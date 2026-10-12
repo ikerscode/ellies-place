@@ -1,0 +1,20 @@
+<!doctype html>
+<!--
+  Dev-only contact sheet page (never part of the build). Owner: pixel-artist (lead).
+  Contract with scripts/art-sheet.mjs:
+    - every element with data-sheet="<name>" is saved as reports/art/<name>.png
+    - set window.__SHEET_READY__ = true once everything is drawn
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Art sheet</title>
+    <style>
+      body { margin: 0; padding: 8px; background: #2a1830; }
+      canvas { display: block; image-rendering: pixelated; margin-bottom: 8px; }
+    </style>
+  </head>
+  <body>
+    <script type="module" src="./sheet.ts"></script>
+  </body>
+</html>

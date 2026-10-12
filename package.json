@@ -1,0 +1,29 @@
+{
+  "name": "ellies-place",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ellie's Place: a cosy single-file life sim.",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "lint": "node scripts/lint.mjs",
+    "test": "vitest run",
+    "build": "vite build && node scripts/check-dist.mjs",
+    "e2e": "playwright test",
+    "soak": "tsx tests/soak/run.ts",
+    "shots": "EP_SUITE=shots playwright test",
+    "art:sheet": "node scripts/art-sheet.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/im-fell-english": "^5.3.0",
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^5.0.4"
+  }
+}

@@ -3,3 +3,6 @@ dist
 reports/shots
 test-results
 playwright-report
+reports/art
+*.tsbuildinfo
+.vite

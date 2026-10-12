@@ -1,0 +1,33 @@
+/*
+ * Fonts, inlined into the build as base64 WOFF2 (latin subset only, WOFF2 only).
+ * Created by the architect in Wave 0; owned by ui-dev from here on.
+ * scripts/check-dist.mjs fails the build if either family stops being inlined.
+ */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: block;
+  font-weight: 400;
+  src: url('@fontsource/pixelify-sans/files/pixelify-sans-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: block;
+  font-weight: 700;
+  src: url('@fontsource/pixelify-sans/files/pixelify-sans-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: normal;
+  font-display: block;
+  font-weight: 400;
+  src: url('@fontsource/im-fell-english/files/im-fell-english-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: italic;
+  font-display: block;
+  font-weight: 400;
+  src: url('@fontsource/im-fell-english/files/im-fell-english-latin-400-italic.woff2') format('woff2');
+}
