@@ -452,7 +452,7 @@ curve(v) = A × ((100 − v) / 100)^p + 0.15
 | Cat Nap | 2.5 | 2.0 | 2.65 | 1.56 | 0.78 | 0.31 | 0.15 | Cats nap a lot without fuss. |
 | Cat Play | 2.0 | 1.5 | 2.15 | 1.45 | 0.86 | 0.40 | 0.15 | |
 | Cat Affection | 2.0 | 1.5 | 2.15 | 1.45 | 0.86 | 0.40 | 0.15 | |
-| Personality (all four) | 2.5 | 1.5 | 2.65 | 1.77 | 1.03 | 0.46 | 0.15 | Personality needs score highest at mid values, so the cats act in character most of the time. |
+| Personality (all four) | 2.5 | 1.5 | 2.65 | 1.77 | 1.03 | 0.46 | 0.15 | A higher A than Play and Affection, so at equal values the personality need wins and the cats act in character most of the time. |
 
 **Advertising long actions.** `bed.sleep` advertises its projected total (`100 − Energy`), not one hour's chunk, so it competes fairly with whole activities. Cat naps advertise 60 minutes' worth.
 
