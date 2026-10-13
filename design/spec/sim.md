@@ -224,3 +224,177 @@ Mood is recomputed every 20 ticks (1 game minute) and smoothed: displayed mood m
 - **Good-mood trickle:** at each full game hour, if mood ≥ 65, emit `heartsEarned` with base amount `GOOD_MOOD_HEARTS` (play.md owns the amount; suggested 2) × multiplier. Not while asleep.
 - With band 2 starting at 45, a normal day sits at ×1.0 to ×1.15. ×0.8 only happens if several needs are ignored, and even then Hearts still come in.
 
+---
+
+## 4. Interactions as data
+
+### 4.1 What every interaction declares (for the architect's schema)
+
+| Field | Meaning |
+| --- | --- |
+| `id` | `<object>.<verb>`, stable. |
+| `tags` | One or more tags from §4.2. Tags drive personality multipliers, Ellie's favourites, quirks and the default numbers. |
+| `actor` | `ellie`, `anyCat` or a specific cat (`ActorFilter`). |
+| `effects` | Need changes for the actor (and, for social interactions, for the target cat), as totals or `/h` rates. |
+| `durationMin` | Game minutes (action time). `until` rules for sleep. |
+| `autonomous` | Whether free will (or cat AI) may pick it. |
+| `window` | Allowed time of day, if any. |
+| `requires` | Carried item, music on, bond level, weather, a visitor present. |
+| `posture` | `stand`, `sit`, `lie`, `exercise`, `offLot`: used by Shadow's trust rule and mood idles. |
+| `bondGain` | Base bond points for the target cat (§9.3). |
+
+### 4.2 Interaction tags (stable ids)
+
+`Ellie ×` is her favourites multiplier in the utility score (§5.1). It makes free will choose her favourite things a bit more often. **Default effect** is what an item interaction gets when home.md or play.md gives a tag but no numbers of its own.
+
+| Tag | Used for | Ellie × | Default effect (Ellie) |
+| --- | --- | --- | --- |
+| `sleep` | Night sleep | 1.0 | Energy +14/h |
+| `nap` | Naps (Ellie or cat) | 1.0 | Energy +10/h |
+| `coffee` | Making or drinking coffee | 1.15 | Energy +18, buff |
+| `rusk_ritual` | Coffee and a rusk in the grass | 1.3 | Calm +30, Hunger +8, Energy +18, Fun +6 |
+| `eat` | Any eating | 1.0 | Hunger +15 |
+| `cook` | Cooking at the counter | 1.0 | Hunger +25 |
+| `cook_sushi` | Veggie sushi | 1.2 | Hunger +50, Fun +10, Calm +5 |
+| `snack` | Quick fridge food | 1.0 | Hunger +15 |
+| `gaming` | Console, handheld, laptop games | 1.15 | Fun +36/h |
+| `music_on` | Starting a record station | 1.0 | none (enables `music_*`) |
+| `music_listen` | Sitting with music | 1.15 | Fun +24/h, Calm +12/h |
+| `dance` | Dancing | 1.0 | Fun +40/h |
+| `headbang` | Headbanging (Heavy only) | 1.2 | Fun +72/h |
+| `read` | Books | 1.0 | Calm +20/h, Fun +8/h |
+| `bath` | Bath | 1.0 | Calm +40/h |
+| `stargaze` | Lying in the grass at night | 1.1 | Calm +24/h, Fun +16/h |
+| `lanterns` | Lighting garden lanterns | 1.0 | Calm +2 |
+| `lamp` | Switching a lamp | 1.0 | Calm +1 |
+| `exercise` | Gym stations, runs, race | 1.0 | modifiers §2.3 |
+| `exercise_light` | Dance, headbang | 1.0 | modifiers §2.3 |
+| `train_hyrox` | Gym station training | 1.15 | Fitness +30/h, Fun +15/h |
+| `run` | Run from the front door | 1.0 | Fitness +21/h |
+| `race` | Race day | n/a (player only) | play.md |
+| `garden_sit` | Sitting in the grass | 1.1 | Calm +16/h |
+| `sit` | Any seat | 1.0 | Calm +6/h, Energy +2/h |
+| `admire` | Looking at decor, mirror | 1.0 | Fun +2, Calm +2 |
+| `dress` | Wardrobe or mirror outfit change | 1.0 | Fun +3 |
+| `photo` | Photo mode | n/a (player only) | Fun +5 |
+| `laptop` | Laptop use (catalog, browsing) | 1.0 | Fun +24/h |
+| `tidy` | Washing up, putting things back, flattening boxes | 1.0 | Calm +1 per item |
+| `care` | Anything Ellie does for a cat's needs | 1.0 | adds the care term (§5.2) |
+| `cat_social` | Ellie with a cat (pet, play, talk) | 1.2 | Fun +3, Calm +4 |
+| `visitor` | Bruce, Poe, Pickle interactions | 1.1 | Fun +3 |
+| `plant` | Watering, tending plants | 1.0 | Calm +4 |
+
+Cat-side tags (personality multipliers in §8.4):
+
+| Tag | Used for |
+| --- | --- |
+| `eat` | Eating from a bowl |
+| `treat_ham` | Ham (Salem's favourite) |
+| `treat` | Any other treat |
+| `nap` | Generic nap spot (sofa, rug, floor) |
+| `nap_bed` | Cat bed |
+| `nap_ellie_bed` | Ellie's bed (pillow at night for George) |
+| `nap_box` | Sleeping in a box |
+| `perch_high` | Any layer-2 perch (wardrobe top, fridge top, cat tree top, high shelf) |
+| `perch_window` | Window sill |
+| `hide_dark` | Dark quiet spots (under the bed, closet, behind the sofa) |
+| `box_sit` | Sitting in a box (awake) |
+| `scratch` | Scratchers, the sofa side |
+| `groom` | Self-grooming (George licks his paw) |
+| `zoomies` | Running laps |
+| `knock` | Knocking a small item off a surface |
+| `play_toy` | Self-play with floor toys |
+| `play_laser` | Laser pointer with Ellie |
+| `play_wand` | Feather wand with Ellie |
+| `pet` | Being petted |
+| `brush` | Being brushed |
+| `pick_up` | Being picked up and cuddled |
+| `lap_sit` | Sitting on Ellie's lap |
+| `near_ellie` | Sitting within 4 tiles of Ellie |
+| `follow_ellie` | Following Ellie to her room |
+| `request` | Walking to Ellie to ask for something |
+| `bow` | Being bowed to (George) |
+| `knight` | The Knighting (George, bond level 4) |
+| `claim_spot` | Taking the seat Ellie is about to use (George) |
+| `inspect` | Inspecting new furniture |
+| `sunbeam` | Lying in a sunbeam |
+| `music_vibe` | Bopping or loafing near music |
+| `warm_device` | Lying on a warm laptop or console |
+| `watch_bird` | Watching the bird bath, Poe or Bruce through a window |
+| `garden_roll` | Rolling in the garden grass |
+| `cheer` | Cheering at a race |
+
+### 4.3 Ellie's interactions (advertised = actual)
+
+Effects are **net totals** at the listed duration (rates where marked `/h`). Advertised numbers are honest: the AI sees the same numbers the sim applies. Minigame interactions multiply their positive effects by a **result factor** 0.8–1.2 (skip = 0.8, autonomous auto-play = 1.0).
+
+| Id | Tags | Object | Min | Effects (Ellie) | Free will | Window / requires | Scope |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `bed.sleep` | sleep | Bed | until wake (§2.4) | Energy +14/h, Calm +4/h; modifiers §2.3 | Yes | 21:00–03:00, or any time if Energy < 30 | MVP |
+| `bed.nap` | nap | Bed | 60 | Energy +12, Calm +3 | Yes | Energy < 50 | MVP |
+| `sofa.nap` | nap, sit | Sofa | 45 | Energy +8, Calm +2 | Yes | Energy < 50 | MVP |
+| `kettle.make_coffee` | coffee | Kettle or coffee machine | 5 | Gives `mug_full` | As a fetch step only | | MVP |
+| `mug.drink` | coffee | Carried `mug_full` | 8 | Energy +18 (+6 from the 3rd coffee of the day), Fun +2, `caffeinated` 120 min | Yes | Requires `mug_full` (auto-fetch) | MVP |
+| `rusk_tin.take` | rusk_ritual | Rusk tin on the counter | 1 | Puts a rusk on the mug (`mug_rusk`) or in hand | As a fetch step only | | MVP |
+| `grass.rusk_ritual` | rusk_ritual, garden_sit, coffee, eat | Garden grass | 20 | Calm +30 (+15 perfect dunk), Energy +18, Hunger +8, Fun +6, `caffeinated` | Yes (auto result: good, no perfect) | 06:30–20:00, not raining; requires `mug_rusk` (auto-fetch both) | MVP |
+| `grass.sit` | garden_sit | Garden grass | 30 | Calm +8, Fun +2 | Yes | 06:30–21:00, not raining | MVP |
+| `fridge.snack` | snack, eat | Fridge | 5 | Hunger +15 | Yes | | MVP |
+| `counter.make_toast` | cook, eat | Counter, then table | 15 | Hunger +25, Fun +2 | Yes | | MVP |
+| `counter.make_sushi` | cook_sushi, cook, eat | Counter (minigame), then table | 40 | Hunger +50, Fun +10, Calm +5 (× result) | Yes (auto-play, no minigame shown) | | MVP |
+| `bowls.fill` | care | Cat bowls | 3 | Fun +2, Calm +3; refills every empty bowl | Yes | At least one bowl empty | MVP |
+| `fridge.give_ham` | care, cat_social | Fridge → Salem | 4 | Fun +4 | Yes | Salem awake, ≤ 2 per game day give food | MVP |
+| `treat_jar.give` | care, cat_social | Treat jar → any cat | 3 | Fun +3 | Yes | | Full |
+| `console.play` | gaming | Console + TV, from the sofa | 45 (auto) / while Critterbound is open | Fun +36/h, Calm +4/h | Yes (plays off-screen, no Critterbound progress) | | MVP |
+| `handheld.play` | gaming, sit | Bed or sofa | 30 | Fun +12, Calm +3 | Yes | Handheld owned | Full |
+| `laptop.browse` | laptop, gaming | Laptop | 20 | Fun +8; laptop is warm for 30 min | Yes | | MVP |
+| `laptop.catalog` | laptop | Laptop or catalog button | player | Opens the catalog | No | | MVP |
+| `record_player.play` | music_on | Record player | 1 | Starts a station for 120 game min or until stopped. Free will picks Heavy 0.4, Lo-fi 0.3, Cosy 0.3 | As a fetch step, or alone | | MVP |
+| `record_player.stop` | music_on | Record player | 1 | Stops music | No | | MVP |
+| `record_player.listen` | music_listen, sit | Sofa or chair in the same room | 30 | Lo-fi or Cosy: Fun +12, Calm +6. Heavy: Fun +15, Calm +2 | Yes | Music on (auto-prepends `record_player.play`) | MVP |
+| `record_player.dance` | dance, exercise_light | Floor near the player | 15 | Fun +10, Fitness +2 | Yes | Music on | MVP |
+| `record_player.headbang` | headbang, exercise_light | Floor near the player | 10 | Fun +12, Fitness +3 | Yes | Heavy on | MVP |
+| `bookshelf.read` | read, sit | Any seat or bed (carries a book) | 45 | Calm +15, Fun +6 | Yes | | MVP |
+| `bath.bathe` | bath | Bath | 40 | Calm +27, Energy +4 | Yes | | MVP |
+| `sink.wash_up` | tidy | Sink | 6 | Clears all dirty dishes in the kitchen-diner and in hand; Calm +1 each (max +4) | Yes | Any dirty dish exists | MVP |
+| `mess.put_back` | tidy | A knocked-over item | 1 | Returns it to its slot; Calm +1 | Yes | | MVP |
+| `box.flatten` | tidy | Delivery box | 2 | Removes the box; Calm +1 | Yes | No cat inside; ≥ 2 boxes on the lot | MVP |
+| `grass.stargaze` | stargaze, garden_sit | Garden grass | 30 | Calm +12, Fun +8 | Yes (no wishes made) | 21:00–04:30, not raining | MVP |
+| `lanterns.light` | lanterns | Garden lanterns | 3 | Calm +2; lanterns lit until 02:00 | Yes | 19:30–01:00 | MVP |
+| `lamp.toggle` | lamp | Any lamp | 1 | Calm +1 when switching on at night | Yes (on at dusk in her room; off when leaving bed) | | MVP |
+| `front_door.run` | run, exercise | Front door (Ellie leaves the lot) | 40 | Fitness +14, Calm +8, Fun +4; exercise modifier costs ~ Energy −11, Hunger −5 | Yes | 06:00–21:00 | MVP |
+| `gym.<station>.train` | train_hyrox, exercise | Each of 8 stations | 20 | Fitness +10, Fun +5 (× result), skill (play.md); exercise modifier costs ~ Energy −5.5, Hunger −2.5 | Yes (auto-play) | Station placed | MVP |
+| `race_board.race` | race, exercise | Race board | play.md | play.md | No | | MVP |
+| `wardrobe.dress` | dress | Wardrobe or mirror | 5 | Fun +3 (first change of the day +5) | No | | MVP |
+| `mirror.admire` | admire | Mirror | 2 | Fun +2, Calm +2 | Yes | | Full |
+| `decor.admire` | admire | Any decor item | 2 | Fun +2, Calm +2 | Yes (≤ 1 per item per day) | | Full |
+| `plant.water` | plant | Any plant | 2 | Calm +4 | Yes (each plant once a day) | | Full |
+| `camera.photo` | photo | Photo mode | player | Fun +5 for the first shot of each subject per day | No | | MVP |
+| `door.answer` | visitor | Front door | 3 | Fun +3, Pickle's line | Yes | Pickle present | MVP |
+| `bruce.spot` | visitor | Bruce | 1 | Fun +4, `moodlet.bruce_spotted` | No (see §11.1 for passing by) | Bruce visible | MVP |
+| `poe.trade` | visitor | Poe at the bird bath | 5 | Fun +4; opens trade (play.md) | No | Poe present | MVP |
+| `poe.watch` | visitor | Poe at the bird bath | 5 | Fun +3, Calm +2 | Yes | Poe present | Full |
+
+Ellie → cat interactions (the cat side is in §8.6):
+
+| Id | Tags | Min | Effects (Ellie) | Free will | Requires | Scope |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cat.pet` | cat_social, care | 5 | Fun +3, Calm +4 | Yes | | MVP |
+| `cat.brush` | cat_social, care | 8 | Calm +5, Fun +2 | Yes | Brush owned (starter item) | MVP |
+| `cat.pick_up` | cat_social, care | 2 | Fun +4, Calm +3 | Yes | Shadow: bond ≥ 40 | MVP |
+| `cat.play_wand` | cat_social, care | 10 | Fun +8 | Yes | Wand owned (starter item) | MVP |
+| `cat.play_laser` | cat_social, care | 10 | Fun +8 | Yes | Laser owned (starter item) | MVP |
+| `cat.talk` | cat_social | 2 | Fun +2 | Yes | | MVP |
+| `george.bow` | cat_social, care | 2 | Fun +4 | Yes | George | MVP |
+| `george.knight` | cat_social | 5 | Fun +10; title "Sir Ellie" | No (player, once) | George bond level 4 | MVP |
+| `peaches.headbang_together` | cat_social, headbang, exercise_light | 10 | Fun +14, Fitness +3 | Yes | Peaches bond level 2, Heavy on | MVP |
+| `cat.call` | cat_social | 1 | Calls the cat over (cat accepts per §8.7) | No | Bond level 3 | Full |
+
+Counts: 38 MVP Ellie interactions (brief needs 25), 11 Full.
+
+### 4.4 Rules shared by all interactions
+
+- **Partial progress keeps its gains.** Rates apply every tick; totals are spread evenly over the duration. Cancelling keeps what was gained.
+- **Minigame interactions** apply their totals × result factor when the minigame ends (or is skipped). While an activity overlay is open the sim keeps running, forced to ×1, so the cats keep living behind it; the previous speed returns afterwards.
+- **Repeat cap:** an interaction's need effects drop to 50 % for its 3rd and later uses in one game day by the same actor (except sleep, eating, `bowls.fill`, gym, run). Nothing ever goes negative.
+- **Effects never push a need below its floor or above 100.**
+
