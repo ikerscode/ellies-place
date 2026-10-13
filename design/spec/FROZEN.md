@@ -25,6 +25,8 @@ Frozen by the lead on Tue 13 Oct 2026. This file beats every `design/spec/*.md` 
 | 4 | Minigame score and result factor | One score `s` in 0..1. Need and Fitness effects use factor `f = 0.8 + 0.4·s`. Skip or cancel: `s = 0.5` (`PASS_SCORE`) for Hearts, XP, race time, wishes; `f = 0.8` for needs. Free-will auto-play: `s = 0.6`, `f = 1.0`. Skips never set a PB. | |
 | 5 | Mood and bond string keys | `ui.mood.<MoodBand>` and `ui.bond.<0-4>` (contract enum values). | `sim.md` `mood.band.N`, `bond.level.N` |
 | 6 | Personal mail shape | Contract `{date, subject, body}`. | BRIEF's `{date, from, lines}` |
+| 6a | Aspiration tier string keys | `asp.<id>.tier.<n>` (title) and `asp.<id>.tier.<n>.goal` (goal text), with ids from #7. | `play.md` `asp.<id>.<n>.name`, `ui.md` `asp.<id>.tier<n>.goal` |
+| 6b | IP and tone review | All findings in `reports/wave1-ip-tone.md` applied (6825fca): band names only under `record.sleeve.*`; Splash starter is Drippet; mood label "Alright"; Salem is "she"; displayed text says "catalogue"; "moodlet" never reaches players; the print phrase lives only in `personal.ts`. | |
 
 ## 3. Catalog and economy (home.md vs play.md)
 
