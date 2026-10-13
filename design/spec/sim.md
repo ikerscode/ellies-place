@@ -389,7 +389,7 @@ Ellie → cat interactions (the cat side is in §8.6):
 | `peaches.headbang_together` | cat_social, headbang, exercise_light | 10 | Fun +14, Fitness +3 | Yes | Peaches bond level 2, Heavy on | MVP |
 | `cat.call` | cat_social | 1 | Calls the cat over (cat accepts per §8.7) | No | Bond level 3 | Full |
 
-Counts: 38 MVP Ellie interactions (brief needs 25), 11 Full.
+Counts: 46 MVP Ellie interactions (brief asks for 25) and 7 Full, 53 in total (brief full target 45). Cat interactions are counted in §8.6.
 
 ### 4.4 Rules shared by all interactions
 
@@ -397,4 +397,196 @@ Counts: 38 MVP Ellie interactions (brief needs 25), 11 Full.
 - **Minigame interactions** apply their totals × result factor when the minigame ends (or is skipped). While an activity overlay is open the sim keeps running, forced to ×1, so the cats keep living behind it; the previous speed returns afterwards.
 - **Repeat cap:** an interaction's need effects drop to 50 % for its 3rd and later uses in one game day by the same actor (except sleep, eating, `bowls.fill`, gym, run). Nothing ever goes negative.
 - **Effects never push a need below its floor or above 100.**
+
+---
+
+## 5. Utility AI (Ellie's free will and all four cats)
+
+One scorer for everyone, as in TECH.
+
+### 5.1 Score
+
+For actor `a` and candidate `c` (an interaction on a specific object slot or target):
+
+```
+needTerm  = Σ over needs n with advertised Δn > 0:   curve_n(v_n) × min(Δn, 100 − v_n) / 10
+costTerm  = Σ over needs n with advertised Δn < 0:   0.5 × curve_n(v_n) × |Δn| / 10
+careTerm  = (Ellie only, tag `care`)  0.5 × Σ over target cats t: curveCat_m(v_t,m) × min(Δt,m, 100 − v_t,m) / 10  ÷ T
+base      = needTerm − costTerm + careTerm
+
+score = max(0, base) × P_tag × B × F_dist × N × R × U × Q
+```
+
+| Factor | Formula | Reason |
+| --- | --- | --- |
+| `min(Δ, 100 − v)` | Gain clipped to headroom | No overkill: a full need gets nothing from more of it. |
+| `/ 10` | Score units | Keeps typical scores 0.5–6, easy to read in debug overlays. |
+| `costTerm` weight 0.5 | Costs count half | Training is still attractive at full Energy; costs bite only when that need is already low. |
+| `careTerm` ÷ T | T = 4 for `bowls.fill` (all cats), T = 1 for single-cat targets | Ellie looks after the cats on her own, so cat Food and Affection recover with free will on. |
+| `P_tag` | Ellie: the highest `Ellie ×` among the interaction's tags (§4.2). Cats: the highest personality multiplier among its tags (§8.4) | Personality as numbers. |
+| `B` (bond) | Social tags (`cat_social`, `pet`, `brush`, `pick_up`, `lap_sit`, `near_ellie`, `follow_ellie`, `request`, `play_*`): `B = 0.7 + 0.006 × bond` (0.7 at 0, 1.0 at 50, 1.3 at 100). All other interactions: 1 | Cats who like her seek her out more, and she seeks them. |
+| `F_dist` | `1 / (1 + d / D0)`, d = octile tile distance to the slot (+2 per layer change for cats). D0 = 15 for Ellie, 12 for cats | Prefer near things. Across the whole 30 × 17 lot (d ≈ 34) it is ×0.31 for Ellie, so far favourites still win sometimes. |
+| `N` (noise) | Uniform 0.85–1.15 from the state RNG, one draw per candidate per decision | Variety without randomness taking over. |
+| `R` (recency) | Same interaction id done by this actor within 60 game min: ×0.5; within 180: ×0.8; else 1 | Stops loops (coffee, coffee, coffee). Sleep, eat and `bowls.fill` are exempt. |
+| `U` (urgency) | If any need n has v_n < 20 and the candidate advertises Δn > 0: ×2.5 | Guarantees low needs recover (soak invariant). |
+| `Q` (quirk/schedule) | From §5.4 and §10–§11 (time windows, quirks, requests) | Schedules and personality beats. |
+
+**Threshold.** Candidates with score < 0.25 are dropped. If nothing is left: Ellie plays an idle (mood-based) and free will waits for the next trigger; cats pick `idle` (§8.8).
+
+### 5.2 Need curves (urgency)
+
+```
+curve(v) = A × ((100 − v) / 100)^p + 0.15
+```
+
+| Need | A | p | v = 0 | 25 | 50 | 75 | 100 | Reason |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Energy | 3.0 | 2.0 | 3.15 | 1.84 | 0.90 | 0.34 | 0.15 | Body needs: quiet when fine, loud when low. |
+| Hunger | 3.0 | 2.0 | 3.15 | 1.84 | 0.90 | 0.34 | 0.15 | Same. |
+| Fun | 2.0 | 1.5 | 2.15 | 1.45 | 0.86 | 0.40 | 0.15 | Steadier pull: she always enjoys fun things. |
+| Calm | 2.0 | 1.5 | 2.15 | 1.45 | 0.86 | 0.40 | 0.15 | Same. |
+| Fitness | 1.6 | 1.2 | 1.75 | 1.28 | 0.85 | 0.45 | 0.15 | Nearly linear: training is a hobby, not an emergency. |
+| Cosy | 1.0 | 1.0 | 1.15 | 0.90 | 0.65 | 0.40 | 0.15 | Linear and small: lamps and lanterns at night, never urgent. |
+| Cat Food | 3.0 | 2.0 | 3.15 | 1.84 | 0.90 | 0.34 | 0.15 | |
+| Cat Nap | 2.5 | 2.0 | 2.65 | 1.56 | 0.78 | 0.31 | 0.15 | Cats nap a lot without fuss. |
+| Cat Play | 2.0 | 1.5 | 2.15 | 1.45 | 0.86 | 0.40 | 0.15 | |
+| Cat Affection | 2.0 | 1.5 | 2.15 | 1.45 | 0.86 | 0.40 | 0.15 | |
+| Personality (all four) | 2.5 | 1.5 | 2.65 | 1.77 | 1.03 | 0.46 | 0.15 | Personality needs score highest at mid values, so the cats act in character most of the time. |
+
+**Advertising long actions.** `bed.sleep` advertises its projected total (`100 − Energy`), not one hour's chunk, so it competes fairly with whole activities. Cat naps advertise 60 minutes' worth.
+
+### 5.3 Choosing: top 3, weighted
+
+1. Score every candidate (at most the **60 nearest** by octile distance, for the 2 ms tick budget).
+2. Sort by score descending; ties broken by interaction id, then entity id (determinism).
+3. Take the top 3 that pass the threshold.
+4. Pick one with probability proportional to score (one RNG draw).
+5. Path to it. If A* fails, drop that candidate and pick again from the remaining top 3 (max 3 tries, then idle).
+
+### 5.4 Ellie's free will
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Default | On (settings toggle) | Brief §5. |
+| Trigger | Queue empty and Ellie not executing for **160 ticks** (8 s at ×1; 4 s at ×2) | Brief: 8 seconds idle. Counted in ticks so it is deterministic and scales with speed. |
+| Re-trigger after idle fallback | Another 160 ticks | |
+| Never picks | `autonomous: false` interactions: race, catalog, photo, dress, trades, `bruce.spot`, Knighting, anything that opens a full-screen UI | Free will does sensible life things, not the player's choices. |
+| Minigame interactions | Run as auto-play (result factor 1.0) without showing the minigame | Keeps the soak meaningful. |
+| Night bias (Q) | `bed.sleep` ×2.5 at 22:00–02:00, ×1.5 at 21:00–22:00 and 02:00–05:00, ×0.3 at 09:00–19:00. Every other candidate ×0.6 from 23:30 to 05:00, except `read`, `stargaze`, `lanterns`, `lamp` | She keeps a sensible bedtime (soak target §14). |
+| Energy 0–10 | `sleep` and `nap` candidates ×2 on top of urgency | Strong pull to bed, never a pass-out. |
+| Cat requests (Q) | A pending cat request (§8.7) gives matching candidates ×1.5 for 30 game min | The cats can ask her for things. |
+| Wishes (Q) | Candidates that would complete an active daily wish: ×1.3 | Free will helps, but the player still does most wishes. |
+| Free will off | Ellie only does what is queued and idles otherwise | Cats still have their AI. |
+
+### 5.5 Cat decisions
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| When | When the current action ends, after an idle gap of 40–120 ticks (2–6 s at ×1, RNG) | Cats pause, look around, then go. Reads as thinking. |
+| Commitment | Every cat action runs at least 3 game min before anything but an interrupt (§6.4) can end it | No twitching between goals. |
+| Same scorer | §5.1 with cat curves, personality multipliers, D0 = 12 | |
+| Max nap chunk | 60 game min, then re-decide (usually the same nap continues with no visible break) | Soak: every agent finishes an action each game hour. |
+| Circadian bias (Q) | 11:00–16:00: `nap*` ×1.3. 06:00–08:00 and 18:00–21:00: `play_toy`, `zoomies`, `knock`, `follow_ellie` ×1.3. 23:00–05:00: everything but `nap*` and scheduled quirks ×0.5 | Cats nap in the afternoon and are lively at dawn and dusk. |
+| Garden access | Cats may enter the garden 07:00–21:00, and at night only while Ellie is in the garden | Peaches can join the rusk ritual; nobody gets locked out (the door is a cat flap). |
+
+---
+
+## 6. Action queue
+
+### 6.1 Rules
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Capacity | **4 entries including the running one** (index 0 runs) | Brief: up to 4, shown top-left. |
+| Adding when full | Rejected; the queue panel shakes and toast `queue.full` shows | Never silently drop her choice. |
+| Floor click | Queues a `walkTo` entry like any action (it counts toward the 4) | One mental model. |
+| Duplicates | Allowed | |
+| Sub-steps | Auto-fetch steps (§7.2), walking, and setting things down live inside one entry and never count toward the cap | |
+| Order | FIFO | |
+| Cats | No visible queue. One current action, cap 1 | Cats are autonomous. |
+
+### 6.2 Cancelling
+
+| Case | Result |
+| --- | --- |
+| Click a waiting entry (index ≥ 1) | Removed at once. |
+| Click the running entry (index 0) | Graceful stop within 20 ticks (she stands up, puts the mug down); gains so far are kept. |
+| Cancel during a minigame | Exits the minigame with the skip result factor 0.8; no penalty. |
+| Cancel during sleep | She wakes, fast-forward ends. |
+
+### 6.3 Autonomous vs player entries
+
+- A free-will action occupies index 0 with `autonomous: true`. There is at most one autonomous entry, and never while player entries exist.
+- When the player queues anything while an autonomous action runs, the autonomous action stops gracefully (10 ticks) and the player's entry starts. Gains so far are kept.
+- Free will never interrupts or reorders player entries.
+
+### 6.4 Interrupts
+
+Low needs **never** interrupt anything. The full list:
+
+| Priority | Interrupt | Effect on Ellie's queue |
+| --- | --- | --- |
+| 1 | Player cancels | §6.2 |
+| 2 | Player queues while an autonomous action runs | §6.3 |
+| 3 | Scripted beats (onboarding tour step, housewarming, the Knighting cutscene) | Queue is **suspended**, not cleared. It resumes afterwards. |
+| 4 | Target becomes unreachable or is sold in Build mode | Entry dropped with toast `queue.dropped`; no cost. |
+| 5 | Slot taken by a cat | Cats always yield to Ellie within 2 game min, except George's `claim_spot` (§10.2), which resolves within 4 game min. Ellie waits beside it with an idle. |
+
+Cat interrupts (they end the cat's current action regardless of commitment): being picked up or petted (accept/refuse, §8.7), a scheduled quirk (§10), a fresh bowl fill for a cat with Food < 65, a new delivery box for Salem, Ellie's mood < 35 for Shadow, Heavy starting in Shadow's room.
+
+---
+
+## 7. Carrying and small objects
+
+### 7.1 Hands and pocket
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Hand slot | 1 item | Simple and readable. |
+| Hand items | `mug_full`, `mug_empty`, `rusk`, `mug_rusk` (a rusk balanced on the mug counts as one item), `plate_full`, `plate_dirty`, `book`, `delivery_box` (two hands, walk ×0.85), a picked-up cat during `cat.pick_up` | Brief's list: mug, rusk, plate, trinket, delivery box. |
+| Pocket (no hand needed) | Shiny Trinkets (count, cap 99), laser pointer, feather wand, brush, handheld, camera | Owned tools are always to hand; trinkets go in the pocket when picked up. |
+| Walking while carrying | Normal speed (box ×0.85) | No penalty for holding a mug. |
+| Cats | Carry nothing | |
+
+### 7.2 Auto-fetch
+
+If an interaction `requires` a hand item Ellie doesn't hold, the sim prepends the fetch steps inside the same queue entry:
+
+| Needs | Prepends | Example |
+| --- | --- | --- |
+| `mug_full` | `kettle.make_coffee` | `mug.drink` |
+| `mug_rusk` | `kettle.make_coffee`, then `rusk_tin.take` | `grass.rusk_ritual` |
+| Music on | `record_player.play` | `record_player.listen` |
+| `book` | Take a book from the nearest bookshelf (1 min); if there is no bookshelf she reads her phone-sized paperback (always owned) | `bookshelf.read` |
+
+- The utility score's distance uses the full trip (fetch object, then target).
+- If a fetch object doesn't exist (no kettle), the interaction is not offered and free will skips it.
+
+### 7.3 Setting things down
+
+| Situation | What happens |
+| --- | --- |
+| A new hand item is needed while holding another | She sets the current one on the nearest free surface slot within 3 tiles, else on the floor beside her (1 s). |
+| After drinking or eating | The empty `mug_empty` or `plate_dirty` goes back to the sink automatically if the sink is ≤ 8 tiles of path away (adds the walk); otherwise she sets it down and it becomes a **dirty dish** (mess). |
+| `book` after reading | Returned to its shelf if ≤ 8 tiles, else left on the seat (not mess). |
+| Delivery box | Can be carried and set down anywhere; it is never mess. |
+
+### 7.4 Mess (gentle)
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Mess kinds | Dirty dishes, items Salem knocked off (§10.3) | Salem's mess from the brief. |
+| Effect | Calm decay (§2.3) and the clutter penalty in Cosy (home.md) | Gentle nudge to tidy. |
+| Lot cap | 12 mess items; at the cap the oldest fades away | Soak cap. |
+| Auto-fade | Any mess item older than 36 game hours fades | Nothing piles up forever while she is away or free will is off. |
+| Knocked items | Never break. `mess.put_back` returns them to their slot | Nothing gets taken away. |
+
+### 7.5 Delivery boxes
+
+| Rule | Value |
+| --- | --- |
+| Appears | On the front step with each delivery (§11.3). Build-mode instant orders leave one box on the front step too. |
+| Lot cap | 3 boxes. A 4th recycles the oldest box with no cat in it (if all have cats, the new box simply doesn't appear). |
+| Auto-recycle | A box with no cat in it disappears after 48 game hours. |
+| Salem | §10.3. |
 
