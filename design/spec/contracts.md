@@ -2,6 +2,23 @@
 
 Owner: architect. The code is the source of truth: `src/core/types.ts` (types) and the helpers next to it in `src/core/`. This page explains them. If you need a change, write the exact diff in `CONTRACT_REQUEST.md` at the root of your branch.
 
+## v2 changes (Wave 1, from `FROZEN.md` §2 to §4)
+
+Requests archived in `reports/contract-requests/`. Everything below is in `types.ts` and, for formulas, `src/core/rules.ts`.
+
+- **Audio.** `SimpleCueName` adds `build.wall`, `build.floor`, `race.horn`.
+- **UI (R1 to R5).** `KeyAction` adds `secondary`, `cats`, `toggleHud`, `help`, `store`. `Ui.region(id: UiRegionId)` with `'buildTop' | 'buildBar' | 'catalog'`. Bus events `app.request` (`AppRequest`), `photo.request` (`{ filter, frame: Rect, snap }`), `activity.skippable`, `activity.skip`, `activity.leave`. `UiDeps.loadPhoto(meta)`. New `Rect`.
+- **Time.** `GameTime.fastForward` stays a number: 1, or `SimTuning.time.sleepFastForward` (10) while sleeping through the night. It **replaces** `speed` in `effectiveSteps` (200 ticks/s), it does not multiply it, and never applies in real-time mode. `SystemContext` adds `dtGameMin` (decay, schedules) and `dtActionMin` (interaction progress); `dtMinutes` is a deprecated alias of `dtGameMin`. `LIMITS.maxTicksPerFrame = 12`.
+- **Needs and mood.** `NEED_FLOORS` (Fitness 20, every cat need 10) and `clampNeed`. `MOOD_STEPS`: six steps at 0, 25, 45, 65, 80, 92 with Hearts ×0.8, 0.9, 1.0, 1.15, 1.3, 1.5. `MoodBand` keeps its five display values (steps 4 and 5 both show `great`, so `ui.mood.<band>` keys and portraits are unchanged); `MoodStep` is 0..5. `moodBandOf` defaults to these floors. `SimTuning.mood.bands`, `mood.heartsMultiplier` and `SimTuning.hearts` are gone (frozen rules in core, economy in `EconomyTable`). Moodlets are `Feeling`s with `MoodletId` (`moodlet.wish_done`...).
+- **Interactions.** `InteractionTag` closed union (sim.md §4.2, Ellie and cat tags). `InteractionDef.tags` is `InteractionTag[]`; `icon` is required; new `posture`, `window`, `bondGain`, `autoFetch`, `repeatExempt`, `recencyExempt`; duration `between` and `untilNeed.chunkMinutes`. `QueuedAction.autonomous`. `ActiveAction.totalMinutes` and `fetch`. `CatDef.tagWeights` is keyed by `InteractionTag`; new `decayWeights`, `runSpeed`. `SimTuning` realigned to sim.md (urgency curve, `distanceD0`, `freeWillIdleTicks`, `catIdleGapTicks`, `urgency`, `ellieTagWeights`, bond soft cap, `nightDarkness`, `cosyEasePerHour`...).
+- **State.** `hearts.earnedTotal` (play.md `heartsEarnedTotal`) and `earnedToday`. `inventory.storedFree` and `inventory.freeOrigin`; `PlaceableC.origin`. `unlocks.codes`. `daily: DailyState` (coffees, knocks, bond per cat, Shadow trust, uses, minigames paid...). `quirks`. `visitors.bruce` / `poe` / `pickle` (replacing `bruceSpotted` and `poeOffers`). `environment.rain`, `lastRainDay`, `lanternsUntilTick`, `music.untilTick`. Component `mess` (`MessC`); `BoxC.createdTick`; `CatC.request` and `requestCooldowns`. `RoomState.cosy` is now `cosyRated` and `cosyLive`, plus `scored` and `area`.
+- **Events.** New sim events `visitor.arrived`, `visitor.left`, `bruce.spotted`, `quirk`, `request.started`, `request.ended`. sim.md's `bondLevelUp` is the existing `bond.level`, and `moodBandChanged` is the existing `mood.band` (now with `step`).
+- **Items (home.md).** `ItemDef.mount` is replaced by `placement: Placement` (`floor | in | out | rug | wall | window | surface | front`; `mountOf()` derives the `Mount`, which adds `window`). `ItemDef.unlock` is an `UnlockCode` string, not a `Condition`: `start`, `fixture`, `day:N`, `asp.<hyrox|royalty|home|collect>.<1-4>`, `bond:<cat>:<1-4>`, `poe:N`, `secret:<id>`. `parseUnlockCode`, `unlockGivesFreeCopy` (secret and Poe only). New `maxCopies`, `uncounted`. `ItemDef.price` is the home.md base price; the shop price is `priceOf(price, ECONOMY)`. Tags may include `room.<RoomKind>`. `LotSpot` Bruce spots now use home.md ids (`BruceSpot`), plus `deliveryBox` and `bruce.wall`. `PlacementError` adds `needsIndoor`, `needsOutdoor`, `needsWindow`, `needsFrontStep`, `oneRugPerTile`, `maxCopies`. `RoomDef` adds `scored`, `cosyTarget`, `plantTarget`.
+- **Progression.** `ASPIRATION_IDS` (`asp.hyrox`, `asp.royalty`, `asp.home`, `asp.collect`); tier ids `asp.<key>.<n>`; tier keys `asp.<key>.tier.<n>` and `.goal` (FROZEN 6a); `AspirationTierDef.gift` and `goalText`. Conditions `setBonusCount`, `roomsCosy`, and `cosy.reading`. `HeartsReason` adds `sticker`, `medal`, `housewarming`. Flag families `known.<cat>.<like|dislike|quirk>.<id>`, `secret.<id>`, `quirk.<id>` (`KnownFlag`, `knownFlag()`).
+- **Economy.** `EconomyTable` (`ContentDb.economy`, written as `ECONOMY` in `src/content/data`): start Hearts, `priceScale` (1.6) and `priceStep` (5), `passScore`/`autoPlayScore` (typed to the core constants), wish Hearts, trickle rows, minigame pay and daily cap, flat activity Hearts, bond level-up (25), aspiration tiers (50/100/175/275), race, medals, Critterbound, stickers, housewarming, skill XP curve, the 2000-a-day guard.
+- **Activities.** `ActivityResult` adds `misses` and `auto`. `PASS_SCORE` 0.5, `AUTO_PLAY_SCORE` 0.6, `SKIP_NEED_FACTOR` 0.8, `AUTO_NEED_FACTOR` 1.0; `resultScore`, `needFactor`, `canSetPb`. Activities no longer put `hearts` effects in results: the sim pays minigame Hearts from the score.
+- **Open (not decided here).** sim.md §4.4 keeps the house running at ×1 behind an activity; play.md §1.2 pauses it. `effectiveSteps` still returns 0 in `activity` mode (play.md) until the lead rules.
+
 ## 1. Principles
 
 - **State is JSON.** `SimState` holds plain objects, arrays, strings, finite numbers, booleans and `null`. It has no classes, `Map`, `Set`, functions, `undefined` values, `NaN` or `Infinity`. `findNonJson(state)` must return `[]`, and `hashState(state)` must not throw.
@@ -45,16 +62,19 @@ Every stub already has the final signature. Today the stubs throw `notImplemente
 6. `const sim = createSim({ content, seed, clock, state: loaded?.state, plugins: [world.plugin()] })`, then `registerCats(sim)`
 7. `sim.onEvent((e) => bus.emit('sim.event', e))`. The app also re-emits the specific events: `cue` → `audio.cue`, `world.changed` → `world.changed`, and `toast` → `ui.toast`.
 8. `const engine = createEngine({ canvas, clock, bus, content, sprites: [BASE.BATCH, ...], sim })`
-9. `const ui = createUi({ root, bus, strings, dispatch: sim.dispatch, sim, content, settings, atlas: () => engine.atlas, worldToScreen: engine.camera.worldToScreen })`
+9. `const ui = createUi({ root, bus, strings, dispatch: sim.dispatch, sim, content, settings, atlas: () => engine.atlas, worldToScreen: engine.camera.worldToScreen, loadPhoto: (m) => save.loadPhoto(m.id) })`
 10. `createBuild({ world, sim, bus, ui, engine, strings })`, `createAudio({ bus, settings })`, and each `register<Family>()` for the activities
 11. `installTestHooks({ sim, engine, content }, location.search, window)`, `save.startAutosave(...)`, then `engine.start()`
 
-When the sim emits `activity.request`, the app looks up the `ActivityDef`, calls `create(params)`, and calls `start(ctx)` with a `forkRng(state.rng, salt)` stream. It then runs `engine.setActivity(a)` and shows Skip once `canSkip()` is true. When `result()` is non-null, it dispatches `{ type: 'activity.finish', result }` and calls `engine.setActivity(null)`.
+When the sim emits `activity.request`, the app looks up the `ActivityDef`, calls `create(params)`, and calls `start(ctx)` with a `forkRng(state.rng, salt)` stream. It then runs `engine.setActivity(a)` and emits `activity.skippable` once `canSkip()` is true. On `activity.skip` or `activity.leave` from the UI it calls `skip()` (both count as a pass). When `result()` is non-null, it dispatches `{ type: 'activity.finish', result }` and calls `engine.setActivity(null)`. Free-will activity picks never reach the app: the sim resolves them itself with `auto: true` and `AUTO_PLAY_SCORE`.
+
+The app also answers `app.request` (continue, new game, import, export, quit to title) and `photo.request` (engine preview or capture, then `photo.captured`).
 
 ## 3. Time and the tick
 
-- 20 ticks per second (`TICKS_PER_SECOND`). `SimTuning.time.minutesPerTick` is 0.05 at speed 1, so one game day takes 24 real minutes.
-- Each fixed step, the engine calls `sim.step(sim.stepsPerTick())`. `stepsPerTick` is `speed × fastForward` in `live` mode, 1 in `cutscene` mode, and 0 in `build`, `photo` and `activity` modes (see `effectiveSteps`). While Ellie sleeps, the sim raises `time.fastForward` to `SimTuning.time.sleepFastForward`.
+- 20 ticks per second (`TICKS_PER_SECOND`). Every tick is 0.05 game minutes at every speed; speed changes ticks per second only, so one game day takes 24 real minutes at ×1.
+- Each fixed step, the engine calls `sim.step(sim.stepsPerTick())`, at most `LIMITS.maxTicksPerFrame` ticks per frame (extra real time is dropped). `stepsPerTick` is `speed` in `live` mode, or `fastForward` instead of `speed` while sleep fast-forward is on, 1 in `cutscene` mode, and 0 when paused and in `build`, `photo` and `activity` modes (see `effectiveSteps`). The sim sets `time.fastForward` to `SimTuning.time.sleepFastForward` (10) when Ellie sleeps through the night and back to 1 when she wakes or the player acts.
+- Each system gets two deltas: `dtGameMin` (need decay, schedules, cooldowns) and `dtActionMin` (interaction progress). Both are 0.05 except in real-time mode, where `dtGameMin` follows the wall clock.
 - `time.tick` is canonical. `day`, `minuteOfDay`, `weekday` and `phase` are derived from it and stored for convenience.
 - In real-time mode (`time.realTime`), the time system sets the minute from `clock.wallNow()`. Determinism does not apply in that mode.
 
@@ -73,10 +93,12 @@ The full shape is in `types.ts`. Here is what each part holds:
 | `version`, `rng`, `time`, `mode`, `options.freeWill` | Core |
 | `nextEntityId`, `nextActionId`, `components` | Entity store (section 5) |
 | `lot` | Tiles, room per tile, rooms with paint and cached cosy, and `revision` |
-| `environment` | Weather, what the record player is playing, stars tonight |
-| `hearts` | Balance, earned, spent |
-| `inventory` | Items stored but not placed, trinkets, pending orders |
-| `unlocks` | Unlocked items, interactions, outfits, paints, titles and activities |
+| `environment` | Weather, today's rain window, last rain day, what the record player is playing and until when, lanterns, stars tonight |
+| `hearts` | Balance, `earnedTotal` (play.md `heartsEarnedTotal`: never decreases, refunds excluded), spent, `earnedToday` |
+| `inventory` | Bought copies stored (`stored`), free copies stored (`storedFree`), the `freeOrigin` set (every item ever received free), trinkets, pending orders |
+| `unlocks` | Unlocked items, interactions, outfits, paints, titles and activities, plus `codes` (unlock codes fired, with the day) |
+| `daily` | Per-day counters reset at 00:00 (`DailyState`): coffees, knocks, bond gained and lost per cat, Shadow trust, interaction uses, minigames and photos paid |
+| `quirks` | Running quirks (id to end tick, also flag `quirk.<id>`) and tonight's zoomies tick |
 | `wishes` | Today's 3, the roll day, history |
 | `aspirations` | Tiers done per aspiration, chosen title |
 | `mail` | Inbox (capped), sent ids, personal mail sent, mailbox waiting count, scheduled |
@@ -84,7 +106,7 @@ The full shape is in `types.ts`. Here is what each part holds:
 | `records` | Hyrox skill, station PBs, race PB, races (capped), medals, plus generic `best` |
 | `wardrobe` | What each of Ellie and the cats wears per slot, Ellie's streak colour |
 | `album` | Photo metadata. The PNGs live in their own storage keys |
-| `visitors` | Visit timers, counts, Bruce sightings per spot, Poe's offers |
+| `visitors` | Visit timers and counts; `bruce` (spotted, found spots, moved in, visit), `poe` (visit, offers, trades), `pickle` (visit, deliveries) |
 | `onboarding`, `housewarming` | Story progress |
 | `activity` | The `ActivitySession` in progress, or null |
 | `stats`, `statsToday` | Counters for progress events and anything else (`int.makeCoffee`, `dunk.perfect`) |
@@ -101,43 +123,48 @@ The full shape is in `types.ts`. Here is what each part holds:
 | Component | On | Notes |
 | --- | --- | --- |
 | `meta` | all | `kind` (`ellie`, `cat`, `visitor`, `item`, `box`, `mess`, `trinket`) and `name` |
+| `mess` | mess | Dirty dish or knocked item, where it goes back, created tick (clears after 36 game hours) |
 | `position` | all | `pos` and `prev` in tile units (prev is for render interpolation), `layer` 0/1/2, `facing`, `room` |
 | `motion` | actors | Path with layers, speed, `stuckTicks`, jump progress |
 | `sprite` | all | Actors: `base` + `anim` resolved with `spriteFor(base, anim)`. Items: full key. Also `hidden` |
-| `agent` | actors | Queue (Ellie holds 4, others 2), `current` `ActiveAction` with its phase, `carrying`, `idleTicks`, `asleep`, cooldowns, `lastPick` |
+| `agent` | actors | Queue (Ellie holds 4 including the running entry, others 2), each entry with `autonomous`; `current` `ActiveAction` with its phase, `totalMinutes` and pending `fetch` steps; `carrying`, `idleTicks`, `asleep`, cooldowns, `lastPick` |
 | `needs`, `mood` | Ellie, cats | Needs are 0..100. Mood is Ellie's only, with its band and `Feeling`s |
 | `bond` | cats | Value 0..100 and level 0..4 |
 | `bubble` | actors | Thought icon and speech line with expiry ticks, plus the speech cooldown |
-| `cat` | cats | Quirk cooldowns, `following`, JSON `memory` (owned by `src/sim/cats`) |
+| `cat` | cats | Active `request` and request cooldowns, quirk cooldowns, `following`, JSON `memory` (owned by `src/sim/cats`) |
 | `visitor` | visitors | When they leave, which spot |
-| `placeable`, `smartObject` | items | Tile, rotation, `MountRef`, placed tick; slot reservations and object `flags` (on, station...) |
-| `carryable`, `light`, `box` | some items | `box.occupant` is the cat inside |
+| `placeable`, `smartObject` | items | Tile, rotation, `MountRef`, placed tick, `origin` (`bought` or `free`); slot reservations and object `flags` (on, station...) |
+| `carryable`, `light`, `box` | some items | `box.occupant` is the cat inside; `box.createdTick` for the 48-hour recycle |
 
 ## 6. Interactions and smart objects
 
 An item is a smart object when its `ItemDef` lists `interactions` and `slots`. An `InteractionDef` holds:
 
-- **Who and on what.** `actors: ActorFilter[]`. `target` is one of `object`, `cat`, `ellie`, `self`, `tile` or `visitor`. `targetCats` is optional.
+- **Ids and tags.** Ids are sim.md's `<object>.<verb>`. `tags` are `InteractionTag`s from sim.md §4.2 (closed union); the first tag gives the default effect when data has no numbers. `icon` (required) is the petal and queue-card icon.
+- **Who and on what.** `actors: ActorFilter[]`. `target` is one of `object`, `cat`, `ellie`, `self`, `tile` or `visitor`. `targetCats` is optional. `posture` (`stand`, `sit`, `lie`, `exercise`, `offLot`), `window` (time of day), `bondGain` (base bond for the target cat).
 - **Advertisements.** `adverts[]` per actor filter. Each one gives the expected `NeedDeltas` over the whole interaction, plus an optional `bias`. The scorer reads these. What actually happens is set by `perHour`, `targetPerHour`, `onStart` and `effects`.
 - **Slots.** `slots` lists slot kinds or ids on the target, in order of preference. `ItemDef.slots` gives each slot's offset at rotation 0, its facing, layer and allowed actors. `rotateOffset` and `rotateFacing` turn them with the item. A slot is reserved in `smartObject.reservations` while it is in use.
-- **Duration.** One of `instant`, `fixed` minutes, `untilNeed` (sleep until energy is 95 or more, with a cap), or `activity` (hands over to a minigame).
+- **Duration** (action minutes). One of `instant`, `fixed`, `between` (drawn when it starts), `untilNeed` (with optional `chunkMinutes`: sleep and naps run in 60-minute chunks that each count as done), or `activity` (hands over to a minigame).
+- **Auto-fetch.** `autoFetch` lists the steps the sim prepends inside the same queue entry when a `carrying` or `musicPlaying` requirement fails (`mug.drink` fetches `kettle.make_coffee`).
 - **Animation keys.** `anims` per actor kind (`approach`, `loop`, `end`), resolved as `${sprite.base}.${anim}`.
 - **Requirements.** `requires: Condition[]`. A failing condition greys out the petal with a reason. `visibleIf` hides the petal entirely.
-- **Rules.** `autonomous` (free will and cat AI may pick it), `cooldownMinutes`, `interruptible`, a start `cue`, an `unlock` condition, and `mvp`.
+- **Rules.** `autonomous` (free will and cat AI may pick it; queued entries carry `autonomous` too), `cooldownMinutes`, `interruptible`, `repeatExempt`, `recencyExempt`, a start `cue`, an `unlock` condition, and `mvp`.
 
 **Scorer** (sim-dev; cats plug in through `AiHooks`):
 
 ```
-score = Σ_n curve_n(value_n) × gain_n × advertised_n × personality × bond × 1/(1 + falloff × distance) × noise
+score = max(0, needTerm − costTerm + careTerm) × P_tag × B × 1/(1 + d/D0) × noise × recency × urgency × Q
 ```
+
+(sim.md §5.1. `P_tag` is `ai.ellieTagWeights` for Ellie and `CatDef.tagWeights` for cats; `D0` is `ai.distanceD0`.)
 
 The scorer picks a weighted choice among the top `ai.topK`, using `state.rng`. `AiHooks.personality` returns a multiplier per candidate, `candidates` adds extra choices (follow Ellie, a sunbeam tile), and `allow` vetoes a candidate.
 
 **Example:**
 
 ```ts
-{ id: asInteractionId('sit'), label: key('int.sit'), target: 'object',
-  actors: [{ kind: 'ellie' }, { kind: 'anyCat' }], tags: ['rest'],
+{ id: asInteractionId('sofa.sit'), label: key('int.sit'), icon: sk('icon.int.sit'), target: 'object',
+  actors: [{ kind: 'ellie' }, { kind: 'anyCat' }], tags: ['sit', 'nap'], posture: 'sit',
   adverts: [{ for: { kind: 'ellie' }, needs: { energy: 5, calm: 5 } }, { for: { kind: 'anyCat' }, needs: { nap: 10 } }],
   slots: ['sit'], duration: { kind: 'fixed', minutes: 30 }, perHour: { energy: 6 },
   anims: { ellie: { loop: 'sit' }, cat: { loop: 'lie' } },
@@ -164,11 +191,14 @@ There is also one interpreter for every `Effect`: `need`, `bond`, `hearts` (with
 
 ## 8. Items, catalog, placement, paint
 
-- **`ItemDef`:** `category`, `styles: StyleTag[]` (`goth`, `cottage`, `neon`, `gym`, `cat`, `plant`, `retro`), free `tags`, `price` (selling always refunds this in full), `cosy` value, and `mount` (`floor`, `rug`, `wall`, `surface`, `fixed`). The footprint is given at rotation 0, and the item lists its allowed `rotations`. Sprites are keyed per rotation, with `flipFor` reusing a mirrored one. It also has `blocksPath`, `topLayer` (what cats can jump onto), `slots`, `surfaceSlots` (where small decor sits), `light`, initial `flags`, `unlock` (a `Condition`), `unlockHint`, `hidden` and `mvp`.
-- **Wall items** hang on a back-wall run of `footprint.w` tiles. **Surface items** sit in a parent's `surfaceSlots` (`MountRef.surface` holds the parent entity and slot index).
+- **`ItemDef`** (home.md §4.4): `category`, `styles: StyleTag[]` (`goth`, `cottage`, `neon`, `gym`, `cat`, `plant`, `retro`: home.md's capitalised names in lower case), free `tags` (function tags like `perch`, `box`, `light`, `solitude`, and `room.<RoomKind>` for the catalog room filter), `price` (the home.md base price), `cosy` value, and `placement` (home.md §1.1 codes). The footprint is given at rotation 0, and `rotations` lists the allowed ones (home.md orientations `4`, `2`, `1` are `[0,1,2,3]`, `[0,1]`, `[0]`: `rotationsFor`). Rotation 0 faces down (south), 1 left, 2 up, 3 right. Sprites are keyed per rotation, with `flipFor` reusing a mirrored one. It also has `blocksPath`, `topLayer` (what cats can jump onto), `slots`, `surfaceSlots` (home.md "slots" column), `interactions` (sim.md ids), `light`, initial `flags`, `unlock` (an `UnlockCode`), `unlockHint`, `maxCopies`, `hidden` (not in the catalog: fixtures), `uncounted` (left out of completion and R(d)) and `mvp`. Fixtures use `unlock: 'fixture'` and their "value price" as `cosy` input.
+- **Unlock codes.** `start`, `fixture`, `day:N` (Pickle's new stock), `asp.<key>.<tier>` (home.md `asp:homemaker:3` is `asp.home.3`), `bond:<cat>:<level>`, `poe:N` (trinkets), `secret:<id>` (flag `secret.<id>`). Unlocking makes an item buyable and gives no copy, except `poe:` and `secret:`, which arrive as a free first copy (`unlockGivesFreeCopy`). Aspiration gifts, sticker gifts and housewarming gifts are `grantItem` effects, which always give free copies.
+- **Prices and refunds.** Shop price is `priceOf(item.price, ECONOMY)`: base × `priceScale`, to the nearest `priceStep` (5), at least 5, and 0 stays 0. A bought copy refunds its shop price in full. A free copy (`PlaceableC.origin === 'free'`, or `inventory.storedFree`) shows "Put away" and never refunds. Placing from storage uses free copies first.
+- **Wall items** hang on a back-wall run of `footprint.w` tiles. **Surface items** sit in a parent's `surfaceSlots` (`MountRef.surface` holds the parent entity and slot index). **Window items** sit in a window tile. `mountOf(placement)` gives the `Mount`.
 - **`PlacementRequest`** holds the item, tile, rotation, mount, and an optional `moving` entity. `World.check` returns `PlacementCheck`, either `{ ok: true, tiles }` or `{ ok: false, reason: PlacementError, tiles }`. The reasons cover bounds, blocking, door and path connectivity, wall or surface needs, rotation, ownership and affordability.
 - **Paint.** `PaintDef` is per surface (`wall` or `floor`) with a pattern (`plain`, `stripes`, `checks`, `wood`, `tiles`, `wallpaper`), colours, styles, price and cosy. Each room stores its `wallPaint` and `floorPaint`.
 - **Set bonuses.** `SetBonusDef.requires` lists style, tag or item counts in one room, and gives a bonus to `cosy`.
+- **Cosy readings.** Each `RoomState` holds `cosyRated` (Build meter, milestones, housewarming) and `cosyLive` (real time and lights, cats, mess: Ellie's Cosy need). Only `scored` rooms count; Home Cosy is the `area`-weighted mean of `cosyRated`.
 - **Catalog.** `CatalogCategoryDef` groups `ItemCategory`s under a label and an icon. Locked items show their `unlockHint`.
 
 ## 9. World (build-mode-dev)
@@ -189,14 +219,15 @@ Build mode keeps its own undo/redo history (up to `LIMITS.buildUndo` steps) and 
 - **Ellie** has `energy`, `hunger`, `fun`, `fitness`, `calm` and `cosy`. Cosy does not decay: it is the current room's score.
 - **Cats** share `food`, `play`, `affection` and `nap`, plus one personality need each: George `royalty`, Salem `chaos`, Shadow `solitude`, Peaches `vibes` (`PERSONALITY_NEED`).
 - **`NeedSpec`** (per need, in `SimTuning.needs`): `start`, `decayPerHour`, `modifiers` (each a `Condition` with a multiplier or an added amount per hour), `lowAt`, the response `curve` and the scorer `gain`.
-- **Mood** is the weighted mean of the needs plus active `Feeling`s. `moodBandOf` maps it onto `mopey`, `low`, `okay`, `good`, `great`. `lerpRange(tuning.mood.heartsMultiplier, mood)` gives the Hearts multiplier (×0.8 to ×1.5), and `walkMultiplier` slows Ellie when she is mopey. Nothing else ever happens at low needs.
-- **Bond** runs 0..100. `bondLevelOf(value, tuning.bond.thresholds)` gives the level, 0..4. `CatDef.bondRate` lets Shadow warm up slowly.
+- **Floors.** `NEED_FLOORS`: Fitness 20, every cat need 10, the rest 0. Use `clampNeed`; nothing pushes a need below its floor.
+- **Mood** is sim.md §3.1: weighted needs, pulled toward the lowest daily need, plus active moodlets (`Feeling`s, positive only, sum capped by `mood.moodletCap`, at most `LIMITS.moodlets`). `moodStepOf(mood)` gives the step 0..5 and `heartsMultiplierOf(mood)` the stepped multiplier (×0.8, 0.9, 1.0, 1.15, 1.3, 1.5). `moodBandOf(mood)` gives the display band (`mopey` to `great`). `mood.walk` slows Ellie when she is low. Nothing else ever happens at low needs.
+- **Bond** runs 0..100. `bondLevelOf(value, tuning.bond.thresholds)` gives the level, 0..4, and levels never drop. Daily soft cap and the over-handling loss are in `tuning.bond`, today's totals in `state.daily`. `CatDef.bondRate` lets Shadow warm up slowly.
 
 ## 11. Wishes, aspirations, Hearts, mail, stickers
 
 - **Wishes.** At `wishes.rollMinute` each day, `perDay` wishes are drawn, weighted by `weight`, from those whose `offerIf` holds. A wish completes when its `goal` holds (counting `statsToday` since the roll). It then pays its `rewards` and emits `wish.completed`.
-- **Aspirations.** Each has 4 `tiers` (`AspirationTierDef`), each with a `goal`, `rewards` and a title. `aspirations.tiers[id]` holds the number of tiers done.
-- **Hearts** are earned through `hearts` effects with a `HeartsReason`. Those marked `moodScaled` use the mood multiplier. Spending happens in `catalog.order` and `build.place` (`source: 'buy'`). Selling refunds the full price.
+- **Aspirations.** Ids are `ASPIRATION_IDS` (`asp.hyrox`, `asp.royalty`, `asp.home`, `asp.collect`). Each has 4 `tiers` (`AspirationTierDef`), each with a `goal`, non-Hearts `rewards`, an optional free `gift` item and a title key `asp.<key>.tier.<n>` (goal text `.goal`). `aspirations.tiers[id]` holds the number of tiers done. A tier's id `asp.<key>.<n>` is also the unlock code for its items.
+- **Hearts** are earned through `hearts` effects with a `HeartsReason`, plus the sources the sim pays straight from `ECONOMY` (trickle, minigames, bond level-ups, aspiration tiers). Mood-scaled sources (wishes, races, minigames, the trickle: FROZEN 1) use `scaleHearts(base, mood)`; the rest are flat. Every earning adds to `hearts.earnedTotal`; refunds do not. Spending happens in `catalog.order` and `build.place` (`source: 'buy'`). Selling a bought copy refunds its price in full.
 - **Mail.** `MailDef.sendIf` is checked each morning, and a mail goes out at most once unless it is `repeatable`. Attachments are `Effect[]`, claimed on read. Personal mail comes from `PERSONAL.mail` by real date (`clock.wallNow()`) and is literal text, not string keys.
 - **Stickers and secrets.** `StickerDef.goal` is a `Condition`, and `secret: true` shows "???" until the sticker is earned. Bruce's sightings are counted per `LotSpot` in `visitors.bruceSpotted`.
 - **Onboarding** is a list of `OnboardingStepDef`, each with a speaker, lines, an optional `waitFor` condition and a highlight. It is driven by `onboarding.next` and `onboarding.skip`.
@@ -215,7 +246,7 @@ interface Activity {
 
 - **Context.** `ActivityContext` gives a private `rng` (forked, so results are deterministic), `params`, a read-only `state`, `content`, the `actor`, `strings`, `sprites` (null in tests), and the `cue`, `say` and `particles` callbacks.
 - **Input.** `ActivityInput` is semantic: `button` (`primary`, `secondary`, `up`, `down`, `left`, `right`, `cancel`) plus `pointer` and `pointerMove` in logical canvas pixels. The engine maps keys, clicks and taps onto it.
-- **Result.** `ActivityResult` holds `completed`, `skipped`, `score` 0..1, `grade`, `timeMs`, `effects: Effect[]` (needs, `skillXp`, `record`, hearts, feelings, stats), `progress: ProgressEvent[]`, and an optional `save` (stored in `activitySaves[id]`). The sim applies it when it receives `activity.finish`.
+- **Result.** `ActivityResult` holds `completed`, `skipped`, `auto`, `score` 0..1, `misses`, `grade`, `timeMs`, `effects: Effect[]` (needs at factor 1, `skillXp`, `record`, moodlets, stats; never `hearts`), `progress: ProgressEvent[]`, and an optional `save` (stored in `activitySaves[id]`). The sim applies it when it receives `activity.finish`: `resultScore(r)` (PASS_SCORE 0.5 when skipped) drives Hearts, XP, race time and wishes; `needFactor(r)` (0.8 skipped, 1.0 auto, else 0.8 + 0.4 s) scales positive need and Fitness effects; `canSetPb(r)` guards records.
 - **Registration.** `ActivityDef { id, title, instructions, family, create(params) }` is registered with `registerActivity`. An interaction with `duration.kind === 'activity'` triggers the `activity.request` sim event.
 
 ## 13. Player actions and dispatch
@@ -234,7 +265,7 @@ The core sim handles the actions it owns. Plugins handle the rest through `SimPl
 
 There are two layers:
 
-1. **`SimEvent`** is pure data from `sim.onEvent`: `cue`, `say`, `thought`, `emote`, `particles`, `toast`, `hearts`, `progress`, `interaction.start`/`interaction.end`, `activity.request`, `wish.rolled`/`wish.completed`, `aspiration.tier`, `sticker`, `unlock`, `mail.arrived`, `delivery`, `mood.band`, `bond.level`, `time.hour`/`time.day`, `mode`, `world.changed`, `onboarding.step`, `housewarming`.
+1. **`SimEvent`** is pure data from `sim.onEvent`: `cue`, `say`, `thought`, `emote`, `particles`, `toast`, `hearts`, `progress`, `interaction.start`/`interaction.end`, `activity.request`, `wish.rolled`/`wish.completed`, `aspiration.tier`, `sticker`, `unlock`, `mail.arrived`, `delivery`, `mood.band` (sim.md `moodBandChanged`, with `band` and `step`), `bond.level` (sim.md `bondLevelUp`), `visitor.arrived`/`visitor.left`, `bruce.spotted`, `quirk`, `request.started`/`request.ended`, `time.hour`/`time.day`, `mode`, `world.changed`, `onboarding.step`, `housewarming`.
 2. **`EpEvents`** is the app bus (`createEventBus<EpEvents>()`). It carries:
    - `sim.event`
    - `world.changed` (`WorldChanged`: reason, revision, rooms, entities)
@@ -246,6 +277,8 @@ There are two layers:
    - `ui.toast`, `ui.panel`, `ui.menu`
    - `activity.started`, `activity.ended`
    - `settings.changed`, `save.result`, `app.visibility`, `photo.captured`
+   - `app.request` and `photo.request` (UI to app)
+   - `activity.skippable` (app to UI), `activity.skip` and `activity.leave` (UI to app)
 
 Autosave listens for `sim.event` `time.hour`, `mode.changed` and `app.visibility`.
 
@@ -257,13 +290,14 @@ Autosave listens for `sim.event` `time.hour`, `mode.changed` and `app.visibility
 - `open(panel, { tab })`, `close`, `isOpen`
 - `toast(ToastSpec)`
 - `showMenu(InteractionMenuSpec)` and `hideMenu()`. The menu's options come from `sim.menuFor(target, tile)` as `MenuOption[]`.
-- `kit` and `destroy`
+- `kit`, `region(id)` (UI-owned frames `buildTop`, `buildBar`, `catalog` that build-mode-dev fills) and `destroy`
+- `UiDeps.loadPhoto(meta)` returns an album PNG data URL or null
 
 `PanelId` and `JournalTab` list the panels and journal tabs. The `UiKit` (`panel`, `button`, `tabs`, `slider`, `toggle`, `card`, `meter`, `tooltip`) returns `UiComponent`s with `el` and `destroy()`, and build-mode-dev builds the catalog with it. All text arrives as a `StringKey` plus optional `StringVars`.
 
 ## 16. Audio
 
-`AudioCue` is the shared union: simple cue names (UI, mode, build, home things, gym and race, cats, visitors), plus cues with a payload: `meow`, `purr`, `mrrp`, `chirp`, `huff` (each with a `Meower`), `blip` (`BlipVoice`), `step` (`FloorSound`), `gym.stroke` (`HyroxStation`), `gym.hit` (`HitGrade`) and `race.crowd` (intensity). `src/audio` keeps its own local `Cue` union, which must stay a superset of `AudioCue`, and maps the core names onto it. `MusicContext` (mode, activity, room, phase, radio, weather, race day, housewarming) drives the music state machine. `AudioApi` provides `unlock()` (on the first gesture), `play`, `setMusic`, `duck`, `applySettings`, `levels` and `dispose`.
+`AudioCue` is the shared union: simple cue names (UI, mode, build including `build.wall` and `build.floor`, home things, gym and race including `race.horn`, cats, visitors), plus cues with a payload: `meow`, `purr`, `mrrp`, `chirp`, `huff` (each with a `Meower`), `blip` (`BlipVoice`), `step` (`FloorSound`), `gym.stroke` (`HyroxStation`), `gym.hit` (`HitGrade`) and `race.crowd` (intensity). `src/audio` keeps its own local `Cue` union, which must stay a superset of `AudioCue`, and maps the core names onto it. `MusicContext` (mode, activity, room, phase, radio, weather, race day, housewarming) drives the music state machine. `AudioApi` provides `unlock()` (on the first gesture), `play`, `setMusic`, `duck`, `applySettings`, `levels` and `dispose`.
 
 ## 17. Strings
 
@@ -308,15 +342,16 @@ Each domain file in `src/content/strings/` exports a `Record<string, string>` wi
 | `strings.ts` | `formatString`, `mergeStringTables`, `createStringLookup` |
 | `hash.ts` | `stableStringify`, `hashString`, `hashState`, `findNonJson` |
 | `geometry.ts` | `rotateSize`, `rotateOffset`, `rotateFacing`, `nextRotation`, `footprintTiles`, `inBounds`, `tileIndex`, `tileFromIndex`, `tileCenter`, `tileOf`, `sameTile`, `octile`, `facingFromDelta`, `spriteDirFor`, `spriteFor` |
-| `math.ts` | `clamp`, `clamp100`, `lerp`, `lerpRange`, `bondLevelOf`, `moodBandOf`, `bandAtLeast`, `phaseAt`, `weekdayOf`, `minuteInRange`, `hourOf`, `clockText`, `effectiveSteps` |
+| `math.ts` | `clamp`, `clamp100`, `lerp`, `lerpRange`, `bondLevelOf`, `MOOD_BAND_FLOORS`, `moodBandOf`, `bandAtLeast`, `phaseAt`, `weekdayOf`, `minuteInRange`, `hourOf`, `clockText`, `effectiveSteps`, `darknessAt` |
+| `rules.ts` | `roundHalfUp`, `moodStepOf`, `heartsMultiplierOf`, `scaleHearts`, `trickleBase`, `needFloor`, `clampNeed`, `resultScore`, `needFactor`, `canSetPb`, `priceOf`, `parseUnlockCode`, `isUnlockCode`, `unlockGivesFreeCopy`, `secretFlag`, `rotationsFor`, `mountOf`, `knownFlag` |
 | `content.ts` | `buildContentIndex`, `validateContent` |
-| `state.ts` | `createEmptySimState`, `emptyLot`, `emptyComponentStore`, `componentKeys`, `allocEntity`, `getC`, `setC`, `hasC`, `removeC`, `removeEntity`, `entitiesWith`, `cloneState`, `notImplemented` |
+| `state.ts` | `createEmptySimState`, `emptyDaily`, `emptyLot`, `emptyComponentStore`, `componentKeys`, `allocEntity`, `getC`, `setC`, `hasC`, `removeC`, `removeEntity`, `entitiesWith`, `cloneState`, `notImplemented` |
 
 ## 22. Open points for the designers' specs
 
 These are typed generically, so the specs can fill them in without a contract change:
 
-- the numbers in `SimTuning` (anything new goes in `tuning.extra` until it earns a field)
+- the numbers in `SimTuning` (anything new goes in `tuning.extra` until it earns a field) and `EconomyTable`
 - the items, paints and set bonuses
 - the lot rows and legend
 - the `LotSpot` positions
