@@ -630,7 +630,7 @@ Band names appear only as printed text on the sleeve. No logos, art, lyrics or s
 - **Miss:** a downbeat with no press within 180 ms.
 - **Peaches joins** if she is in the room and her bond is level 2 or more: from combo 8 she headbangs too (`ev.peaches_headbang`). This sets `stk.peaches_headbang`.
 
-Both minigames use the shared Hearts and XP-free rule (no skill). Counters: `danceCount`, `headbangCount` (3 headbangs unlocks `out.band_tee`), `recordMinutes` (3 game hours unlocks `out.vinyl_clip`).
+Both minigames pay the shared Hearts formula. They give no skill XP. Counters: `danceCount`, `headbangCount` (3 headbangs unlocks `out.band_tee`), `recordMinutes` (3 game hours unlocks `out.vinyl_clip`).
 
 ### 5.2 Photo mode (P)
 
@@ -742,7 +742,7 @@ Reading, the bath, sleep and naps are `sim.md` interactions. play.md only needs 
 - Each cat reacts to each new outfit piece once (`outfit.react.<cat>.<outfit>` falls back to `outfit.react.<cat>.generic.<n>`).
 - Wearing a non-default piece sets the `outfit` photo tag. Changing outfit counts for `wish.wear_outfit`.
 
-### 6.2 Outfits (36 rows: 20 MVP, 36 full)
+### 6.2 Outfits (36 rows: 21 MVP, 36 full)
 
 Game 1 items are marked G1.
 
@@ -785,7 +785,7 @@ Game 1 items are marked G1.
 | 35 | `out.cat_slippers` | feet | `out.cat_slippers.name` "Cat slippers" | Aspiration Cat Royalty tier 4 | Y |
 | 36 | `out.striped_socks` | feet | `out.striped_socks.name` "Striped socks" | Poe trade (trade table in `home.md`) | F |
 
-MVP count: 20 (target 15). Full count: 36 (target 30). Start outfits: 6 (catears, beanie, spike choker, black vest, boots, plus empty slots).
+MVP count: 21 (target 15). Full count: 36 (target 30). Start outfits: 5 (cat ears, beanie, spiked choker, black vest, boots).
 
 **Band tee design note (original):** a black tee with a cracked moon and a moth print, and a spiky, unreadable "logo" scrawl. It must not resemble any real band's logo or artwork, and it carries no readable band name.
 
@@ -801,4 +801,180 @@ The green streaks are the default. Other colours change only the streak pixels.
 | `streak.crimson` | Deep red | 5 game hours of the Heavy station |
 | `streak.frost` | Pale ice blue | `const.heart` seen |
 | `streak.peach` | Soft peach | Housewarming |
+
+---
+
+## 7. Progression
+
+### 7.1 Daily wishes: rules
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| When | 3 wishes are rolled when Ellie first wakes after 05:00, or at 07:00 if she is already awake. | BRIEF section 11. |
+| Lifetime | A wish stays until it is completed or until the next morning's roll. Unfinished wishes fade quietly. No message, no cost. | Never punish. |
+| Category cap | At most 1 wish per category, and at most 2 cat wishes (`george`, `salem`, `shadow`, `peaches`, `cats`) per day. | Variety. |
+| Easy wish | At least 1 of the 3 pays 15 Hearts (an easy one). | Ten minutes should already feel satisfying. |
+| Cooldown | A wish completed in the last 2 game days has weight 0. | |
+| Weights | Base 1. x2 if its category was not offered in the last 2 days. x3 if it has never been completed (small discoveries). | |
+| Context | A wish is only eligible when its context rule is true at roll time, and it must be completable in the rest of that day (time windows checked against the clock). | Never offer the impossible. |
+| Day 1 | Fixed set at the end of onboarding: `wish.bow_george`, `wish.coffee_rusk_grass`, `wish.play_heavy`. | Her favourite things first. |
+| Saturday | `wish.race_today` takes one slot (outside the caps) whenever it is Saturday. | Race day. |
+| Swap | Once per game day she may swap one wish for another eligible one (`wish.swap`). Free. | Choice, not chore. |
+| Reward | On completion: Hearts x moodMult (rounded), and a mood boost: a moodlet `moodlet.wish` of the row's size for 4 game hours. Moodlets stack to +20 at most. | |
+| Full set | All 3 done in one game day: +15 Hearts x moodMult and `wishesFullSets += 1`. | |
+| Toast | `wish.done` "Wish granted: {title}" with a sparkle and the cats' reaction (`ev.wish_done`). | |
+| Journal | `journal.wishes` lists today's wishes, the swap button, and a count of all wishes ever completed. | |
+| Free will | Free will gives a small utility bonus (x1.2) to interactions that would complete an open wish. | Helps the soak and a hands-off player. |
+
+**Sizes:** easy = 15 Hearts and mood +5; medium = 25 Hearts and +8; big = 40 Hearts and +12.
+
+### 7.2 Condition and context language
+
+Wave 2 encodes conditions as data. "Today" means since the wish was offered.
+
+| Form | Meaning |
+| --- | --- |
+| `done(X)` | Interaction or activity X completed (a Skip pass counts). Optional filters in brackets. |
+| `score(X) >= v` | Activity X finished with score at least v. Skips do not count for score conditions. |
+| `photo(tags)` | A photo taken with all of these tags. |
+| `observe(cat, state)` | That cat is in that state while Ellie is awake and in the same room or within 8 tiles. |
+| `near(cat, r, m)` | That cat stays within r tiles of Ellie for m game minutes in a row. |
+| `event(e)` | The event fired. |
+| `count(c) +n` | Counter c rose by n today. |
+| Context `own(item)` | At least one placed or stored copy. |
+| Context `bond(cat) >= L` | Bond level L (0 to 4, levels from `sim.md`). |
+| Context `afford(tag)` | At least one unlocked, unowned catalog item with that tag costs no more than her current Hearts. |
+
+### 7.3 The wishes pool (60 rows: 30 MVP)
+
+Title keys are `wish.<id>.title`. Every wish also has `wish.<id>.done` for a one-line cat reaction (optional, falls back to `wish.done.generic.<n>`).
+
+| # | Id | Cat. | Title (placeholder) | Condition | Context | Hearts | Mood | MVP |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `wish.bow_george` | george | "Bow to George" | `done(cat.bow)` | always | 15 | +5 | Y |
+| 2 | `wish.serve_george_first` | george | "Serve George first" | George's bowl is filled first in a feeding round before 11:00 | rolled before 10:00 | 15 | +5 | F |
+| 3 | `wish.george_approves` | george | "Get George to approve something new" | `event(ev.george_verdict)` with verdict approve, on an item placed today | `afford(any)` or an item in storage | 25 | +8 | Y |
+| 4 | `wish.george_perch` | george | "Give George a high perch" | `observe(george, nap)` on layer 2 for 30 game min | `own(any perch)` | 25 | +8 | F |
+| 5 | `wish.george_pillow` | george | "Let George have the pillow" | at 03:00 George is on her pillow while she sleeps | always | 15 | +5 | F |
+| 6 | `wish.laser_salem` | salem | "Let Salem win at laser pointer" | `done(cat.play_laser)[salem, salemWins]` | always (`laser_pointer` is a start item) | 15 | +5 | Y |
+| 7 | `wish.ham_salem` | salem | "Give Salem some ham" | `done(cat.treat_ham)` | always | 15 | +5 | Y |
+| 8 | `wish.salem_box` | salem | "Find Salem in a box" | `observe(salem, in_box)` | a box exists in the house | 15 | +5 | Y |
+| 9 | `wish.salem_zoomies` | salem | "Watch Salem's zoomies" | `observe(salem, zoomies)` | always | 15 | +5 | F |
+| 10 | `wish.feather_salem` | salem | "Feather wand time with Salem" | `done(cat.play_feather)[salem]` | `own(feather_wand)` | 15 | +5 | F |
+| 11 | `wish.shadow_near` | shadow | "Get Shadow to sit near you" | `near(shadow, 2, 10)` while Ellie is seated | always | 25 | +8 | Y |
+| 12 | `wish.shadow_spot` | shadow | "Find Shadow's hiding spot" | `observe(shadow, nap)` in a solitude spot (under the bed, on the wardrobe, in the closet, or any item tagged `solitude`) | always | 15 | +5 | F |
+| 13 | `wish.shadow_lap` | shadow | "Read with Shadow on your lap" | `read.book` with `shadowOnLap` for 10 game min | `bond(shadow) >= 3` | 40 | +12 | F |
+| 14 | `wish.shadow_pet` | shadow | "Pet Shadow (he stays)" | `done(cat.pet)[shadow]` completes without him leaving | `bond(shadow) >= 1` | 15 | +5 | F |
+| 15 | `wish.peaches_sunbeam` | peaches | "Find Peaches in a sunbeam" | `observe(peaches, sunbeam)` | rolled before 15:00, no rain today | 15 | +5 | Y |
+| 16 | `wish.peaches_music` | peaches | "Put music on for Peaches" | Peaches in the room with the playing record player for 10 game min | always | 15 | +5 | Y |
+| 17 | `wish.peaches_brush` | peaches | "Brush Peaches" | `done(cat.brush)[peaches]` | `own(cat_brush)` | 15 | +5 | F |
+| 18 | `wish.peaches_headbang` | peaches | "Headbang with Peaches" | `event(ev.peaches_headbang)` | `bond(peaches) >= 2` | 40 | +12 | F |
+| 19 | `wish.feed_all` | cats | "Feed all four cats" | each cat eats from a bowl she filled today | always | 15 | +5 | Y |
+| 20 | `wish.photo_all_four` | cats | "Take a photo of all four cats" | `photo(all_four)` | day >= 2 | 40 | +12 | Y |
+| 21 | `wish.cats_one_room` | cats | "All four cats in one room" | all four cats in Ellie's room at once | day >= 3 | 25 | +8 | F |
+| 22 | `wish.play_each` | cats | "Play with every cat today" | a `cat.play_*` with each of the four cats | `own(laser_pointer)` | 40 | +12 | F |
+| 23 | `wish.cat_gift` | cats | "Get the cats something new" | order an item with style tag Cat | `afford(Cat)` | 25 | +8 | F |
+| 24 | `wish.make_sushi` | food | "Make vegetarian sushi" | `done(act.sushi)` | always | 25 | +8 | Y |
+| 25 | `wish.sushi_great` | food | "Make a Great sushi plate" | `score(act.sushi) >= 0.70` | `sushiMade >= 1` | 40 | +12 | F |
+| 26 | `wish.sushi_inari` | food | "Sushi with inari" | `done(act.sushi)[ing.inari]` | `sushiMade >= 1` | 15 | +5 | F |
+| 27 | `wish.coffee_rusk_grass` | food | "Coffee and a rusk in the grass" | `done(act.rusk_dunk)` | always | 25 | +8 | Y |
+| 28 | `wish.perfect_dunk` | food | "Get a perfect dunk" | 1 perfect dunk (not from a skip) | `ritualsDone >= 1` | 25 | +8 | Y |
+| 29 | `wish.morning_coffee` | food | "Coffee before nine" | a coffee finished before 09:00 | rolled before 08:30 | 15 | +5 | F |
+| 30 | `wish.latte_art` | food | "Pour some latte art" | `score(act.coffee_machine) >= 0.70` with milk | `own(coffee_machine)` | 25 | +8 | F |
+| 31 | `wish.eat_table` | food | "Eat at the table" | `eat.sushi` or toast eaten seated at a table | always (start table) | 15 | +5 | F |
+| 32 | `wish.toast` | food | "Toast for breakfast" | toast eaten before 11:00 | rolled before 10:00 | 15 | +5 | F |
+| 33 | `wish.train_any` | hyrox | "Do a training session" | `done(act.train.*)` | always | 15 | +5 | Y |
+| 34 | `wish.train_two` | hyrox | "Train two different stations" | `done(act.train.*)` on 2 different stations | `own(any station item)` | 25 | +8 | F |
+| 35 | `wish.station_pb` | hyrox | "Beat a station PB" | `event(ev.train_pb)` | at least 1 training PB stored | 25 | +8 | Y |
+| 36 | `wish.go_run` | hyrox | "Go for a run" | `done(act.run_outside)` or `done(act.run_treadmill)` | always | 15 | +5 | Y |
+| 37 | `wish.race_today` | hyrox | "Race today" | finish `act.race` | Saturday | 40 | +12 | Y |
+| 38 | `wish.skill_up` | hyrox | "Level up a station" | any station skill goes up a level | some station skill < 10 | 25 | +8 | F |
+| 39 | `wish.wallballs_great` | hyrox | "Great wall balls" | `score(act.train.wallballs) >= 0.70` | `own(wallball_target)` | 25 | +8 | F |
+| 40 | `wish.play_heavy` | music | "Play something heavy" | `station.heavy` plays for 10 game min | always | 15 | +5 | Y |
+| 41 | `wish.headbang` | music | "Headbang to a record" | `done(act.headbang)` | always | 15 | +5 | Y |
+| 42 | `wish.dance_cosy` | music | "Dance to the Cosy station" | `done(act.dance)[station.cosy]` | always | 15 | +5 | F |
+| 43 | `wish.play_critterbound` | games | "Play Critterbound" | a Critterbound session of 60 real s or more | always | 15 | +5 | Y |
+| 44 | `wish.befriend_critter` | games | "Befriend a new critter" | a new crew member | starter chosen and crew < 6 | 25 | +8 | Y |
+| 45 | `wish.win_spar` | games | "Win a spar" | beat a wanderer | `wanderersBeaten < 3` | 25 | +8 | F |
+| 46 | `wish.handheld_bed` | games | "Play the handheld in bed" | Critterbound on the handheld in bed | `own(handheld)` | 15 | +5 | F |
+| 47 | `wish.photo_cat` | photo | "Take a photo of a cat" | `photo(any cat)` | always | 15 | +5 | Y |
+| 48 | `wish.photo_night` | photo | "A night photo" | `photo(night)` with the night filter | always | 15 | +5 | F |
+| 49 | `wish.photo_outfit` | photo | "A selfie in a new look" | `photo(ellie, outfit)` | owns a non-default outfit piece | 15 | +5 | F |
+| 50 | `wish.order_something` | home | "Order something from Pickle" | an order placed | `afford(any)` | 15 | +5 | Y |
+| 51 | `wish.cosy_up` | home | "Make a room cosier" | any room's Cosy is 10 above its value when the wish was rolled | some room below 90 | 25 | +8 | Y |
+| 52 | `wish.plant` | home | "Put a plant somewhere new" | place an item tagged Plant | a Plant item in storage, or `afford(Plant)` | 15 | +5 | F |
+| 53 | `wish.lamps_on` | home | "Lamps on after dark" | 3 or more lights on after 20:00 while she is awake | `own` 3 lights | 15 | +5 | F |
+| 54 | `wish.stargaze` | evening | "Watch for shooting stars" | `done(act.stargaze)` | no rain tonight (weather is rolled each morning) | 25 | +8 | Y |
+| 55 | `wish.lanterns` | evening | "Light the garden lanterns" | `done(lantern.light)` | `own(garden_lanterns)` | 15 | +5 | Y |
+| 56 | `wish.bath` | evening | "A long bath" | `done(bath.soak)` | always | 15 | +5 | Y |
+| 57 | `wish.read` | evening | "Read a chapter" | `read.book` for 30 game min | always | 15 | +5 | F |
+| 58 | `wish.wear_outfit` | style | "Wear something different" | any outfit slot changed | owns 2 or more pieces in some slot | 15 | +5 | Y |
+| 59 | `wish.spot_bruce` | visitors | "Spot Bruce" | `done(bruce.spot)` | day >= 3 | 25 | +8 | Y |
+| 60 | `wish.poe_trade` | visitors | "Trade a trinket with Poe" | `done(poe.trade)` | holding at least 1 Shiny Trinket | 25 | +8 | Y |
+
+Counts: 60 rows, 30 MVP (rows 1, 3, 6, 7, 8, 11, 15, 16, 19, 20, 24, 27, 28, 33, 35, 36, 37, 40, 41, 43, 44, 47, 50, 51, 54, 55, 56, 58, 59, 60). MVP covers every category except `games` full rows and gives her favourites (sushi, coffee and rusk, heavy music, Hyrox, the cats, gaming) at least one MVP wish each.
+
+### 7.4 Aspirations
+
+Four aspirations, each with 4 tiers. Tiers complete in order; progress toward a later tier is tracked from the start but only pays once the tier before it is done. MVP ships Hyrox Hero, Cat Royalty and Home Maker (3 x 4). Collector is full scope.
+
+Each tier gives:
+
+- **Hearts:** tier 1 = 50, tier 2 = 100, tier 3 = 175, tier 4 = 275. Not multiplied by mood.
+- **Gift item:** delivered free by Pickle the next morning (or at once in Build mode), and unlocked for re-buying in the catalog. Gift items can be put away but not sold for Hearts (see 13).
+- **Unlock item (full scope only):** added to the catalog to buy.
+- Sometimes an **outfit**, and at tier 4 a **title** (`title.<id>`), shown in the journal header and used by the cats now and then.
+- A toast `asp.tier_done`, a short fanfare `asp.fanfare`, and every present cat reacts (`ev.aspiration_tier`).
+
+Bond levels below are `sim.md`'s levels 0 to 4 (top level 4).
+
+#### Hyrox Hero (`asp.hyrox`, MVP)
+
+| Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `asp.hyrox.1` | `asp.hyrox.1.name` "Warm-up" | 5 training sessions completed (any stations, passes count) | `pb_board` (wall PB board) | `kettlebell_rack` | `out.sweatband` |
+| 2 | `asp.hyrox.2` | `asp.hyrox.2.name` "Race Day" | Finish 1 race | `medal_hooks` (wall medal display) | `foam_roller` | `out.race_kit` |
+| 3 | `asp.hyrox.3` | `asp.hyrox.3.name` "Target Time" | Finish a race in under 1:30:00 | `trophy_shelf` | `recovery_beanbag` | `out.trainers` |
+| 4 | `asp.hyrox.4` | `asp.hyrox.4.name` "PB Streak" | After tier 3: set a new overall PB in 3 races, and have every station skill at 5 or more | `champion_banner` | `pro_treadmill` | `out.gym_hoodie`, `title.hyrox_hero` |
+
+Reference pace: tier 1 on day 2, tier 2 on day 6 (first Saturday), tier 3 around day 13, tier 4 around day 24.
+
+#### Cat Royalty (`asp.cats`, MVP)
+
+| Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `asp.cats.1` | `asp.cats.1.name` "Cat Friend" | Any one cat at bond level 2 | `cat_bed_round` | `cat_scratcher_post` | `out.paw_clip` |
+| 2 | `asp.cats.2` | `asp.cats.2.name` "Court of Four" | All four cats at bond level 2 or more at the same time | `cat_tree_tall` | `cat_tunnel` | none |
+| 3 | `asp.cats.3` | `asp.cats.3.name` "Royal Favour" | George has knighted her (`knighted`), and Shadow has sat on her lap at least once (`shadowOnLap` ever) | `royal_cushion` (George's throne cushion) | `window_perch` | `out.bell_choker` |
+| 4 | `asp.cats.4` | `asp.cats.4.name` "Four on the Bed" | All four cats at bond level 4, and on one night all four are on her bed at the 03:00 check while she sleeps | `four_cats_portrait` | `canopy_cat_bed` | `out.cat_slippers`, `title.cat_royalty` |
+
+Reference pace: tier 1 day 3, tier 2 day 9, tier 3 day 17, tier 4 day 25. For tier 4, `cat-ai` must give every cat at bond level 4 a strong pull to Ellie's bed at night (see 13).
+
+#### Home Maker (`asp.home`, MVP)
+
+Rooms counted: bedroom, living room, kitchen-diner, bathroom, spare room, back garden (6). The front step is not counted.
+
+| Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `asp.home.1` | `asp.home.1.name` "Settling In" | Any room at Cosy 40 or more | `pothos_plant` | `bookshelf_tall` | none |
+| 2 | `asp.home.2` | `asp.home.2.name` "A Matching Set" | Any room has an active set bonus (`home.md` sets) | `string_lights` | `velvet_armchair` | `out.cosy_jumper` |
+| 3 | `asp.home.3` | `asp.home.3.name` "Home Sweet Home" | All 6 rooms at Cosy 45 or more, with an average of 60 or more, at the same time | `lantern_arch` | `garden_swing` | none. Also makes the housewarming available (section 12). |
+| 4 | `asp.home.4` | `asp.home.4.name` "Dream Place" | 3 different set bonuses active at once, and one room at Cosy 90 or more | `stained_glass_lamp` (or `attic_ladder` if the stretch attic exists) | `chandelier_goth` | `out.dungarees`, `title.home_maker` |
+
+Reference pace: tier 1 day 2, tier 2 day 5, tier 3 day 11, tier 4 day 22.
+
+#### Collector (`asp.collect`, full scope)
+
+"Catalog items owned" counts distinct catalog items with at least one copy owned (placed or stored), including gifts and trades. Items excluded from the catalog count: this aspiration's tier 4 gift.
+
+| Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `asp.collect.1` | `asp.collect.1.name` "First Finds" | 1 Poe trade and 5 photos taken | `curio_shelf` | `glass_cloche` | none |
+| 2 | `asp.collect.2` | `asp.collect.2.name` "Curator" | 50 % of catalog items owned, and 20 photos taken | `photo_wall_frames` | `display_cabinet` | none |
+| 3 | `asp.collect.3` | `asp.collect.3.name` "Magpie's Rival" | 8 Poe trades and 15 stickers | `gilded_poe_perch` | `map_of_stars_rug` | none |
+| 4 | `asp.collect.4` | `asp.collect.4.name` "The Whole Collection" | 95 % of catalog items owned, 50 photos taken, and all 6 critters befriended | `golden_polaroid_frame` (not counted in the catalog) | none | `title.collector` |
+
+Reference pace: tier 1 day 4, tier 2 day 12, tier 3 day 19, tier 4 day 29.
+
+**Item count check.** Full: 16 gift items and 15 unlock items (Collector tier 4 has none). MVP: 12 gift items, and unlock items are full scope only. Section 8.3 gives the catalog unlock budget these fit into.
 
