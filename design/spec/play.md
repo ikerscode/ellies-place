@@ -32,6 +32,7 @@ Read with: `design/ELLIE.md` (tone, facts), `design/BRIEF.md`, `design/spec/sim.
 - **Item ids** (catalog) are written bare, like `pb_board`. They are proposals. If `home.md` names the same thing differently, `home.md` wins and the Wave 2 data uses its id. What must survive is the unlock source and the price band.
 - **Interaction ids** (like `cat.bow`) are proposals in the same way. `sim.md` wins on names.
 - **String keys** are in `code`. A short placeholder in quotes after a key, like `wish.bow_george.title` "Bow to George", is a hint for the writer only. The writer owns every final word.
+- **Any id shown to the player without its own key** (a station, medal, streak colour, place, filter, layout, menu label) uses `<id>.name` for its display name, for example `streak.violet.name`, `act.race.name`, `plate.fan.name`. No player-facing text lives in data or code.
 - **Game time:** `hh:mm` is the in-game clock. "Game minute" and "game hour" are in-game. "s" means real seconds while an activity screen is open. At speed x1 one game hour is one real minute (BRIEF section 4).
 - **Day 1 is a Monday.** Saturdays are days 6, 13, 20, 27 and so on.
 - **Needs** are 0 to 100 and every change is clamped to that range. `+12 Calm` means add 12, then clamp.
@@ -474,6 +475,8 @@ Listed so wishes can point at them. `sim.md` may tune these; the ids are what wi
 ## 4. Critterbound
 
 A tiny original creature-befriending RPG that Ellie plays on the TV and console (`tv_console`, living room, start item) or on the `handheld` (catalog item, played in bed). It has its own screen and its own small save summary inside the main save.
+
+The 15 to 30 s minigame length does not apply here. Critterbound is a small game inside the game, played in sessions of any length. Its version of the Skip rule is in 4.6.
 
 ### 4.1 Names and words (IP rules)
 
