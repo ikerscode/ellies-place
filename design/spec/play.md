@@ -1199,7 +1199,7 @@ Bruce appears at random, seeded, in one of 5 places, at most once per game day, 
 
 After all 5 are spotted, Bruce **lives on the garden wall** for good (`bruceOnWall = true`). He is there every day from 08:00 to 20:00, can be petted (`bruce.pet`), and still denies being there.
 
-### 10.3 Sticker list (36: 18 MVP)
+### 10.3 Sticker list (36: 19 MVP)
 
 | # | Id | Name key | Condition | Reward beyond 15 Hearts | S | MVP |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1240,7 +1240,7 @@ After all 5 are spotted, Bruce **lives on the garden wall** for good (`bruceOnWa
 | 35 | `stk.salem_reads` | `stk.salem_reads.name` | Salem "reads" a letter (sits on an open letter on the mail table; he can't read) | | S | F |
 | 36 | `stk.grazie_print` | `stk.grazie_print.name` | Hang the framed print (only if the flag in `personal.ts` is on; otherwise this row is hidden and not counted) | | S | F |
 
-MVP: 18. Gift items from stickers: full 8 (`bruce_wall_cushion`, `cardboard_castle`, `vintage_rusk_tin`, `star_map_print`, `wish_jar`, `critter_plush_set`, `critterbound_poster`, `shiny_display_case`); MVP 3 (the first three). This matches 8.3.
+MVP: 19. Gift items from stickers: full 8 (`bruce_wall_cushion`, `cardboard_castle`, `vintage_rusk_tin`, `star_map_print`, `wish_jar`, `critter_plush_set`, `critterbound_poster`, `shiny_display_case`); MVP 3 (the first three). This matches 8.3.
 
 **Secrets** in the journal (`journal.secrets`) are the S rows above plus the two constellations, Bruce on the wall, and George's "Sir Ellie". They appear in the journal only once found.
 
@@ -1340,4 +1340,75 @@ The party runs on the in-game clock that evening. Speed is locked to x1 from 19:
 - The group photo in the album, and `keepsake_polaroid` (a decor item of that photo in a frame) through `mail.housewarming.thanks` next morning.
 - If `personal.ts` has the framed print flag on (default on), Pickle also brings `framed_print_grazie` ("Grazie per essere te stessa") as a separate gift item at 19:00, in its own small box. It is optional decor. She can place it or keep it in storage.
 - Calm +30, Fun +30 at the end of the night. `housewarmingDone = true`. The heart constellation becomes eligible on her next stargaze (5.3).
+
+---
+
+## 13. What other specs and the contract must match
+
+### 13.1 home.md
+
+- **Catalog shape and price budgets** in 8.3 (group counts, unlock sources, Hearts-gated sums), full and MVP.
+- **Items named here** (ids are proposals; keep the unlock source if the id changes):
+  - Start group: `ski_erg`, `sled`, `rower`, `farmers_handles`, `sandbag`, `wallball_target`, `kettlebell`, `treadmill`, `gym_mat`, `garden_lanterns`, `coffee_machine`, `handheld`, `feather_wand`, `welcome_plant` (gifted in onboarding).
+  - Starting furniture (BRIEF section 3 plus): `kettle`, `rusk_jar`, `record_player`, `record_shelf`, `tv_console`, `laser_pointer` (carry toy), `cat_brush`, a kitchen table and chair.
+  - Aspiration gifts and unlocks: section 7.4. Bond unlocks: 8.3. Sticker gifts: 10.3.
+  - Not counted in the catalog: `golden_polaroid_frame`, `keepsake_polaroid`, `framed_print_grazie`.
+- **Free items** (gifts, trades, mail and housewarming gifts) use "Put away" instead of "Sell" and never refund Hearts.
+- **Rooms for Cosy:** the 6 rooms in 7.4. Set bonus names (Goth Parlour, Cat Palace, Home Gym, Plant Corner, and any others) and an `activeSetBonuses` query.
+- **Tags** used by wishes: style tags `Cat`, `Plant`; function tags `perch` (layer 2 for cats), `solitude` (Shadow's spots), `box` (Salem can sit in it), `light`.
+- **Sled placement:** needs a straight run of 6 garden tiles.
+- **Poe's trade table:** 12 items full, 4 MVP, plus `out.striped_socks` as one trade.
+
+### 13.2 sim.md
+
+- Bond levels 0 to 4, with 4 the top. `moodMult` inside 0.8 to 1.5 (1.3).
+- Interaction ids and the flags and counters in 3.5 and 5.5.
+- Free will picks minigame activities and resolves them at score 0.6 with no screen. Free will gives x1.2 utility to interactions that would complete an open wish.
+- Starting needs and the frozen clock during onboarding (9.1).
+- Weather rolled each morning (wishes and stargazing read it).
+- Activity effects in this spec are applied as given; `sim.md` owns decay rates and non-minigame interactions.
+
+### 13.3 cat-ai and voice
+
+Events play.md emits and the expected reaction:
+
+| Event | Expected cat reaction |
+| --- | --- |
+| `ev.training` | George judges from the doorway; Salem copies badly; Shadow leaves a busy room |
+| `ev.train_pb` | Salem cheers |
+| `ev.ball_loose` | Salem chases the wall ball |
+| `ev.race_done`, `ev.home_from_race` | Cats gather at the door; George inspects the medal |
+| `ev.sushi_start` | George walks to the counter with top priority and asks for fish |
+| `ev.sushi_done` | Salem sniffs the cucumber end |
+| `ev.ritual_start` | Peaches lies in the sun beside Ellie; Shadow settles 3 to 4 tiles away; George watches from high up |
+| `ev.music_heavy` | Shadow leaves the room; Peaches bops |
+| `ev.peaches_headbang` | Peaches headbangs (fired by the headbang minigame at combo 8, bond >= 2) |
+| `ev.console_on` | Peaches lies by the console; Salem paws at the TV |
+| `ev.photographed` | George poses; Shadow turns away; Salem walks to the lens |
+| `ev.stargaze` | Peaches lies beside her; Salem stares then sleeps; Shadow sits on the fence |
+| `ev.george_verdict` | (emitted by cat-ai when George inspects new furniture: approve or disapprove) |
+| `ev.wish_done`, `ev.aspiration_tier` | Nearby cats react |
+| `ev.mail_read` | Salem sits on the letter |
+
+Also for cat-ai: at bond level 4 every cat must be strongly drawn to Ellie's bed at night (Cat Royalty tier 4). Salem must get into empty boxes (counts `salemBoxSits`). Shadow can sit on her lap while she reads at high bond.
+
+The writer and `voice.md` own every string key family named here: `act.*.instr`, `grade.*`, `race.george.*`, `race.salem.*`, `race.shadow.*`, `sushi.*`, `rusk.*`, `coffee.*`, `cb.*`, `record.*`, `photo.cap.*`, `star.*`, `out.*.name`, `outfit.react.*`, `wish.*`, `asp.*`, `title.*`, `medal.*`, `onb.*`, `stk.*`, `bruce.*`, `mail.*`, `hw.*`, `journal.*`, `ui.skip`, `settings.relaxed_timing`.
+
+### 13.4 Contract notes for the architect (types.ts)
+
+play.md needs these in the contract. They are requests, not edits.
+
+1. `ActivityResult` gains `score: number` (0 to 1), `misses: number`, and an `details` union per activity family (station splits for a race, fillings for sushi, perfect dunk count, Critterbound summary changes, photo tags). `hearts` stays but is computed by progression from the score, not by the activity.
+2. Progression state in `SimState` (or a `progression` slice):
+   - `heartsEarnedTotal: number`
+   - `unlockedItems: ItemId[]`, `freeItems: ItemId[]` (owned items that came free)
+   - `skills: Record<SkillId, { level: number; xp: number }>`
+   - `pbs: { overall: number | null; raceSplit: Record<StationId, number>; runSplit: number | null; train: Record<StationId, number> }`, `medals: MedalId[]`, `races: RaceRecord[]` (last 5)
+   - `wishes: { today: { id: WishId; done: boolean; baseline?: number }[]; swapUsed: boolean; history: Record<WishId, number> }` (last completed day per wish)
+   - `aspirations: Record<AspirationId, number>` (tiers done, 0 to 4)
+   - `stickers: StickerId[]`, `outfitsOwned: OutfitId[]`, `outfitWorn: Record<Slot, OutfitId | null>`, `streak: StreakId`
+   - `counters: Record<string, number>` (every counter named in this spec) and `flags: Record<string, boolean>`
+   - `mail: { queue: MailId[]; inbox: { id: MailId; read: boolean; day: number }[] }`
+   - `photos: PhotoRecord[]` (max 100), `critterbound: CritterboundSummary`
+3. A `ProgressEvent` union for the events in 13.3 and the condition language in 7.2.
 
