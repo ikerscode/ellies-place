@@ -24,13 +24,14 @@ This spec gives exact numbers. Every player-facing word is a string key (`item.<
 
 | Code | Where it may go |
 | --- | --- |
-| `floor` | Any walkable floor tile, indoor or garden. |
+| `floor` | Any walkable floor tile, indoor or garden (not the front step). |
 | `in` | Indoor floor only (bedroom, living, kitchen, bathroom, spare). |
 | `out` | Garden floor only (grass or patio). |
-| `rug` | Any floor tile, drawn under furniture, stays walkable. Max one rug per tile. |
+| `rug` | Any walkable floor tile including the front step, drawn under furniture, stays walkable. Max one rug per tile. |
 | `wall` | A back-wall tile (§2.5), including the garden wall. `w×1` along the wall. Not on doors or windows. |
 | `window` | A window tile only (any facing). |
 | `surface` | One surface slot on a table, counter, shelf or unit (the host's `slots` column). |
+| `front` | The front step tiles only (the mailbox fixture). |
 
 A floor or `in` item may not block a door's inside tile, the archway tiles' neighbours, or the last walkable path between two doors. Build mode shows the tile red and refuses (it never deletes anything). Reason: Ellie and the cats must never get stuck (pillar 1).
 
@@ -154,7 +155,7 @@ Sun times are fixed every day: sunrise 06:30, sunset 19:30. There are no seasons
 - The patch starts at the floor tile just inside the window and extends away from it. It is clipped to that room's floor tiles. It never crosses walls, doors or the archway.
 - **Intensity** ramps 0 to 1 over the first 30 game minutes and 1 to 0 over the last 30. A tile counts as "in a sunbeam" (for Peaches' Vibes and `cat_sunbathe`) while intensity ≥ 0.5.
 - Rain (if the weather system has it) switches beams off.
-- Example: at 12:30 the living room south beam has `u = 0.5`, depth 2, drift 0, so it covers (7..8, 13..14). At 15:30, `u = 0.93`, depth 5, drift +3, so it covers (10, 10..14): column 11 is wall, so the patch is clipped to 1 tile wide. Peaches walks from the middle of the rug toward the archway over the afternoon. That's the point.
+- Example: at 12:30 the living room south beam has `u = 0.5`, depth 2, drift 0, so it covers (7..8, 13..14). At 15:30, `u = 0.93`, depth 5, drift +3, so it covers (10, 10..14): column 11 is wall, so the patch is clipped to 1 tile wide. Peaches walks from in front of the sofa toward the archway over the afternoon. That's the point.
 
 Reason for the hour windows: east 06:30 to 11:00 and west 15:00 to 19:30 give a beam somewhere in the home from sunrise to sunset, with the long midday south beams in the two big rooms where Peaches is most visible.
 
@@ -248,7 +249,7 @@ The suggested spot for `gym_sled_track` (once unlocked) is (22,3) rotation 0, co
 
 ### 4.1 Rules
 
-- **124 catalog items** (123 if the framed print is switched off) plus 5 fixtures. **74 are MVP.** **40 are unlocked at the start**, and 18 of those are already placed.
+- **124 catalog items** (123 if the framed print is switched off) plus 5 fixtures. **75 are MVP.** **40 are unlocked at the start**, and 18 of those are already placed.
 - **Unlocking** an item makes it buyable. It does not give a free copy. Pickle's next delivery note mentions what's new (`mail.pickle.new_stock`).
   - Exceptions that arrive as a free first copy: **secret** items, and **Poe trades** (she paid in Shiny Trinkets). After that they're buyable at the listed price.
 - **Price** is in Hearts. Selling always refunds the full listed price (BRIEF §8). A price-0 item refunds 0 and stays in the catalog at 0, so selling it loses nothing.
@@ -259,7 +260,7 @@ The suggested spot for `gym_sled_track` (once unlocked) is (22,3) rotation 0, co
 - **`bruce_wall_cushion`** goes only on the garden wall (row 0, tx 21..28). It's where Bruce lives once he moves in.
 - **Band names:** `record_shelf`, `record_player` and the record sleeves show "Pierce the Veil", "Deftones" and "Suicideboys" as plain text on plain coloured sleeves. No logos, artwork or lyrics (BRIEF §20). No poster or other item carries a band name.
 - **Laptop:** a plain silver laptop with no logo. It is where she orders (`order_catalog`) and it's warm for Peaches.
-- **Art key** `base#palette` means one sprite grid (`base`) with a palette map (`palette`), using game 1's `makeSprite` palette maps. The catalog has 123 distinct bases (80 in MVP).
+- **Art key** `base#palette` means one sprite grid (`base`) with a palette map (`palette`), using game 1's `makeSprite` palette maps. The 124 catalog items use 118 distinct bases (75 in MVP); the 5 fixtures add 5 more.
 - **Plants never wilt.** `water_plant` gives a small Calm boost and a sparkle, and nothing bad happens if she never waters (pillar 1).
 
 ### 4.2 Unlock codes
@@ -276,7 +277,7 @@ The suggested spot for `gym_sled_track` (once unlocked) is (22,3) rotation 0, co
 | `secret:<id>` | Found by doing something (see §7.2) | 8 |
 
 Reasons:
-- **40 at start (32%)** covers every category and gives each MVP style at least 3 items, so the first session already has real choices. The Goth Parlour set is buildable from start items alone (§6.5). Cottage Kitchen is 2 cheap purchases away from the starting kitchen. A first set inside the first 10 to 20 minutes is the hook.
+- **40 at start (32%)** covers every category and gives every style except Neon at least 3 items, so the first session already has real choices. The Goth Parlour set is buildable from start items alone (§6.5). Cottage Kitchen is 2 cheap purchases away from the starting kitchen. A first set inside the first 10 to 20 minutes is the hook.
 - **Home Maker carries the most unlocks (32).** It is the decorating aspiration, so decorating unlocks more decorating. Its tier 1 is front-loaded (10 items) to land inside the first hour.
 - **Bond items are each cat's taste:** George gets royal things, Salem gets catnip, a neon cat and a box castle, Shadow gets a felt cave and a dim moon lamp, and Peaches gets sun, music and warmth.
 - **Poe and Collector items are full scope** (non-MVP), so MVP doesn't depend on the trinket loop or the fourth aspiration.
@@ -397,7 +398,7 @@ Columns: `orient.` uses the codes in §1; `placement` uses §1.1; `light r` is t
 | 90 | `frame_polaroids` | `item.frame_polaroids.name` | walldecor | 2×1 | 1 | wall | Retro | 15 | asp:collector:1 | `frame_polaroids` | view_photos | - | - | N |
 | 91 | `painting_meadow` | `item.painting_meadow.name` | walldecor | 1×1 | 1 | wall | Cottage | 30 | asp:homemaker:3 | `painting_meadow` | admire | - | - | N |
 | 92 | `mirror_ornate` | `item.mirror_ornate.name` | walldecor | 1×1 | 1 | wall | Goth | 45 | asp:homemaker:2 | `mirror_ornate` | admire_self, dress_up | - | - | N |
-| 93 | `tapestry_moon` | `item.tapestry_moon.name` | walldecor | 2×1 | 1 | wall | Goth | 35 | asp:homemaker:3 | `tapestry_moon` | admire | - | - | N |
+| 93 | `hanging_moon` | `item.hanging_moon.name` | walldecor | 2×1 | 1 | wall | Goth | 35 | asp:homemaker:3 | `hanging_moon` | admire | - | - | N |
 | 94 | `portrait_four_cats` | `item.portrait_four_cats.name` | walldecor | 2×1 | 1 | wall | Cat | 60 | asp:royalty:4 | `portrait_four_cats` | admire | - | - | Y |
 | 95 | `frame_grazie` | `item.frame_grazie.name` | walldecor | 1×1 | 1 | wall | - | 0 | secret:housewarming | `frame_grazie` | admire | - | - | Y |
 | 96 | `portrait_george` | `item.portrait_george.name` | walldecor | 1×1 | 1 | wall | Cat, Goth | 40 | bond:george:3 | `portrait_george` | admire, bow_to_george | - | - | N |
@@ -453,7 +454,7 @@ Paint applies per room: one wall paint (all of that room's wall faces) and one f
 - The garden grass and the garden wall can't be painted. The patio (column 21) and the front step take `floor.patio.*` paints.
 - Colours are suggestions from game 1's palette family; the pixel-artist may adjust within it.
 
-### 5.1 Wall paints (18)
+### 5.1 Wall paints (20)
 
 | Id | Name key | Pattern | Colours | Tag | Unlock | Default in |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -501,7 +502,7 @@ Paint applies per room: one wall paint (all of that room's wall faces) and one f
 | `floor.wood.herringbone` | `paint.floor.wood.herringbone` | wood (herringbone) | #c9a24f / #6b4a3a | Retro | asp:homemaker:3 | |
 | `floor.stripes.lavender` | `paint.floor.stripes.lavender` | stripes | #cfc6d9 / #8e6cc2 | - | asp:collector:1 | |
 
-Paint counts: 36 paints, 18 at start (incl. the 8 room defaults), 32 MVP. Paints are not catalog items and don't count toward catalog completion.
+Paint counts: 36 paints (20 wall, 16 floor), 18 at start including the 11 room defaults, 33 MVP (start plus Home Maker, Hyrox Hero and Cat Royalty unlocks), 3 full scope (Collector). Paints are not catalog items and don't count toward catalog completion.
 
 ---
 
@@ -775,6 +776,6 @@ Not tied to an item: `sit_grass` and `lie_grass` (any grass tile, for the coffee
 - **play.md:** aspiration ids `hyrox`, `royalty`, `homemaker`, `collector`, and which items each tier unlocks (§4.4); bond-level unlocks; the Poe trinket prices; the secret ids (§7.2); the Hearts band (§4.3); the housewarming and Home Maker thresholds (§6.6); and the 30-minute delivery time.
 - **sim.md:** the Cosy need rule (§6.6); light auto-switching (§6.2); sunbeam hours and geometry (§2.4) for Peaches; the cat comfort features (§6.2), which should match what each cat's AI seeks; the interaction ids (§8).
 - **build-mode-dev:** the map (§2.1), back-wall tiles (§2.5), the placement rules (§1.1, including never blocking a door's inside tile), fixtures (§3.2), surface slots, Bruce anchors (§7.1), and the hint rules (§6.4).
-- **pixel-artist:** 123 distinct item art bases (80 in MVP), 36 paints, window facings, and the band-name rule for sleeves (§4.1).
+- **pixel-artist:** 118 distinct catalog art bases (75 in MVP) plus 5 fixtures, 36 paints, window facings, and the band-name rule for sleeves (§4.1).
 - **writer:** `item.<id>.name` and `item.<id>.desc` for 124 items and 5 fixtures, `room.*`, `paint.*`, `set.<id>.name` and `set.<id>.done`, `cosy.hint.*`, `cosy.need.*`, and `item.frame_grazie.text` (exactly "Grazie per essere te stessa").
 - **personal.ts (writer):** a boolean `framedPrint`, default `true`.
