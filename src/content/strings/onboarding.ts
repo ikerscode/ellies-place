@@ -22,7 +22,7 @@ export const onboarding = {
 
   // Salem: needs and the action queue
   'onboard.salem.hi.01': "{name}! You LIVE here now! I live here too! HI!",
-  'onboard.salem.needs.01': "See the bars? That's how you're doing! I can't read them!",
+  'onboard.salem.needs.01': "See the candles? That's how you're doing! I can't read them!",
   'onboard.salem.needs.02': "When one's low you go slow! Eat something! Or pet me!",
   'onboard.salem.queue.01': 'Pick lots of things and they wait in a line up top!',
   'onboard.salem.queue.02': "Changed your mind? Click one and it's gone! Like ham!",
@@ -33,7 +33,7 @@ export const onboarding = {
   'onboard.peaches.hi.01': 'Hey. No rush. Come and sit by the records.',
   'onboard.peaches.record.01': 'Click the player and put something on. Any station.',
   'onboard.peaches.record.02': "Shadow leaves for the heavy stuff. Don't take it personally.",
-  'onboard.peaches.mood.01': "That little face up top is your mood. A song helps.",
+  'onboard.peaches.mood.01': "That little face in the corner is your mood. A song helps.",
   'onboard.peaches.mood.02': "Good mood, more Hearts. That's about it.",
   'onboard.peaches.handoff.01': "Shadow's got something to show you. He won't say so.",
 
@@ -46,7 +46,7 @@ export const onboarding = {
 
   // Pickle: the catalog
   'onboard.pickle.hi.01': "Ribbit! New neighbour! I'm Pickle. I deliver things.",
-  'onboard.pickle.catalog.01': 'Open the catalog, pick a thing, and I bring it. Ribbit.',
+  'onboard.pickle.catalog.01': 'Open the catalogue, pick a thing, and I bring it. Ribbit.',
   'onboard.pickle.catalog.02': 'You pay in Hearts. You earn those by having a nice day.',
   'onboard.pickle.catalog.03': 'Every order comes in a box. The box is for the black cat.',
   'onboard.pickle.handoff.01': "Got to hop. Other deliveries. There aren't any. Ribbit!",

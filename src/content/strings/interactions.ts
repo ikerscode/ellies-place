@@ -41,7 +41,7 @@ export const interactions = {
 
   // Ellie: home
   'int.checkMail': 'Check the post',
-  'int.openCatalog': 'Browse the catalog',
+  'int.openCatalog': 'Browse the catalogue',
   'int.tidy': 'Tidy up',
 
   // Cats

@@ -103,6 +103,7 @@ Characters have their own named palettes (`PAL.ellie`, `PAL.george`, `PAL.salem`
 - **Wall items:** the back wall face is one tile row. Wall items are at most 16 px tall and as wide as their run (`16 × fw − 2`).
 - **Patterns:** 16 × 16, seamless on all sides, no outline. Pattern grids use the palette characters `1`, `2`, `3` for `PaintDef.colors[0..2]`; their registered palette is a default preview.
 - **Originality:** never copy or trace any commercial sprite, logo or character (The Sims, Pokémon, Nintendo or anything else). Band names appear only as text on sleeves, drawn by the UI, never as logos. No floating diamonds over heads.
+- **Hardware:** consoles, handheld, controller and arcade cabinet use original shapes: no Game Boy brick, no Joy-Con split, no recognisable arcade game on screen (show Critterbound).
 
 ## 4. Animation rules
 
@@ -303,8 +304,8 @@ About 125 items. Sizes are the grid size before the outline; footprints are in t
 | `fairy_lights` | wall 3 | 46 × 8 | 0 | `.on` 2 frames | cottage |
 | `neon_sign_bat` | wall 2 | 28 × 12 | 0 | `.on` 2 frames | neon |
 | `wall_sconce` | wall 1 | 8 × 12 | 0 | `.on` | goth |
-| `poster_band` | wall 1 | 12 × 14 | 0 | | retro (UI draws a band name as text on hover only) |
-| `frame_print` | wall 1 | 12 × 12 | 0 | | (the optional "Grazie per essere te stessa" print; text drawn by UI) |
+| `poster_gig` | wall 1 | 12 × 14 | 0 | | retro (abstract original artwork, no band name, no text) |
+| `frame_print` | wall 1 | 12 × 12 | 0 | | (the optional framed print; the UI draws only `FRAMED_PRINT_TEXT` from `src/content/personal.ts`) |
 | `frame_polaroids` | wall 2 | 26 × 12 | 0 | | callback to the polaroid keepsake |
 | `mirror_wall` | wall 1 | 12 × 14 | 0 | | |
 | `shelf_wall` | wall 2 | 28 × 8 | 0 | 2 surface slots | |

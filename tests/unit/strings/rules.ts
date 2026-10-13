@@ -48,6 +48,7 @@ export const BANNED: readonly { readonly re: RegExp; readonly why: string }[] = 
   { re: /pok[eé]/i, why: 'Pokemon IP' },
   { re: /\bnintendo\b/i, why: 'Nintendo IP' },
   { re: /gotta catch|\bsul sul\b/i, why: 'IP catchphrase' },
+  { re: /\bmoodlets?\b/i, why: 'internal term (say "mood boost")' },
   // The framed-print phrase lives only in personal.ts
   { re: /grazie per essere/i, why: 'framed-print phrase (personal.ts only)' },
   // American spellings
@@ -61,6 +62,7 @@ export const BANNED: readonly { readonly re: RegExp; readonly why: string }[] = 
   { re: /\bcookies?\b/i, why: 'American word (biscuit)' },
   { re: /\brealiz/i, why: 'American spelling (realise)' },
   { re: /\bapartment/i, why: 'American word (flat)' },
+  { re: /\bcatalogs?\b/i, why: 'American spelling (catalogue)' },
 ];
 
 /** Returns the reasons a line breaks the banned list, or [] if it is clean. */
@@ -137,3 +139,11 @@ export function lengthProblem(key: string, text: string): string | null {
 
 /** Dotted keys: a lower-case domain, then camelCase or snake_case segments. */
 export const KEY_RE = /^[a-z][a-zA-Z]*(\.[a-zA-Z0-9_]+)+$/;
+
+/** Real band names: allowed only as record sleeve text (BRIEF section 20). */
+export const BAND_RE = /deftones|pierce the veil|suicide ?boys/i;
+
+/** Keys allowed to carry a band name: the record sleeves. */
+export function bandNameAllowed(key: string): boolean {
+  return key.startsWith('record.sleeve.');
+}

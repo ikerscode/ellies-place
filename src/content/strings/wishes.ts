@@ -1,7 +1,7 @@
 /**
  * Daily wish titles (40 characters or fewer) and aspirations.
  * Keys: wish.<wishId>; asp.<aspirationId>.name / .desc / .tier.<1-4>.
- * Ids are provisional until the game designers freeze sim.md and play.md.
+ * Aspiration ids follow design/spec/FROZEN.md section 3 #7; Home Maker tiers follow #8.
  */
 export const wishes = {
   // Food and the ritual
@@ -37,31 +37,31 @@ export const wishes = {
 
 /** Aspirations: four tiers each (design/BRIEF.md section 11). */
 export const aspirations = {
-  'asp.hyroxHero.name': 'Hyrox Hero',
-  'asp.hyroxHero.desc': 'Race on Saturdays and get a bit quicker each time.',
-  'asp.hyroxHero.tier.1': 'Chalked up',
-  'asp.hyroxHero.tier.2': 'First race done',
-  'asp.hyroxHero.tier.3': 'Under the target time',
-  'asp.hyroxHero.tier.4': 'PB streak',
+  'asp.hyrox.name': 'Hyrox Hero',
+  'asp.hyrox.desc': 'Race on Saturdays and get a bit quicker each time.',
+  'asp.hyrox.tier.1': 'Chalked up',
+  'asp.hyrox.tier.2': 'First race done',
+  'asp.hyrox.tier.3': 'Under the target time',
+  'asp.hyrox.tier.4': 'PB streak',
 
-  'asp.catRoyalty.name': 'Cat Royalty',
-  'asp.catRoyalty.desc': 'Win over all four cats. Even Shadow. Especially Shadow.',
-  'asp.catRoyalty.tier.1': 'Tolerated',
-  'asp.catRoyalty.tier.2': 'Lap-approved',
-  'asp.catRoyalty.tier.3': 'One of the household',
-  'asp.catRoyalty.tier.4': 'Four cats, one bed',
+  'asp.royalty.name': 'Cat Royalty',
+  'asp.royalty.desc': 'Win over all four cats. Even Shadow. Especially Shadow.',
+  'asp.royalty.tier.1': 'Tolerated',
+  'asp.royalty.tier.2': 'Lap-approved',
+  'asp.royalty.tier.3': 'One of the household',
+  'asp.royalty.tier.4': 'Four cats, one bed',
 
-  'asp.homeMaker.name': 'Home Maker',
-  'asp.homeMaker.desc': 'Make the flat properly cosy, one room at a time.',
-  'asp.homeMaker.tier.1': 'Unpacked',
-  'asp.homeMaker.tier.2': 'One cosy room',
-  'asp.homeMaker.tier.3': 'A matching set',
-  'asp.homeMaker.tier.4': 'Every room cosy',
+  'asp.home.name': 'Home Maker',
+  'asp.home.desc': 'Make the flat properly cosy, one room at a time.',
+  'asp.home.tier.1': 'One cosy room',
+  'asp.home.tier.2': 'A matching set',
+  'asp.home.tier.3': 'Three rooms, three sets',
+  'asp.home.tier.4': 'Cosy from the door to the garden',
 
-  'asp.collector.name': 'Collector',
-  'asp.collector.desc': "Trade with Poe, fill the catalog and the album. Poe approves.",
-  'asp.collector.tier.1': 'Shiny start',
-  'asp.collector.tier.2': 'Regular at the bird bath',
-  'asp.collector.tier.3': 'Half the catalog',
-  'asp.collector.tier.4': 'The full set',
+  'asp.collect.name': 'Collector',
+  'asp.collect.desc': "Trade with Poe, fill the catalogue and the album. Poe approves.",
+  'asp.collect.tier.1': 'Shiny start',
+  'asp.collect.tier.2': 'Regular at the bird bath',
+  'asp.collect.tier.3': 'Half the catalogue',
+  'asp.collect.tier.4': 'The full set',
 } as const satisfies Readonly<Record<string, string>>;

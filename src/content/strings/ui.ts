@@ -11,7 +11,7 @@ export const ui = {
   'ui.title.settings': 'Settings',
   'ui.title.credits': 'Credits',
   'ui.title.saveFound': 'Day {n}. The cats kept your spot.',
-  'ui.title.newGameConfirm': 'Start over? The cats will forget.',
+  'ui.title.newGameConfirm': 'Start over? Everything goes back in the boxes.',
   'ui.title.newGameYes': 'Start fresh',
   'ui.title.newGameNo': 'Keep my place',
 
@@ -23,7 +23,7 @@ export const ui = {
   'ui.hud.queueCancel': 'Click to cancel',
   'ui.hud.freeWill': '{name} is choosing',
   'ui.hud.journal': 'Journal',
-  'ui.hud.catalog': 'Catalog',
+  'ui.hud.catalog': 'Catalogue',
   'ui.hud.photo': 'Photo',
   'ui.hud.mood': 'Mood',
   'ui.hud.raceDay': 'Race day',
@@ -65,7 +65,7 @@ export const ui = {
   // Mood bands (MoodBand), low to high
   'ui.mood.mopey': 'Mopey',
   'ui.mood.low': 'Meh',
-  'ui.mood.okay': 'Fine',
+  'ui.mood.okay': 'Alright',
   'ui.mood.good': 'Content',
   'ui.mood.great': 'Glowing',
 

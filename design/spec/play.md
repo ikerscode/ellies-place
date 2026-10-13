@@ -513,7 +513,7 @@ All designs and names are original. Each is 16 x 16 px. Short art notes are for 
 | Id | Name key (placeholder) | Kind | Pep | Pow | Guard | Speed | Kind trick (power 8) | Art note | Where |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `crit.fizzlet` | `cb.crit.fizzlet` "Fizzlet" | Spark | 22 | 7 | 3 | 6 | `cb.trick.static_pop` "Static Pop" | A round puff of fluff whose fur stands on end and crackles. Two dot eyes, tiny feet. | Starter |
-| `crit.plipp` | `cb.crit.plipp` "Plipp" | Splash | 24 | 6 | 4 | 5 | `cb.trick.drizzle_dash` "Drizzle Dash" | A raindrop-shaped newt with a curly tail and a drip on its nose. | Starter |
+| `crit.drippet` | `cb.crit.drippet` "Drippet" | Splash | 24 | 6 | 4 | 5 | `cb.trick.drizzle_dash` "Drizzle Dash" | A raindrop-shaped newt with a curly tail and a drip on its nose. | Starter |
 | `crit.mossby` | `cb.crit.mossby` "Mossby" | Sprout | 26 | 5 | 5 | 4 | `cb.trick.bramble_hug` "Bramble Hug" | A pebble-shaped hedgehog covered in moss, one sprout on top. | Starter |
 | `crit.kettlecoil` | `cb.crit.kettlecoil` "Kettlecoil" | Spark | 24 | 6 | 5 | 3 | `cb.trick.steam_whistle` "Steam Whistle" | A tiny snail whose shell is a little kettle that whistles and sparks. | Meadow grass |
 | `crit.brineling` | `cb.crit.brineling` "Brineling" | Splash | 22 | 6 | 5 | 5 | `cb.trick.bubble_pinch` "Bubble Pinch" | A sea-glass crab that hides in jars. | Pond edge |
@@ -528,7 +528,7 @@ Every critter also knows `cb.trick.bump` "Bump" (power 5, no kind).
 - **Menu** (four petals, the main game's own style): `cb.cmd.trick` (choose one of two tricks), `cb.cmd.snack` (restore 8 Pep, 2 uses per spar), `cb.cmd.swap` (change crew member, uses the turn), and in befriendable spars `cb.cmd.befriend`, otherwise `cb.cmd.scoot` (leave a meadow spar, always works).
 - **Opponent choice:** uses its kind trick unless that would be weak against the target, then Bump. 25 % of turns it picks at random instead (seeded).
 - **Grit:** each crew member that took part in a won spar gains 1 Grit star (max 5). Each star gives +2 max Pep and +1 Pow. Opponents have fixed Grit.
-- **Pep at 0:** the critter "curls up for a nap" (`cb.nap`) and swaps out. If the whole crew naps, the spar ends with `cb.spar.rest` "Everyone needs a nap." She wakes up at the Nap Nook with the crew fully restored. Nothing is lost. All Pep also refills after every spar.
+- **Pep at 0:** the critter "curls up for a nap" (`cb.nap`) and swaps out. If the whole crew naps, the spar ends with `cb.spar.rest` "Everyone needs a nap." She wakes up at the Nap Nest with the crew fully restored. Nothing is lost. All Pep also refills after every spar.
 
 ### 4.5 Befriending
 
@@ -542,9 +542,9 @@ One 30 x 17 tile screen, its own tiny tile set (`art.cb.*`), drawn in a slightly
 
 | Area | What happens |
 | --- | --- |
-| Nap Nook (start, bottom left) | Choose a starter on first play. Walk in to restore the crew. Save point (auto-saves on leaving the screen too). |
+| Nap Nest (start, bottom left) | Choose a starter on first play. Walk in to restore the crew. Save point (auto-saves on leaving the screen too). |
 | Meadow (tall grass, centre) | Each step in tall grass has an encounter chance; first encounter no sooner than 6 steps, average one per 10 steps (seeded). Encounters: Thistlepup 60 %, Kettlecoil 40 %. Wild critters have Grit 0 to 1. |
-| Pond (top centre) | Same encounter rule on the reeds. Brineling 100 %. After spar 1, the starter Ellie did not pick (the first of the two in the order Fizzlet, Plipp, Mossby) waits shyly at the pond edge as a one-time befriendable spar. |
+| Pond (top centre) | Same encounter rule on the reeds. Brineling 100 %. After spar 1, the starter Ellie did not pick (the first of the two in the order Fizzlet, Drippet, Mossby) waits shyly at the pond edge as a one-time befriendable spar. |
 | Wooden bridge (centre right) | Wanderer spar 1: **Pip** (`cb.npc.pip`), one critter: the kind her starter beats, Grit 0. |
 | Dock (top right) | Wanderer spar 2: **Marlow** (`cb.npc.marlow`), two critters at Grit 1: one her starter beats, one neutral. Opens after spar 1. |
 | Lantern Hill (far right) | Wanderer spar 3: **Old Wren** (`cb.npc.old_wren`), two critters at Grit 2: one that beats her starter, one neutral. Opens after spar 2. Winning gives the last missing starter as a gift (`cb.wren.gift`). |
@@ -570,7 +570,7 @@ All 6 critters can be befriended in one or two sessions: starter (1), meadow (2)
 **Save summary** stored in the main save as `critterbound`:
 
 ```
-{ starter: 'fizzlet' | 'plipp' | 'mossby' | null,
+{ starter: 'fizzlet' | 'drippet' | 'mossby' | null,
   crew: { id: CritterId, grit: 0..5 }[],      // max 6
   wanderersBeaten: 0..3,
   lossesVs: { pip: n, marlow: n, wren: n },
@@ -702,7 +702,7 @@ The three lines offered are three different categories, seeded. Missing a star c
 | Id | When it appears | What happens | Reward |
 | --- | --- | --- | --- |
 | `const.cat` | The first stargaze on day 3 or later | A cat shape joins up across the sky over 5 s, with a George line `star.const.cat.george` | `stk.cat_constellation` |
-| `const.heart` | The first stargaze after the housewarming, or on day 10 or later, whichever comes first | A heart shape of stars, with a Peaches line `star.const.heart.peaches` | `stk.heart_constellation`, gift item `star_map_print` |
+| `const.heart` | The first stargaze after the housewarming, or on day 10 or later, whichever comes first | A heart shape of stars, with a Peaches line `star.const.heart.peaches`. The line must be new and non-romantic, e.g. "Stars made a heart. Show-offs." | `stk.heart_constellation`, gift item `star_map_print` |
 
 Both are then shown in the journal (`journal.secrets`). They never appear again in the sky.
 
@@ -823,7 +823,7 @@ The green streaks are the default. Other colours change only the streak pixels.
 | Day 1 | Fixed set at the end of onboarding: `wish.bow_george`, `wish.coffee_rusk_grass`, `wish.play_heavy`. | Her favourite things first. |
 | Saturday | `wish.race_today` takes one slot (outside the caps) whenever it is Saturday. | Race day. |
 | Swap | Once per game day she may swap one wish for another eligible one (`wish.swap`). Free. | Choice, not chore. |
-| Reward | On completion: Hearts x moodMult (rounded), and a mood boost: a moodlet `moodlet.wish` of the row's size for 4 game hours. Moodlets stack to +20 at most. | |
+| Reward | On completion: Hearts x moodMult (rounded), and a mood boost: a moodlet `moodlet.wish` of the row's size for 4 game hours. Moodlets stack to +20 at most. "Moodlet" is internal only; player text says "mood boost". | |
 | Full set | All 3 done in one game day: +15 Hearts x moodMult and `wishesFullSets += 1`. | |
 | Toast | `wish.done` "Wish granted: {title}" with a sparkle and the cats' reaction (`ev.wish_done`). | |
 | Journal | `journal.wishes` lists today's wishes, the swap button, and a count of all wishes ever completed. | |
@@ -942,14 +942,14 @@ Bond levels below are `sim.md`'s levels 0 to 4 (top level 4).
 
 Reference pace: tier 1 on day 2, tier 2 on day 6 (first Saturday), tier 3 around day 13, tier 4 around day 24.
 
-#### Cat Royalty (`asp.cats`, MVP)
+#### Cat Royalty (`asp.royalty`, MVP)
 
 | Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `asp.cats.1` | `asp.cats.1.name` "Cat Friend" | Any one cat at bond level 2 | `cat_bed_round` | `cat_scratcher_post` | `out.paw_clip` |
-| 2 | `asp.cats.2` | `asp.cats.2.name` "Court of Four" | All four cats at bond level 2 or more at the same time | `cat_tree_tall` | `cat_tunnel` | none |
-| 3 | `asp.cats.3` | `asp.cats.3.name` "Royal Favour" | George has knighted her (`knighted`), and Shadow has sat on her lap at least once (`shadowOnLap` ever) | `royal_cushion` (George's throne cushion) | `window_perch` | `out.bell_choker` |
-| 4 | `asp.cats.4` | `asp.cats.4.name` "Four on the Bed" | All four cats at bond level 4, and on one night all four are on her bed at the 03:00 check while she sleeps | `four_cats_portrait` | `canopy_cat_bed` | `out.cat_slippers`, `title.cat_royalty` |
+| 1 | `asp.royalty.1` | `asp.royalty.1.name` "Cat Friend" | Any one cat at bond level 2 | `cat_bed_round` | `cat_scratcher_post` | `out.paw_clip` |
+| 2 | `asp.royalty.2` | `asp.royalty.2.name` "Court of Four" | All four cats at bond level 2 or more at the same time | `cat_tree_tall` | `cat_tunnel` | none |
+| 3 | `asp.royalty.3` | `asp.royalty.3.name` "Royal Favour" | George has knighted her (`knighted`), and Shadow has sat on her lap at least once (`shadowOnLap` ever) | `royal_cushion` (George's throne cushion) | `window_perch` | `out.bell_choker` |
+| 4 | `asp.royalty.4` | `asp.royalty.4.name` "Four on the Bed" | All four cats at bond level 4, and on one night all four are on her bed at the 03:00 check while she sleeps | `four_cats_portrait` | `canopy_cat_bed` | `out.cat_slippers`, `title.cat_royalty` |
 
 Reference pace: tier 1 day 3, tier 2 day 9, tier 3 day 17, tier 4 day 25. For tier 4, `cat-ai` must give every cat at bond level 4 a strong pull to Ellie's bed at night (see 13).
 
@@ -959,10 +959,10 @@ Rooms counted: bedroom, living room, kitchen-diner, bathroom, spare room, back g
 
 | Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `asp.home.1` | `asp.home.1.name` "Settling In" | Any room at Cosy 40 or more | `pothos_plant` | `bookshelf_tall` | none |
-| 2 | `asp.home.2` | `asp.home.2.name` "A Matching Set" | Any room has an active set bonus (`home.md` sets) | `string_lights` | `velvet_armchair` | `out.cosy_jumper` |
-| 3 | `asp.home.3` | `asp.home.3.name` "Home Sweet Home" | All 6 rooms at Cosy 45 or more, with an average of 60 or more, at the same time | `lantern_arch` | `garden_swing` | none. Also makes the housewarming available (section 12). |
-| 4 | `asp.home.4` | `asp.home.4.name` "Dream Place" | 3 different set bonuses active at once, and one room at Cosy 90 or more | `stained_glass_lamp` (or `attic_ladder` if the stretch attic exists) | `chandelier_goth` | `out.dungarees`, `title.home_maker` |
+| 1 | `asp.home.1` | `asp.home.1.name` "One cosy room" | Any room rated Cosy 45 or more (FROZEN §3 #8) | `pothos_plant` | `bookshelf_tall` | none |
+| 2 | `asp.home.2` | `asp.home.2.name` "A matching set" | First set completed (any room has an active set bonus, `home.md` sets) | `string_lights` | `velvet_armchair` | `out.cosy_jumper` |
+| 3 | `asp.home.3` | `asp.home.3.name` "Three rooms, three sets" | 3 rooms rated Cosy 65 or more, and 3 different sets completed | `lantern_arch` | `garden_swing` | none. (When the housewarming becomes available is FROZEN §3 #9.) |
+| 4 | `asp.home.4` | `asp.home.4.name` "Cosy from the door to the garden" | Home Cosy (rated) 80 or more | `stained_glass_lamp` (or `attic_ladder` if the stretch attic exists) | `chandelier_goth` | `out.dungarees`, `title.home_maker` |
 
 Reference pace: tier 1 day 2, tier 2 day 5, tier 3 day 11, tier 4 day 22.
 
@@ -1168,7 +1168,7 @@ Never fix the band by adding a cost, a timer or a loss.
 | # | Who | Where | Teaches | She does (completes the beat) | Lines (keys, placeholders) |
 | --- | --- | --- | --- | --- | --- |
 | 0 | none | Front door | Title | Picks start or skip | `onb.title` "Ellie's Place", a 3 s pan across the flat |
-| 1 | George | Bedroom | Moving and interacting: click the floor to walk, click an object for its petal menu | Walks to the bedroom, clicks the bed and picks any petal | `onb.george.1` "A royal tour. Follow me. Slowly, I am old and important." `onb.george.bed` "This is your bed. It was mine. You may borrow it." (BRIEF line) `onb.george.hint` |
+| 1 | George | Bedroom | Moving and interacting: click the floor to walk, click an object for its petal menu | Walks to the bedroom, clicks the bed and picks any petal | `onb.george.1` "A royal tour. Follow us. Slowly. We are old and important." `onb.george.bed` "This is your bed. It was mine. You may borrow it." (BRIEF line) `onb.george.hint` |
 | 2 | Salem | Kitchen | Needs and the action queue | Opens the needs panel (it auto-opens with a highlight), then queues 2 actions (fill the cat bowls, then a fridge snack) and watches them run from the queue top-left. Cancelling one is shown, not required. | `onb.salem.1` (Salem is hungry and also excited about everything), `onb.salem.queue`, `onb.salem.hint` |
 | 3 | Peaches | Living room | The record player and mood | Peaches is sitting on the lid. Ellie plays the Cosy station. The HUD mood face lights up and the Hearts multiplier tooltip shows once. | `onb.peaches.1` "Oh, that's the spot." (game 1 voice sample) `onb.peaches.mood`, `onb.peaches.hint` |
 | 4 | Shadow | On top of the wardrobe | Build mode | Presses B (or the Build button), moves the small lamp anywhere, presses B again. The cats inspect the lamp. | `onb.shadow.1` "Move things. Quietly." (BRIEF line) `onb.shadow.done`, `onb.shadow.hint` |
@@ -1240,7 +1240,7 @@ After all 5 are spotted, Bruce **lives on the garden wall** for good (`bruceOnWa
 | 32 | `stk.wishes_50` | `stk.wishes_50.name` | Complete 50 wishes | | | F |
 | 33 | `stk.cosy_100` | `stk.cosy_100.name` | Any room at Cosy 100 | | | F |
 | 34 | `stk.all_on_bed` | `stk.all_on_bed.name` | All four cats on the bed at the 03:00 check | | | F |
-| 35 | `stk.salem_reads` | `stk.salem_reads.name` | Salem "reads" a letter (sits on an open letter on the mail table; he can't read) | | S | F |
+| 35 | `stk.salem_reads` | `stk.salem_reads.name` | Salem "reads" a letter (sits on an open letter on the mail table; she can't read) | | S | F |
 | 36 | `stk.grazie_print` | `stk.grazie_print.name` | Hang the framed print (only if the flag in `personal.ts` is on; otherwise this row is hidden and not counted) | | S | F |
 
 MVP: 19. Gift items from stickers: full 8 (`bruce_wall_cushion`, `cardboard_castle`, `vintage_rusk_tin`, `star_map_print`, `wish_jar`, `critter_plush_set`, `critterbound_poster`, `shiny_display_case`); MVP 3 (the first three). This matches 8.3.
@@ -1286,7 +1286,7 @@ Keys: `mail.<id>.from`, `mail.<id>.subject`, `mail.<id>.body`.
 | 12 | `mail.poe.receipt.a` | Poe | Morning after each Poe trade; variant = trade count mod 3 | none | Y |
 | 13 | `mail.poe.receipt.b` | Poe | as above | none | F |
 | 14 | `mail.poe.receipt.c` | Poe | as above | none | F |
-| 15 | `mail.poe.wanted` | Poe | Morning after her 5th trade: a list of shiny things he wants | none | F |
+| 15 | `mail.poe.wanted` | Poe | Morning after her 5th trade: a list of shiny things Poe wants | none | F |
 | 16 | `mail.george.decree` | George | Morning of day 2 | 10 Hearts ("a royal stipend") | Y |
 | 17 | `mail.george.knighthood` | George | Morning after the knighting | `out.knight_sash` | F |
 | 18 | `mail.george.fish_petition` | George | Morning after `fishDenied` reaches 5 | none | F |
@@ -1341,7 +1341,7 @@ The party runs on the in-game clock that evening. Speed is locked to x1 from 19:
 
 - 200 Hearts, `stk.housewarming`, `streak.peach`.
 - The group photo in the album, and `keepsake_polaroid` (a decor item of that photo in a frame) through `mail.housewarming.thanks` next morning.
-- If `personal.ts` has the framed print flag on (default on), Pickle also brings `framed_print_grazie` ("Grazie per essere te stessa") as a separate gift item at 19:00, in its own small box. It is optional decor. She can place it or keep it in storage.
+- If `personal.ts` has the framed print flag on (default on), Pickle also brings `framed_print_grazie` (showing only `FRAMED_PRINT_TEXT` from `src/content/personal.ts`) as a separate gift item at 19:00, in its own small box. It is optional decor. She can place it or keep it in storage.
 - Calm +30, Fun +30 at the end of the night. `housewarmingDone = true`. The heart constellation becomes eligible on her next stargaze (5.3).
 
 ---

@@ -8,7 +8,7 @@ export const mail = {
   // Pickle's delivery notes
   'mail.pickleWelcome.subject': "Pickle's Deliveries: hello!",
   'mail.pickleWelcome.body':
-    'Ribbit! New flat, new customer. Lovely.\nOrder from the catalog and I hop it over.\nPay in Hearts. No flies accepted.\nPickle (and the box)',
+    'Ribbit! New flat, new customer. Lovely.\nOrder from the catalogue and I hop it over.\nPay in Hearts. No flies accepted.\nPickle (and the box)',
   'mail.pickleFirstOrder.subject': 'Your first order!',
   'mail.pickleFirstOrder.body':
     'Delivered, signed for, slightly damp.\nThe box is free. The black cat has it now.\nRibbit. That one was a thank you.\nPickle',

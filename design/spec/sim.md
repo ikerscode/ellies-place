@@ -206,6 +206,7 @@ Mood is recomputed every 20 ticks (1 game minute) and smoothed: displayed mood m
 - The same id refreshes its timer and does not stack.
 - **Cap:** the sum of active moodlets is capped at +25. At most 8 active (soak cap).
 - There are **no negative moodlets**.
+- "Moodlet" is internal only; player text says "mood boost".
 
 ### 3.3 Mood bands and the Hearts multiplier
 
@@ -688,7 +689,7 @@ Used for George's verdicts (§10.2), cat happiness (§8.9) and thought icons. Di
 | Cat | Likes | Dislikes |
 | --- | --- | --- |
 | George | Goth, Retro, layer-2 perches, items priced ≥ 150 Hearts, being served first | Neon, Gym items, being picked up below bond 60 (he accepts at a lower rate) |
-| Salem | Cat, Neon, boxes, ham, anything new | The bath (he runs past it) |
+| Salem | Cat, Neon, boxes, ham, anything new | The bath (she runs past it) |
 | Shadow | Goth, Plant, dark corners, quiet | Neon, Heavy music, three or more actors within 3 tiles |
 | Peaches | Cottage, Plant, Retro, music, sun | Rain (sits at the window looking pensive) |
 
@@ -846,7 +847,7 @@ Each source gives base points × `clamp(P_tag, 0.5, 1.5)` for that cat (§8.4).
 | Eating from a bowl Ellie filled within 2 game h | +1 | Once per fill per cat. |
 | Shadow trust: Ellie still nearby (§10.4) | +1 per 10 game min | Own cap: +6 per game day; not counted in the soft cap. |
 | Photo of the cat (first per cat per day) | +1 | |
-| Cat in the same room while Ellie does its favourite thing (George: she eats at the table, he supervises; Salem: she plays the console, he watches the screen; Peaches: music on; Shadow: she reads) | +1 per game hour | Max +3 per day. |
+| Cat in the same room while Ellie does its favourite thing (George: she eats at the table, he supervises; Salem: she plays the console, Salem watches the screen; Peaches: music on; Shadow: she reads) | +1 per game hour | Max +3 per day. |
 | Race cheer | +2 | Full scope. |
 
 **Daily soft cap:** the first **10 points** per cat per game day count fully; further gains count ×0.3. The day resets at 00:00.
@@ -908,11 +909,11 @@ Quirks are utility boosts (Q) or scheduled actions. Scheduled ones interrupt a c
 | Quirk | Rule | Effect |
 | --- | --- | --- |
 | **Follows Ellie** | From bond level 1. For 10 game min after Ellie enters a new room, `ellie.follow` gets Q ×2 (on top of P 1.7) while Salem is awake and not eating | Target: Salem shares Ellie's room ≥ 40 % of her awake time (§15). |
-| **Every box** | When a delivery box appears: `box.sit` on it gets Q ×3 for 60 game min while Chaos < 95 | Target: ≥ 80 % of boxes get Salem within 60 game min while he's awake. Each box counts once for the 50-box sticker. |
+| **Every box** | When a delivery box appears: `box.sit` on it gets Q ×3 for 60 game min while Chaos < 95 | Target: ≥ 80 % of boxes get Salem within 60 game min while she's awake. Each box counts once for the 50-box sticker. |
 | **Knocking** | `surface.knock` on small decor in surface slots. Cap 3 knocks per game day | The item lands on the floor (mess) and never breaks. |
 | **Shiny Trinkets** | Each knock: p = 0.35 that a Shiny Trinket lands beside the item. Max 2 trinkets per day from knocks (+1 from the bond level 2 gift, so max 3 a day) | Feeds Poe's trades. |
-| **The new vase** | On leaving Build mode, if a new small item was placed on a surface: p = 0.5 he knocks it within 10 game min (counts toward the daily cap) | The brief's joke. |
-| **Ham** | `fridge.give_ham` is his favourite treat (P 1.6) | |
+| **The new vase** | On leaving Build mode, if a new small item was placed on a surface: p = 0.5 she knocks it within 10 game min (counts toward the daily cap) | The brief's joke. |
+| **Ham** | `fridge.give_ham` is her favourite treat (P 1.6) | |
 | **Can't read** | Sits on mail and on the catalog laptop's warm spot; no sim effect (lines only) | |
 
 ### 10.4 Shadow

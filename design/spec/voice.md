@@ -4,12 +4,12 @@ Owner: writer. Every player-facing line in Ellie's Place follows this page. Pers
 
 ## House rules
 
-- **British English.** Colour, favourite, cosy, telly, post, biscuit, mum, realise. Sushi is always vegetarian when Ellie makes it.
+- **British English.** Colour, favourite, cosy, telly, post, biscuit, mum, realise. Displayed text says "catalogue"; keys and ids keep `catalog`. Sushi is always vegetarian when Ellie makes it.
 - **Short.** Most lines are one or two sentences. Some are one word. Mix the lengths so a run of bubbles doesn't read like a metronome.
 - **Specific beats general.** "Salem is in the box. Salem lives in the box now." beats "Salem loves boxes!"
 - **Funny first, warm underneath.** The cats are devoted to Ellie and would sooner eat cucumber than say so (except Salem, who says so every four seconds).
 - **No romance.** No confessions, no love letters, no hearts text from game 1. The giver never appears or speaks. Mail from the giver lives only in `src/content/personal.ts`, and he writes it himself.
-- **No IP.** No names, creatures, catchphrases, items or invented-language words from The Sims, Pokémon, Nintendo or any other game or show. The life sim and the monster RPG are ours. Real band names appear only as text on record sleeves, with no lyrics.
+- **No IP.** No names, creatures, catchphrases, items or invented-language words from The Sims, Pokémon, Nintendo or any other game or show. The life sim and the monster RPG are ours. Real band names appear only as text on record sleeves, with no lyrics. Internal terms such as "moodlet" never reach players: player text says "mood boost".
 - **Punctuation.** No em or en dashes, and no `--` standing in for one. Use three full stops for a trailing pause (`...`), never the single ellipsis character. Straight quotes and apostrophes only, because the pixel font is ASCII-first. `é` in "café" is the one exception.
 - **Placeholders:** `{name}` for Ellie's name, `{cat}` for a cat's name, `{n}` for a number. Nothing else.
 - **Pronouns:** George, Shadow, Bruce and Pickle are "he". Salem and Peaches are "she". Poe is "Poe".
@@ -55,7 +55,7 @@ Limits count characters after placeholders are filled with typical values (`{nam
 - **Speech:** `cat.<cat>.<situation>.nn`, `visitor.<bruce|poe|pickle>.<situation>.nn`, `ellie.<situation>.nn`. Lines that share everything but the number are interchangeable variants, numbered 01, 02... with no gaps, so code can pick one with the seeded RNG by counting keys under the prefix.
 - **Common situations:** `pet`, `idle`, `food`, `nap`, `bed`, `morning`, `newItem`, `approve`/`disapprove` (George on new furniture), `race`, `caption` (photo captions), `lowMood`, `grass`, plus each cat's own (`box`, `ham`, `knock`, `zoomies`, `laser` for Salem; `sunbeam`, `record`, `lid` for Peaches; `heavy`, `lap`, `trust` for Shadow; `fish`, `pillow`, `bow`, `knight` for George).
 - **Onboarding:** `onboard.<speaker>.<step>.nn`, in play order, and `onboard.ui.*` for its buttons.
-- **Content:** `int.<interactionId>`, `wish.<wishId>`, `asp.<id>.name|desc|tier.<1-4>`, `mail.<mailId>.subject|body`, `item.<itemId>.name|desc`, `room.<roomId>`.
+- **Content:** `int.<interactionId>`, `wish.<wishId>`, `asp.<id>.name|desc|tier.<1-4>` (ids `hyrox`, `royalty`, `home`, `collect`, FROZEN §3 #7), `mail.<mailId>.subject|body`, `item.<itemId>.name|desc`, `room.<roomId>`.
 - **UI keyed by contract enums,** so code can build the key: `ui.need.<EllieNeed>`, `ui.catNeed.<CatNeed>`, `ui.bond.<0-4>`, `ui.mood.<MoodBand>`, `ui.phase.<DayPhase>`, `ui.mode.<GameMode>`, `ui.speed.<0-3>`, `ui.day.<Weekday>`, `ui.category.<ItemCategory>`, `ui.style.<StyleTag>`, `ui.cosy.<CosyFactor>`, `ui.journal.<JournalTab>`, `ui.radio.<RadioStation>`, `ui.hyrox.<HyroxStation>`, `ui.toast.place.<PlacementError>`.
 - **Other UI:** `ui.<area>.<thing>`; toasts are `ui.toast.*`, hints `ui.hint.*`.
 
@@ -75,7 +75,7 @@ Few words. Dry, warm, a bit tired in the mornings. She speaks rarely, so each li
 6. Veggie, please. Always veggie.
 7. Salem, that's the delivery. Oh. Fine. It's yours.
 8. This is the good grass.
-9. Who keeps moving the Deftones records?
+9. Who keeps moving my records?
 10. One more battle. Then bed. Probably.
 
 ### George
@@ -116,7 +116,7 @@ Small, black, sweet and goofy. All caps when excited, in short bursts. Loves ham
 
 Big, black, unimpressed. Minimal and deadpan. Denies having feelings, then quietly turns up when Ellie is low. Likes the dark: under the bed, on the wardrobe, in the closet. Leaves when the Heavy station goes on.
 
-- Avoid: exclamation marks, more than two sentences, admitting anything.
+- Avoid: exclamation marks, more than three short fragments (at most three per line), admitting anything.
 
 1. I'm not purring. That's the floor.
 2. Move things. Quietly.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FRAMED_PRINT_TEXT, PERSONAL } from '../../../src/content/personal';
 import { STRING_DOMAINS, STRINGS } from '../../../src/content/strings';
-import { KEY_RE, badChars, badPlaceholders, bannedHits, lengthProblem } from './rules';
+import { BAND_RE, KEY_RE, badChars, badPlaceholders, bandNameAllowed, bannedHits, lengthProblem } from './rules';
 
 const entries = Object.entries(STRINGS);
 
@@ -30,6 +30,9 @@ describe('rules helpers', () => {
     expect(bannedHits('A love letter for you')).toHaveLength(1);
     expect(bannedHits("You've got this!")).toHaveLength(1);
     expect(bannedHits('Grazie per essere te stessa')).toHaveLength(1);
+    expect(bannedHits('Browse the catalog')).toHaveLength(1);
+    expect(bannedHits('Browse the catalogue')).toEqual([]);
+    expect(bannedHits('A wish moodlet')).toHaveLength(1);
   });
 
   it('catches over-length lines per key prefix', () => {
@@ -77,6 +80,18 @@ describe('string tables', () => {
   it('use only ASCII (plus é) and the three placeholders', () => {
     expect(problems((_k, v) => badChars(v).join('') || null)).toEqual([]);
     expect(problems((_k, v) => badPlaceholders(v).join(', ') || null)).toEqual([]);
+  });
+
+  it('keep real band names on record sleeves only', () => {
+    expect(bandNameAllowed('record.sleeve.deftones')).toBe(true);
+    expect(bandNameAllowed('ellie.records.01')).toBe(false);
+    expect(entries.filter(([k, v]) => BAND_RE.test(v) && !bandNameAllowed(k))).toEqual([]);
+  });
+
+  it('key aspirations by the frozen ids', () => {
+    // Three or more segments: asp.<id>.<field>. Two-segment keys (asp.tier_done) are shared UI text.
+    const ids = new Set(entries.map(([k]) => k.split('.')).filter((p) => p[0] === 'asp' && p.length > 2).map((p) => p[1]));
+    expect([...ids].sort()).toEqual(['collect', 'home', 'hyrox', 'royalty']);
   });
 
   it('fit the length limits in design/spec/voice.md', () => {
