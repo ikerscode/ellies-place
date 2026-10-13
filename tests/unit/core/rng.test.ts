@@ -107,3 +107,22 @@ describe('rng (mulberry32)', () => {
     }
   });
 });
+
+describe('forkRng', () => {
+  it('is deterministic, advances the parent once, and salts differ', async () => {
+    const { createRng, forkRng, nextU32 } = await import('../../../src/core/rng');
+    const p1 = createRng(1);
+    const p2 = createRng(1);
+    const c1 = forkRng(p1, 5);
+    const c2 = forkRng(p2, 5);
+    expect(c1).toEqual(c2);
+    expect(p1).toEqual(p2);
+    const ref = createRng(1);
+    nextU32(ref);
+    expect(p1.a).toBe(ref.a);
+    const p3 = createRng(1);
+    const c3 = forkRng(p3, 6);
+    expect(c3.a).not.toBe(c1.a);
+    expect(nextU32(c1)).toBe(nextU32(c2));
+  });
+});
