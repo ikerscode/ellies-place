@@ -1,10 +1,10 @@
 # PROGRESS
 
 - **Start:** Mon 12 Oct 2026 22:34 SAST
-- **Last update:** Tue 13 Oct 22:16 SAST
+- **Last update:** Tue 13 Oct 22:40 SAST
 - **Current wave:** 1 (design freeze). First dispatch (Mon 22:51) was killed by a forced PC restart before any commits; partial files survive in audio-dev, pixel-artist-lead, writer worktrees. Re-dispatched Tue 15:51 in two batches of 4 to keep memory down: batch A architect#1 + 3 game designers (running); architect done 16:08; writer + pixel-artist#lead dispatched 16:09 (told to merge main for contracts); game-designer#systems done (sim.md 767d2e5); audio-dev dispatched 16:12; game-designer#play done (play.md ce081b7); ui-dev dispatched 16:16 (all 8 dispatched). writer done (w1/writer, 63 tests). game-designer#home done (home.md 239827e). pixel-artist#lead done (33 sprites, base.png checked by lead: ported characters look right; cats front-only, new poses + side/up views go to Wave 2 pixel-artist#A). audio-dev done (bf89807, 105 tests, peaks ≤0.76; contract request: AudioCue build.wall, build.floor, race.horn). ui-dev done (205f685, ui.md, 5 additive contract requests). All 8 Wave 1 agents done. integrator#1 merged all 7 branches, no conflicts, 148 tests, e2e smoke green (Chromium). FROZEN.md written. Next: architect contracts v2 + ip-and-tone-guard, then code-reviewer, then Gate 1. Earlier, all three hit the account session limit ~16:20 (resets 20:00); resumed via SendMessage 22:16 with context intact (audio 5 commits, pixel 5 commits, ui 0). Lead drafting FROZEN decisions (home.md vs play.md economy conflicts found).
 - **Merged branches:** all Wave 1 (game-designer-systems, -home, -play, writer, pixel-artist-lead, audio-dev, ui-dev) on main.
-- **Gate status:** Gate 0 GREEN on Chromium (typecheck, lint, 15 unit tests, build 174.6 KB, e2e smoke, soak stub). WebKit NOT run, see below.
+- **Gate status:** Gate 1 mechanical checks GREEN on Chromium at 22:40 (typecheck, lint 58 files, 164 unit tests, build 174.6 KB, e2e smoke, soak stub, art:sheet real). Waiting on code-reviewer#1 contracts review. WebKit still NOT run (see Decisions).
 
 ## Decisions
 
@@ -16,6 +16,9 @@
 
 - Agents are told to commit early and often so a restart loses at most one section.
 
+- Lead model switched to Sonnet 5.5 by the user at 22:3x; commit trailers by lead now say Claude Sonnet 5.5. Agents still use Opus 5.5.
+- Rulings 17-19 in FROZEN: sim runs at x1 behind minigames; sim.md interaction ids win; Wave 2 writer does placement-error strings.
+
 ## Next step
 
-architect#2 applies FROZEN §4 contracts v2; ip-and-tone-guard reviews specs + strings; then code-reviewer on contracts; then Gate 1.
+code-reviewer#1 reviewing contracts (reports/wave1-contracts-review.md). Then fix any blocks (architect), commit "wave 1: spec frozen", create Wave 2 worktrees (13 agents, batches of 4-5 to limit memory and usage-limit risk).
