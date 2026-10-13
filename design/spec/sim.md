@@ -357,6 +357,7 @@ Effects are **net totals** at the listed duration (rates where marked `/h`). Adv
 | `bath.bathe` | bath | Bath | 40 | Calm +27, Energy +4 | Yes | | MVP |
 | `sink.wash_up` | tidy | Sink | 6 | Clears all dirty dishes in the kitchen-diner and in hand; Calm +1 each (max +4) | Yes | Any dirty dish exists | MVP |
 | `mess.put_back` | tidy | A knocked-over item | 1 | Returns it to its slot; Calm +1 | Yes | | MVP |
+| `trinket.pick_up` | tidy | A Shiny Trinket on the floor | 1 | Trinket to pocket (cap 99); Fun +2 | Yes | | MVP |
 | `box.flatten` | tidy | Delivery box | 2 | Removes the box; Calm +1 | Yes | No cat inside; ≥ 2 boxes on the lot | MVP |
 | `grass.stargaze` | stargaze, garden_sit | Garden grass | 30 | Calm +12, Fun +8 | Yes (no wishes made) | 21:00–04:30, not raining | MVP |
 | `lanterns.light` | lanterns | Garden lanterns | 3 | Calm +2; lanterns lit until 02:00 | Yes | 19:30–01:00 | MVP |
@@ -387,9 +388,9 @@ Ellie → cat interactions (the cat side is in §8.6):
 | `george.bow` | cat_social, care | 2 | Fun +4 | Yes | George | MVP |
 | `george.knight` | cat_social | 5 | Fun +10; title "Sir Ellie" | No (player, once) | George bond level 4 | MVP |
 | `peaches.headbang_together` | cat_social, headbang, exercise_light | 10 | Fun +14, Fitness +3 | Yes | Peaches bond level 2, Heavy on | MVP |
-| `cat.call` | cat_social | 1 | Calls the cat over (cat accepts per §8.7) | No | Bond level 3 | Full |
+| `cat.call` | cat_social | 1 | Calls the cat over (cat accepts per §8.7) | No | That cat at bond level 4 | Full |
 
-Counts: 46 MVP Ellie interactions (brief asks for 25) and 7 Full, 53 in total (brief full target 45). Cat interactions are counted in §8.6.
+Counts: 47 MVP Ellie interactions (brief asks for 25) and 7 Full, 54 in total (brief full target 45). Cat interactions are counted in §8.6.
 
 ### 4.4 Rules shared by all interactions
 
@@ -743,7 +744,7 @@ Cat side of Ellie's interactions (applied to the target cat, × `clamp(P_tag, 0.
 | `bowls.fill` | Refills each empty bowl (1 serving); George Royalty +12 if within 8 tiles | +1 to each cat that eats from it within 2 game h |
 | `peaches.headbang_together` | Vibes +20, Play +10 | +4 |
 
-Counts: 24 MVP cat-only interactions plus 10 MVP Ellie-to-cat ones (brief asks for 12 MVP, 25 full); 3 Full.
+Counts: 25 MVP cat-only interactions (including `idle`) plus 10 MVP Ellie-to-cat ones, 35 MVP in all (brief asks for 12 MVP, 25 full); 4 more are Full scope.
 
 ### 8.7 Accepting, refusing and requests
 
@@ -845,7 +846,7 @@ Each source gives base points × `clamp(P_tag, 0.5, 1.5)` for that cat (§8.4).
 | Eating from a bowl Ellie filled within 2 game h | +1 | Once per fill per cat. |
 | Shadow trust: Ellie still nearby (§10.4) | +1 per 10 game min | Own cap: +6 per game day; not counted in the soft cap. |
 | Photo of the cat (first per cat per day) | +1 | |
-| Cat present in a room where Ellie does that cat's favourite thing (George: being bowed to in public is covered; Salem: any `play_*`; Peaches: music on; Shadow: reading) | +1 per game hour | Max +3 per day. |
+| Cat in the same room while Ellie does its favourite thing (George: she eats at the table, he supervises; Salem: any `play_*` with another cat or toy; Peaches: music on; Shadow: she reads) | +1 per game hour | Max +3 per day. |
 | Race cheer | +2 | Full scope. |
 
 **Daily soft cap:** the first **10 points** per cat per game day count fully; further gains count ×0.3. The day resets at 00:00.
@@ -871,3 +872,224 @@ Level-up also pays Hearts (flat, no mood multiplier). Suggested amounts for play
 
 All four at level 4 sleeping on the bed while Ellie sleeps is the Cat Royalty final tier (play.md). At night, every level-4 cat gets Q ×3 on its own bed slot (George pillow, Salem side, Peaches foot, Shadow corner), so the scene happens within a night or two of the last level-up.
 
+---
+
+## 10. Quirk schedules
+
+Quirks are utility boosts (Q) or scheduled actions. Scheduled ones interrupt a cat's current action (§6.4). All times use `minuteOfDay` (wall clock in real-time mode).
+
+### 10.1 Salem: 3 a.m. zoomies
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Roll | At 00:00, p = 0.70 | Most nights, not all, so it stays a surprise. |
+| Start | Uniform in 02:45–03:30 (RNG at the roll) | "3 a.m." |
+| Length | 3–6 game min (RNG) | |
+| Route | Laps through at least 3 rooms (all reachable rooms if fewer), at 7 tiles/s, ending with a skid and a sit | |
+| Effects | Salem Chaos +30, Play +15, Nap −4 | |
+| On Ellie | None while she sleeps (no Calm cost, no waking). If she is awake within 6 tiles: the noise rule in §2.3 applies | Never punish her sleep. |
+| Photo flag | `quirk.zoomies3am` is active for the duration, for the photo sticker | Brief §15. |
+| Daytime zoomies | `self.zoomies` at any time (90 game min cooldown) | |
+
+### 10.2 George
+
+| Quirk | Rule | Effect |
+| --- | --- | --- |
+| **Pillow at night** | From bond level 1. When Ellie starts `bed.sleep` between 21:00 and 03:00, or at 22:30 if she isn't in bed yet: p = 0.6 he takes the pillow slot of her bed. He stays until she wakes or 07:00. | Royalty +10/h, Nap +9/h. Ellie's sleep and Energy are unchanged; she curls up on the other side. |
+| **Sits on what she's using** | When Ellie starts `laptop.*`, `bookshelf.read`, `console.play` or eating at a table, with George awake within 10 tiles and Royalty < 70: p = 0.15, at most once per 2 game h | He sits on the keyboard, book or plate edge for up to 3 game min. Her action pauses (its duration extends; gains unchanged). Royalty +10, Ellie Fun +3. |
+| **Claims her spot** | When Ellie queues a seat or bed interaction, with George within 8 tiles, Royalty < 60, and his path shorter than hers: p = 0.3 | He sits there first. Ellie waits beside it; he yields after 2–4 game min with a line. Royalty +12. |
+| **Served first** | During `bowls.fill`, if George is within 8 tiles | His bowl is filled first (animation order). Royalty +12. |
+| **Inspects new furniture** | On leaving Build mode: up to 3 newly placed items, most expensive first, within 10 game min, 2 min each | Verdict: approve if the item has a George-liked style or costs ≥ 150 Hearts; disapprove if it has a disliked style and no liked one; otherwise approve with p = 0.6 (+0.2 from bond level 2). Verdicts are cosmetic: a line and a crown-up or crown-down icon. Royalty +3 each. |
+| **Paw lick** | Idle animation weight 0.5 when idle | |
+| **Sushi** | Asks for fish during `counter.make_sushi` (play.md owns the line; Ellie always says no) | No sim effect. |
+
+### 10.3 Salem
+
+| Quirk | Rule | Effect |
+| --- | --- | --- |
+| **Follows Ellie** | From bond level 1. For 10 game min after Ellie enters a new room, `ellie.follow` gets Q ×2 (on top of P 1.7) while Salem is awake and not eating | Target: Salem shares Ellie's room ≥ 40 % of her awake time (§15). |
+| **Every box** | When a delivery box appears: `box.sit` on it gets Q ×3 for 60 game min while Chaos < 95 | Target: ≥ 80 % of boxes get Salem within 60 game min while he's awake. Each box counts once for the 50-box sticker. |
+| **Knocking** | `surface.knock` on small decor in surface slots. Cap 3 knocks per game day | The item lands on the floor (mess) and never breaks. |
+| **Shiny Trinkets** | Each knock: p = 0.35 that a Shiny Trinket lands beside the item. Max 2 trinkets per day from knocks (+1 from the bond level 2 gift, so max 3 a day) | Feeds Poe's trades. |
+| **The new vase** | On leaving Build mode, if a new small item was placed on a surface: p = 0.5 he knocks it within 10 game min (counts toward the daily cap) | The brief's joke. |
+| **Ham** | `fridge.give_ham` is his favourite treat (P 1.6) | |
+| **Can't read** | Sits on mail and on the catalog laptop's warm spot; no sim effect (lines only) | |
+
+### 10.4 Shadow
+
+| Quirk | Rule | Effect |
+| --- | --- | --- |
+| **Slow trust** | Ellie is in a `sit` or `lie` posture (any interaction, awake or asleep) and Shadow is awake, not hiding, in the same room (garden counts) within 6 tiles, for 10 continuous game minutes | Bond +1 per full 10 game min, max +6 per game day (own cap). |
+| **Won't be picked up** | Below bond 40, `cat.pick_up` is refused (§8.7) | A line, no loss. |
+| **Lap while reading** | Bond ≥ 60 and Ellie is in `bookshelf.read` (or any read): every 10 game min p = 0.25 he picks `ellie.lap_sit` | Brief: "At a high bond he sits on her lap while she reads." |
+| **Secret softness** | Ellie's mood < 35: Shadow's `ellie.near` gets Q ×4, ending 2 tiles from her, for 30 game min; cooldown 180 game min. Works at any bond level | While he's within 3 tiles: Ellie Calm +10/h. He doesn't let it raise his Solitude decay (the 3-tile rule is suspended for this action). |
+| **Leaves for Heavy** | When Heavy starts in his room (or he's in a room with Heavy playing): he leaves within 1 game min for the furthest room, preferring `hide.sit`. Candidates in that room score 0 while Heavy plays | A line on the way out (p 0.8). |
+| **Crowds** | Three or more actors within 3 tiles: candidates in that spot ×0.5 | |
+
+### 10.5 Peaches
+
+| Quirk | Rule | Effect |
+| --- | --- | --- |
+| **Follows sunbeams** | While in `sunbeam.bask`, every 10 game min: if her tile is no longer a sunbeam tile, she stretches and moves to the nearest sunbeam tile of the same beam within 4 tiles; if none, the action ends | She drifts across the floor through the day. |
+| **Bops to music** | `music.vibe` (P 1.7). Lo-fi and Cosy give +25/h | Bop animation on the beat. |
+| **Record player lid** | Music off, Vibes < 50, Ellie in the living room: `record_player.lid_sit` Q ×1.5 | A hint to put music on. |
+| **Warm devices** | `device.warm` on a laptop or console used within 30 game min | |
+| **Rusk ritual** | When Ellie starts `grass.rusk_ritual` (garden open, Peaches awake): `sunbeam.bask` on grass within 3 tiles of Ellie gets Q ×3 | Brief §10.3: Peaches lies in the sun beside her. |
+| **Shadow at the ritual** | At the same moment, from Shadow's bond level 1: `ellie.near` at 4–6 tiles gets Q ×2 | "Shadow turns up at a polite distance." |
+
+### 10.6 Reactions when Build mode closes
+
+| Cat | Reaction | Chance |
+| --- | --- | --- |
+| George | Inspects (§10.2) | 1.0 |
+| Salem | Knocks the new vase (§10.3); sits in any new box or tunnel | 0.5; 0.8 |
+| Peaches | Tries a new seat, bed or rug within 15 game min | 0.6 per item, max 2 |
+| Shadow | Tries a new hiding spot or dark corner within 30 game min; ignores everything else | 0.7 |
+
+---
+
+## 11. Sunbeams
+
+### 11.1 The sun
+
+The in-game sun path is stylised for the top-down three-quarter view: it rises at **screen-left**, arcs over the **back (top) wall**, and sets at **screen-right**. Light falls down-screen into rooms.
+
+| Window wall | Active | Peak | Beam direction |
+| --- | --- | --- | --- |
+| Left wall (morning) | 06:30–11:00 | 08:00 | Into the room towards screen-right |
+| Back wall (midday) | 09:00–16:30 | 12:45 | Down-screen into the room |
+| Right wall (evening) | 14:30–19:00 | 17:30 | Into the room towards screen-left |
+| Front wall | none | | Not drawn in this view |
+
+No sunbeams on rain days (§13). The garden grass is "in sun" 07:00–19:00 except the tree's shade (a 3 × 2 tile patch below the tree, home.md places the tree).
+
+### 11.2 Beam shape
+
+For a window `w` tiles wide, with `p = (t − start) / (end − start)` in 0..1:
+
+| Wall | Depth into the room (tiles) | Sideways shear across the full depth (tiles) |
+| --- | --- | --- |
+| Left | `D = 5 − 3p` (long at dawn, shorter later) | `+1` (drifts down-screen) |
+| Back | `D = 2 + 2 × (1 − sin(πp))` (4 at the edges, 2 at noon) | `S = 3 × (1 − 2p)`: slants right in the morning, left in the afternoon |
+| Right | `D = 2 + 3p` (lengthens towards sunset) | `+1` |
+
+- The beam is the parallelogram from the window span, extended `D` tiles inwards and sheared by `S`, clipped to the room's floor.
+- **Sunbeam tiles** (for logic) are floor tiles at least 50 % covered. Beams also light layer-1 surfaces they cross (bed, sofa, rug), so Peaches can bask on the bed.
+- Logic recomputes the tile set every **5 game min** (deterministic); the renderer interpolates the shape smoothly.
+- **Intensity** (additive light alpha): `0.1 + 0.35 × sin(πp)`.
+
+### 11.3 What home.md must provide
+
+At least one left-wall window, one back-wall window and one right-wall window across the indoor rooms, with the living room having at least one. Then indoor sunbeams cover 06:30–19:00 and Peaches always has somewhere to go on a dry day.
+
+---
+
+## 12. Visitors
+
+### 12.1 Bruce (flame point Siamese)
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| First visit | Day 2, at a uniform time 11:00–15:00, at the garden fence | Guaranteed early mystery. |
+| Hourly roll | Each game hour from 07:00 to 21:00: p = 0.08 | ≈ 1.1 visits a day. |
+| Limits | Max 2 visits per game day; at least 4 game h between visits | Rare enough to be a treat. |
+| Where | Garden fence 0.35, under the kitchen table 0.20, behind the TV 0.15, on top of the fridge 0.15, in a delivery box 0.15 (needs a box; otherwise its weight goes to the fence). A not-yet-found hiding spot gets ×1.5 weight | The five hiding places from the brief; new ones come up faster. |
+| Window peeks | Separately, p = 0.10 per visit that he appears at a window instead (flavour, doesn't count as a hiding spot) | Brief: "at the garden fence or a window". |
+| Stays | 45–90 game min, or until spotted | |
+| Spotted | The player clicks him (`bruce.spot`), or Ellie passes within 3 tiles with a clear line | He says a denial line, then vanishes 5 s later. Spot count +1; the hiding spot is marked found. |
+| Moves in | After **10 spots with all 5 spots found**, or after **15 spots** in any case | Brief: "eventually he moves onto the garden wall for good." The 15 fallback means a missing box never blocks it. |
+| After moving in | On the garden wall 08:00–20:00 every day (still denies everything when clicked). Hiding visits continue at p = 0.04 per hour | |
+| Cats | Within 8 tiles of a visible Bruce: Salem `window.sit` / `watch_bird` Q ×2; George a disapproving look; others ignore him | |
+
+### 12.2 Poe (raven)
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| First visit | Day 3, 10:00–14:00 | After Salem has had time to knock things off. |
+| Daily roll | At 00:00: p = 0.60. Forced to 1.0 if Ellie holds ≥ 3 trinkets and Poe hasn't come for 2 days | Trades never stall. |
+| Arrival | Uniform 09:00–16:00, not in rain (if rain covers the time, he comes right after) | |
+| Stays | 90 game min, or 10 min after a trade | |
+| Where | The bird bath (always in the garden) | |
+| Trades | `poe.trade` opens the trade screen; play.md owns the table | |
+| Cats | Salem `bird_bath.watch` Q ×2; Peaches ignores; George watches from a perch | |
+
+### 12.3 Pickle (frog, Pickle's Deliveries)
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Delivery wait | 45 game min after ordering in Live mode | "A short in-game wait": 45 s at ×1. |
+| Batching | Every order placed during the wait joins the same delivery | One knock, one box. |
+| Night | Deliveries come at any hour (Pickle works nights; it's a joke in his note) | No waiting until morning. |
+| Arrival | A knock (audio cue), Pickle at the front step for 15 game min, a box on the doormat, a delivery note (mail item, play.md) | |
+| Answering | Optional: `door.answer` within the 15 min gives Fun +3 and his line. Nothing is lost if she doesn't | |
+| Build mode orders | Arrive instantly; one box is left on the front step for Salem when she returns to Live mode | Brief §9. |
+| Day 1 | Pickle visits during the tour (onboarding, play.md) | |
+| Cats | Salem's box rule (§10.3); George inspects the box (`furniture.inspect`, Royalty +3) | |
+
+---
+
+## 13. Weather
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Rain roll | At 00:00, p = 0.15 | Occasional rain, as in the audio brief. |
+| Never | Day 1, Saturdays, or two days in a row | Race day and the first day stay dry. |
+| Rain window | Start uniform 06:00–18:00, lasts 120–360 game min | |
+| Effects | No sunbeams; outdoor interactions ×0.3 in free will (never forbidden); Ellie's Calm decay ×0.6 indoors; Peaches watches from a window (`window.sit` Q ×1.5) | Rain is cosy, not a loss. |
+
+---
+
+## 14. RNG order (determinism)
+
+All randomness uses the state RNG. Daily rolls at 00:00 happen in this fixed order: rain, Salem's zoomies (and start time), Poe's visit (and arrival time), Bruce's daily bookkeeping. Hourly rolls on the hour, in this order: Bruce, then the good-mood trickle (no RNG). George's pillow roll happens when its trigger fires. Within a tick, actors decide in entity id order (Ellie first). Candidate noise draws happen in sorted candidate order.
+
+---
+
+## 15. Soak invariants (targets for `npm run soak`)
+
+Run: 30 game days, free will on, no player input, seed fixed. Start from a new game with the starting home (home.md) and no purchases.
+
+| # | Invariant | Target |
+| --- | --- | --- |
+| 1 | Ellie's needs (Energy, Hunger, Fun, Fitness, Calm) | After dropping below 50, each is back above 50 within 24 game hours. Cosy is excluded (it is a room score). |
+| 2 | Cat needs (Food, Play, Affection, Nap and the personality need, for all four) | Same: back above 50 within 24 game hours. |
+| 3 | Daily mean mood | ≥ 50 on every day; time with mood < 25 ≤ 5 % of the run. |
+| 4 | Actions complete | Every agent completes ≥ 1 action per game hour. Sleep and naps count because they run in 60-minute chunks (§5.5, §2.4). |
+| 5 | Stuck | No agent without progress (no position change and no action progress) for > 2 game hours. |
+| 6 | Bedtime | Ellie starts `bed.sleep` between 21:30 and 01:00 on ≥ 80 % of days and wakes between 05:30 and 10:00 on every day. |
+| 7 | Bonds | Every cat gains ≥ 15 bond over the 30 days; no cat ever loses more than 2 in a day; levels never drop. |
+| 8 | Salem | Shares Ellie's room ≥ 40 % of her awake time; 3 a.m. zoomies happen on 14–28 nights. |
+| 9 | Peaches | Basks in a sunbeam ≥ 60 game min on ≥ 70 % of dry days. |
+| 10 | Shadow | Trust gain happens on ≥ 50 % of days. |
+| 11 | Visitors | Bruce 15–45 visits, max 2 per day; Poe 12–24 visits; Pickle 0 (no orders in an idle soak). |
+| 12 | Weather | 2–8 rain days, never two in a row, never on a Saturday. |
+| 13 | Caps | Ellie's queue ≤ 4; moodlets ≤ 8 and sum ≤ 25; mess ≤ 12; boxes ≤ 3; trinkets ≤ 99; Salem knocks ≤ 3 per day. |
+| 14 | Ranges | Every need in [floor, 100]; bond in [0, 100]; no NaN, undefined or Infinity. |
+| 15 | Hearts | Inside play.md's band. The mood multiplier stays in [0.8, 1.5]. |
+| 16 | Determinism | Same seed and inputs give the same final hash; save and reload round-trips deep-equal. |
+
+Rough day budget behind targets 1–3 (free will only): sleep ~7–8 h; three meals (~70 min, Hunger +90); two coffees or a ritual; four or five Fun actions (~150 min, Fun +60–80); one run or two gym sessions (Fitness +14–20 vs 18 decay); one Calm action (+15–30) plus sleep's +4/h; two bowl fills and two or three pets. That's about 8 of 16 waking hours busy, leaving room for walking and idling.
+
+---
+
+## 16. Notes for other specs and the architect
+
+### 16.1 Other specs must match
+
+| Spec | Must match |
+| --- | --- |
+| home.md | Interaction ids and tags in §4.3, §4.2 and §8.6 (item rows should reference them; new item interactions pick a tag and get its default effect). At least 2 layer-2 perch slots in the start home (wardrobe top, fridge top), one dark hide spot (under the bed), Ellie's bed with 4 cat slots, 4 cat bowls, a starter cat bed, a toy mouse, a brush, a feather wand and a laser pointer (pocket items), a kettle, a rusk tin, a bookshelf or a paperback, garden grass and a bird bath. Windows on left, back and right walls (§11.3). Unlock keys `bond:<cat>:<level>`. Cosy uses cat happiness (§8.9) and the mess count (§7.4). Lamps count when `darkness ≥ 0.3`. |
+| play.md | Good-mood trickle amount (`GOOD_MOOD_HEARTS`, suggested 2); bond level-up Hearts (15/25/40/60, flat); which Hearts sources take the mood multiplier (§3.3); minigame result factor 0.8–1.2 and skip = 0.8; race on Saturdays (weekday formula §1.4); Cat Royalty final tier = all four level-4 cats in bed slots while she sleeps; Poe's trade table uses Shiny Trinkets; the 50-box, 3 a.m. zoomies, Bruce five-spots and Shadow lap stickers use the flags here. |
+| ui.md | Queue cap 4 incl. the running entry, `queue.full` and `queue.dropped` toasts, mood band keys `mood.band.0..5`, bond level keys `bond.level.0..4`, thought/speech frequencies (§8.10). |
+| voice.md / strings | Lines for: refusals, "that's enough", George verdicts, Bruce denials, Shadow leaving for Heavy, Salem's 3 a.m. zoomies, "Sir Ellie" after the Knighting. |
+| audio.md | Cues: knock (Pickle), zoomies, knocked item landing, rain start and stop, bowl fill. |
+
+### 16.2 Contract notes for `types.ts` (the architect decides the exact shape)
+
+- `GameTime.fastForward: boolean` (sleep fast-forward, §1.3); per-tick `dtGameMin` and `dtActionMin` (§1.6).
+- `InteractionTag` string union with the ids in §4.2.
+- Interaction def fields listed in §4.1, including `autonomous`, `posture`, `window`, `requires`, `bondGain`.
+- `ActionRequest` (or the queued entry) carries `autonomous: boolean`; Ellie's queue cap is 4 including the running entry.
+- Sim state needs: moodlets (id, amount, endsAtTick), daily counters (coffees, knocks, trinkets, bond-points-today per cat, Shadow trust-today), Bruce state (spots, found set, movedIn), Poe and Pickle schedule, weather (raining, window), mess items, delivery boxes, trinket count, outfit and title unlock flags, active cat requests, quirk flags (`quirk.zoomies3am`).
+- Events: `bondLevelUp { cat, level }`, `visitorArrived/visitorLeft { visitor }`, `bruceSpotted { spot }`, `quirk { id }`, `requestStarted { cat, need }`, `moodBandChanged { band }`.
+- `NeedValues` floors: Fitness 20; cat needs 10.
