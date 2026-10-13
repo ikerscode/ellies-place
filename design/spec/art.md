@@ -438,14 +438,14 @@ All `outline` default, anchor top-left. Need and thought icons are 10 × 10; too
 
 ```ts
 import type { ArtBatch, SpriteDef } from '../../core/types';
-import { PAL, asKey, def, pad, stamp, mirror } from '../base';
+import { PAL, def, pad, stamp, mirror } from '../base';
 
 const sofa: SpriteDef = def('item.sofa_small', SOFA_GRID, { w: PAL.plum.hi, p: PAL.plum.base, ... }, { anchor: { x: 15, y: 24 } });
 export const BATCH: ArtBatch = { id: 'b', title: 'Bedroom, living, lighting', sprites: [sofa, ...] };
 ```
 
 - `def(key, grid, palette, opts?)` builds a `SpriteDef`; `opts` takes `anchor` (default bottom centre), `frames`, `dirs`, `outline`, `fps`.
-- `pad(grid, { top, right, bottom, left })`, `stamp(grid, x, y, patch)`, `mirror(grid)` and `recolor(grid, from, to)` are pure grid helpers.
+- `pad(grid, { top, right, bottom, left })`, `stamp(grid, x, y, patch)`, `fill`, `lift`, `mirror(grid)`, `recolor(grid, map)`, `seq(frames, counts)` and `rectsToGrids` are pure grid helpers.
 - `rasterize(grid, palette, outline)` returns RGBA pixels (works in Node, used by tests); `makeSprite`, `flipped`, `compileSprite` need a canvas.
 - `validateBatch(batch)` returns a list of problems (key format, duplicate keys, ragged rows, unknown palette characters, bad colours, mismatched frame sizes). Each batch's unit test calls it and expects `[]`.
 
