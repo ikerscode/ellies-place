@@ -292,8 +292,12 @@ Reasons:
 
 - **Sum of one of each:** 5,300 Hearts (MVP items: 3,019). Start-unlocked but not yet owned: 22 items for 788 Hearts. Mean price 43.
 - Feature pieces sit at about 3 to 4 times a mid item, so one big buy feels like a small goal (about one day of wishes), not a grind.
-- The 8 Hyrox stations total 625 Hearts (sled track included), so a full home gym is a 2 to 3 hour goal alongside decorating.
-- **For play.md's Hearts band:** owning 25 to 40% of the catalog after 2 hours means buying roughly 13 to 32 items past the 18 starters. Choosing the cheapest unlocked items, that costs about 300 to 1,000 Hearts. Owning 85 to 100% after 8 hours costs about 4,300 to 5,300 Hearts, minus the 8 free secret and Poe items. play.md must set earnings to land inside those numbers.
+- The 8 Hyrox stations total 595 Hearts (sled track included), so a full home gym is a 2 to 3 hour goal alongside decorating.
+- **For play.md's Hearts band** (measured as items *owned*, since 32% is already *unlocked* at minute one):
+  - 0 h: 18 of 124 owned (15%).
+  - 2 h target, 25 to 40% owned: 31 to 50 items, so 13 to 32 bought. The cheapest path costs 164 to 692 Hearts; a realistic mix is about 300 to 1,000. Unlocks by then must include Home Maker 1, Hyrox Hero 1 and Cat Royalty 1 (44 buyable non-starter items).
+  - 8 h target, 85 to 100% owned: 106 to 124 items. 14 of them arrive free (6 Poe, 8 secret). Buying the other 92 costs 4,347 Hearts; 85% costs at least 2,257 (cheapest path), realistically about 3,500.
+  - play.md must set Hearts earnings and aspiration pacing so both windows are hit.
 
 ### 4.4 Catalog table
 
