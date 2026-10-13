@@ -279,7 +279,7 @@ Mood is recomputed every 20 ticks (1 game minute) and smoothed: displayed mood m
 | `photo` | Photo mode | n/a (player only) | Fun +5 |
 | `laptop` | Laptop use (catalog, browsing) | 1.0 | Fun +24/h |
 | `tidy` | Washing up, putting things back, flattening boxes | 1.0 | Calm +1 per item |
-| `care` | Anything Ellie does for a cat's needs | 1.0 | adds the care term (§5.2) |
+| `care` | Anything Ellie does for a cat's needs | 1.0 | adds the care term (§5.1) |
 | `cat_social` | Ellie with a cat (pet, play, talk) | 1.2 | Fun +3, Calm +4 |
 | `visitor` | Bruce, Poe, Pickle interactions | 1.1 | Fun +3 |
 | `plant` | Watering, tending plants | 1.0 | Calm +4 |
@@ -361,7 +361,7 @@ Effects are **net totals** at the listed duration (rates where marked `/h`). Adv
 | `box.flatten` | tidy | Delivery box | 2 | Removes the box; Calm +1 | Yes | No cat inside; ≥ 2 boxes on the lot | MVP |
 | `grass.stargaze` | stargaze, garden_sit | Garden grass | 30 | Calm +12, Fun +8 | Yes (no wishes made) | 21:00–04:30, not raining | MVP |
 | `lanterns.light` | lanterns | Garden lanterns | 3 | Calm +2; lanterns lit until 02:00 | Yes | 19:30–01:00 | MVP |
-| `lamp.toggle` | lamp | Any lamp | 1 | Calm +1 when switching on at night | Yes (on at dusk in the room she is in; off when she goes to sleepeaving bed) | | MVP |
+| `lamp.toggle` | lamp | Any lamp | 1 | Calm +1 when switching on at night | Yes (on at dusk in the room she is in; off when she goes to sleep) | | MVP |
 | `front_door.run` | run, exercise | Front door (Ellie leaves the lot) | 40 | Fitness +14, Calm +8, Fun +4; exercise modifier costs ~ Energy −11, Hunger −5 | Yes | 06:00–21:00 | MVP |
 | `gym.<station>.train` | train_hyrox, exercise | Each of 8 stations | 20 | Fitness +10, Fun +5 (× result), skill (play.md); exercise modifier costs ~ Energy −5.5, Hunger −2.5 | Yes (auto-play) | Station placed | MVP |
 | `race_board.race` | race, exercise | Race board | play.md | play.md | No | | MVP |
@@ -558,7 +558,7 @@ If an interaction `requires` a hand item Ellie doesn't hold, the sim prepends th
 | `mug_full` | `kettle.make_coffee` | `mug.drink` |
 | `mug_rusk` | `kettle.make_coffee`, then `rusk_tin.take` | `grass.rusk_ritual` |
 | Music on | `record_player.play` | `record_player.listen` |
-| `book` | Take a book from the nearest bookshelf (1 min); if there is no bookshelf she reads her phone-sized paperback (always owned) | `bookshelf.read` |
+| `book` | Take a book from the nearest bookshelf (1 min); if there is no bookshelf she reads her own paperback (always owned) | `bookshelf.read` |
 
 - The utility score's distance uses the full trip (fetch object, then target).
 - If a fetch object doesn't exist (no kettle), the interaction is not offered and free will skips it.
@@ -578,8 +578,8 @@ If an interaction `requires` a hand item Ellie doesn't hold, the sim prepends th
 | --- | --- | --- |
 | Mess kinds | Dirty dishes, items Salem knocked off (§10.3) | Salem's mess from the brief. |
 | Effect | Calm decay (§2.3) and the clutter penalty in Cosy (home.md) | Gentle nudge to tidy. |
-| Lot cap | 12 mess items; at the cap the oldest fades away | Soak cap. |
-| Auto-fade | Any mess item older than 36 game hours fades | Nothing piles up forever while she is away or free will is off. |
+| Lot cap | 12 mess items; at the cap the oldest one clears itself | Soak cap. |
+| Auto-clear | Any mess item older than 36 game hours clears itself: dirty dishes vanish (washed off-screen), knocked items hop back to their slot | Nothing piles up while she is away or free will is off, and no decor is ever lost. |
 | Knocked items | Never break. `mess.put_back` returns them to their slot | Nothing gets taken away. |
 
 ### 7.5 Delivery boxes
@@ -935,7 +935,7 @@ Quirks are utility boosts (Q) or scheduled actions. Scheduled ones interrupt a c
 | **Record player lid** | Music off, Vibes < 50, Ellie in the living room: `record_player.lid_sit` Q ×1.5 | A hint to put music on. |
 | **Warm devices** | `device.warm` on a laptop or console used within 30 game min | |
 | **Rusk ritual** | When Ellie starts `grass.rusk_ritual` (garden open, Peaches awake): `sunbeam.bask` on grass within 3 tiles of Ellie gets Q ×3 | Brief §10.3: Peaches lies in the sun beside her. |
-| **Shadow at the ritual** | At the same moment, from Shadow's bond level 1: `ellie.near` at 4–6 tiles gets Q ×2 | "Shadow turns up at a polite distance." |
+| **Shadow at the ritual** | When Ellie starts `grass.rusk_ritual` or `grass.stargaze`, from Shadow's bond level 1: `ellie.near` at 4–6 tiles gets Q ×2 | "Shadow turns up at a polite distance." |
 
 ### 10.6 Reactions when Build mode closes
 
