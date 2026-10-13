@@ -1003,3 +1003,308 @@ Plays when the sim emits `housewarming` with status `done` (after the party scen
 | `build.tools` / `build.cosy` / `build.catalog` | build bar, cosy chip, catalog drawer (build-mode-dev adds `data-hl`) |
 
 `kind: 'item'` and `kind: 'spot'` highlights are drawn by the engine on the hints layer; the UI only points the dialogue box away from them (7.5).
+
+---
+
+## 20. Keyboard
+
+The engine maps raw keys to `KeyAction`s and emits `input.key { action, down, repeat }` (contracts 14). The table below is the binding the engine must use. Mac users get Cmd where Windows users get Ctrl.
+
+### 20.1 Bindings
+
+| KeyAction | Keys | Live | Build | Photo | Activity | Panels open |
+| --- | --- | --- | --- | --- | --- | --- |
+| `toggleBuild` | B | enter build | leave build | no | no | no |
+| `catalog` | C | open order catalog | toggle drawer | no | no | closes catalog if it is the top panel |
+| `journal` | J | open journal | no | no | no | closes journal if it is the top panel |
+| `photo` | P | enter photo mode | no | leave photo mode | no | no |
+| `fullscreen` | F | toggle | toggle | toggle | toggle | toggle |
+| `pause` | Space | toggle pause | no | snap | (Space is `primary`) | no |
+| `speed1` / `speed2` / `speed3` | 1 / 2 / 3 | set speed | no | no | no | no |
+| `rotate` | R | no | rotate | no | no | no |
+| `sell` | Delete, Backspace | cancels a focused queue card only | sell selected | no | no | no |
+| `duplicate` | D | no | copy | no | no | no |
+| `eyedropper` | E | no | pick | no | no | no |
+| `undo` | Ctrl/Cmd + Z | no | undo | no | no | no |
+| `redo` | Shift + Ctrl/Cmd + Z, Ctrl + Y | no | redo | no | no | no |
+| `cancel` | Esc | Esc stack (20.3) | deselect, then leave build | leave (or Retake on preview) | pause menu | close top panel |
+| `confirm` | Enter | open the bloom on a focused target | place held item | snap | `primary` | activate focused control |
+| `primary` | Space, Enter, left click | n/a | n/a | n/a | `primary` | n/a |
+| `up` / `down` / `left` / `right` | Arrows (and W A S D in activities only) | walk Ellie one tile | nudge held item one tile | move the frame | directions | move within the focused group |
+| new: `secondary` (R1) | X, Shift | no | no | no | `secondary` | no |
+| new: `cats` (R1) | K | toggle cat panel | no | no | no | closes cat panel |
+| new: `toggleHud` (R1) | H | hide or show HUD | no | no | no | no |
+| new: `help` (R1) | ? (Shift + /) | keyboard help | keyboard help | no | no | toggles help |
+| new: `store` (R1) | S | no | store selected | no | no | no |
+
+Notes:
+
+- Arrow walking dispatches `walkTo` to the neighbouring walkable tile in that direction (the sim rejects blocked tiles quietly). Holding an arrow repeats at the key repeat rate.
+- Space after a mouse click on a HUD button must still pause: HUD buttons call `blur()` after a pointer click (keyboard focus stays, mouse focus does not), so Space reaches the game.
+- `1`, `2`, `3` are speeds everywhere in live, including while the bloom is open.
+
+### 20.2 When shortcuts are ignored (typing and focus guard)
+
+The engine skips mapping a keydown when any of these is true:
+
+1. `event.isComposing` (IME input).
+2. The target is an `input`, `textarea`, `select` or `[contenteditable]` (only Esc still maps, to `cancel`). There are no text fields in the game today, but the file input and any future field are covered.
+3. `event.defaultPrevented` is true. UI controls that use keys themselves (sliders, tabs, toolbars, grids, the bloom, the queue cards) handle the key on the focused element first and call `preventDefault()`. The engine listens on `window` in the bubble phase, so it sees that.
+4. Ctrl, Cmd or Alt is held, except for `undo` and `redo`. So Cmd + R reloads, Cmd + P prints, Cmd + C copies, as the browser expects.
+5. The focused element is a button or has `role` button, tab, slider, switch, checkbox, option, radio or menuitem, and the key is Space, Enter or an arrow (the control gets it natively).
+6. A modal panel is open and the action is not `cancel`, `confirm`, an arrow, `fullscreen`, `help`, or the key that toggles that same panel.
+7. `repeat` is true and the action is a toggle (`toggleBuild`, `journal`, `catalog`, `photo`, `fullscreen`, `pause`, `cats`, `toggleHud`, `help`). Repeats are allowed for arrows, `rotate`, `undo` and `redo`.
+
+### 20.3 The Esc stack
+
+Esc closes the topmost thing and stops:
+
+1. a pinned tooltip or wish caption;
+2. the confirm dialog (choosing its safe option);
+3. the bloom;
+4. the top modal panel (mail reader over journal closes first);
+5. the cat panel;
+6. in build: the held ghost or selection, then build itself;
+7. in photo: the preview (Retake), then photo mode;
+8. in an activity: the pause menu opens (Esc again resumes);
+9. in live with nothing open: the Settings panel opens.
+
+### 20.4 Focus order (Tab) in live mode
+
+Queue cards, clock, speed control, Hearts, orders chip, cat tabs, wish cards, mode tokens, Ellie card, candles, then the world targets (20.6). Shift + Tab goes back. Modal panels trap focus and return it to the opener on close.
+
+### 20.5 Focus visibility
+
+- `:focus-visible` only: `outline: var(--b2) solid var(--lav); outline-offset: var(--b1)`, plus `--glow`. On paper surfaces the ring is `--wine`.
+- Never `outline: none` without a replacement.
+
+### 20.6 World targets for the keyboard
+
+- `.ep-world-proxies` holds one transparent `button` per target: Ellie, the four cats, any visitor, and every smart object in Ellie's current room (max 24, sorted left to right, top to bottom). Each is sized and placed over the entity's sprite bounds each frame, and rebuilt when the room or the entity list changes.
+- A proxy shows nothing until it gets keyboard focus; then a dashed lavender rounded ring outlines the sprite and the name tag shows.
+- Enter or Space opens the bloom for it. Its `aria-label` is the item or character name plus a short state ("Record player, playing Lo-fi").
+- Proxies have `pointer-events: none` so mouse clicks still reach the canvas.
+
+---
+
+## 21. Component kit
+
+`ui.kit` implements `UiKit` from `src/core/types.ts`. Every component takes `StringKey`s, never raw text, builds plain DOM with `ep-` classes, and returns `{ el, destroy }`. `destroy()` removes listeners and the element. Every component has these states unless noted: default, hover, focus-visible, active (pressed), disabled.
+
+### 21.1 Panel
+
+- `panel({ title, closable, paper, onClose })` returns `{ el, body, destroy }`.
+- Dark: `--box`, `--edge`, `--bevel`, `--float`, `--r-l`, padding `--sp-4`. Title bar: `--fs-l` Pixelify (IM Fell when `paper`), close button (×, 14u, ghost) top-right when `closable`.
+- Paper: `--paper` fill, `--paper-ink` text, `--r-s`, IM Fell body.
+- `role="dialog"`, `aria-modal` when shown in `#ep-modal`, `aria-labelledby` the title. Focus moves to the first focusable child on open.
+- States: opening (`pop` scale 0.96 to 1 plus fade, `--t-med`), closing (fade `--t-fast`). Reduced motion: fade only.
+
+### 21.2 Button
+
+- `button({ label, icon, variant, tooltip, disabled, onClick })`, with `setDisabled`.
+- Variants:
+
+| Variant | Default | Hover | Active | Disabled |
+| --- | --- | --- | --- | --- |
+| `primary` | `--wine`, `--ink`, `--edge`, `--lift` (game 1 `.btn`) | `--wine-hi` | moves down 1u, shadow 0.5u | `#5a4a5e` fill, `--muted` text, no lift, `cursor: default` |
+| `secondary` | `--box-inner`, `--ink`, `--b1` edge | `--wine` | moves down 1u | 45% opacity |
+| `ghost` | transparent, `--lav` text | `--plum` fill | moves down 1u | 45% opacity |
+| `petal` | the bloom petal (6.2) | grows | squash | wilted |
+
+- Min hit size 12u × 12u and never under 24 CSS px. Icons from `atlas.toDataUrl(icon, 2)` as `<img>` with `image-rendering: pixelated`, `alt=""`.
+- Clicks play `ui.click` through `audio.cue`; disabled clicks play `ui.nope` and do not call `onClick`.
+
+### 21.3 Tabs
+
+- `tabs({ tabs, selected, onSelect })`, with `select(id)`. `role="tablist"`, each tab `role="tab"` with `aria-selected`; roving tabindex; arrows move (Left and Right when horizontal, Up and Down when the `vertical` class is set); Home and End jump.
+- States: idle (`--plum`), hover (`--box-inner`), selected (wine ribbon, sticks out 4u), focus ring, with an optional unseen dot.
+
+### 21.4 Slider
+
+- `slider({ label, min, max, step, value, onChange })`, with `set(value)`. A native `input[type=range]` styled: track `--box-inner` 3u tall, fill `--lav`, thumb a 9u square with `--edge` (pixel look). Label and the current value beside it.
+- Arrows change by `step`, Page Up and Page Down by 10 steps. `onChange` fires on input (live) for volumes.
+- Disabled: 45% opacity.
+
+### 21.5 Toggle
+
+- `toggle({ label, value, onChange })`, with `set(value)`. `role="switch"`, `aria-checked`. A 20u × 10u pill with a 8u knob: off `--box-inner` with the knob left, on `--wine` with the knob right and a tiny check icon on the knob (state not by colour alone). Space or Enter flips it. Cue `ui.toggle`.
+
+### 21.6 Card
+
+- `card({ title, body, icon, vars, locked, onClick })`. `--plum` fill, `--b1` edge, `--r-m`, icon at the top, title `--fs-m`, body `--fs-s` `--muted`.
+- Clickable cards are `button`s; static cards are `div`s.
+- Locked: silhouette icon (CSS `filter: brightness(0)` at 60% opacity), padlock badge, body text is the unlock hint, `aria-disabled="true"` but still focusable.
+- States: hover lifts 1u with lavender edge; selected (class) has a wine edge.
+
+### 21.7 Meter
+
+- `meter({ label, icon, value, max })`, with `set(value)`. Default: horizontal bar 3u tall in a `--box-inner` track with the icon on the left. Colour by fraction: `--need-ok` at 50% and up, `--need-mid` at 25 to 49%, `--need-low` under 25%, and under 25% the icon droops (`wilt`).
+- Variant classes: `ep-meter--candle` (5.5), `ep-meter--hearts` (bond: `max` 4, drawn as heart slots).
+- `role="meter"` with min, max, now and label. `set()` animates the fill over `--t-med` (instant in reduced motion).
+
+### 21.8 Tooltip
+
+- `tooltip(target, text, vars)`: one shared tooltip element. Shows after 350 ms hover or immediately on keyboard focus; hides on leave, blur, Esc or scroll.
+- `--box`, `--b1` edge, `--fs-s`, max width 120u, a small tail toward the target, placed above the target and clamped like bubbles (flips below at the top edge).
+- `aria-describedby` links target and tooltip. Touch: a long press of 500 ms shows it.
+
+### 21.9 Extra pieces (internal, not in `UiKit`)
+
+Chip, segmented control (speed, text size), list row, swatch, badge dot, polaroid frame, ribbon tab, scrim. They follow the same tokens and states.
+
+---
+
+## 22. Accessibility
+
+### 22.1 Text size
+
+`settings.textSize` sets `--ts` (0.9, 1, 1.2). All `--fs-*` tokens multiply by it and the floors scale too (3.2). Layouts use wrapping and `min-width: 0` so nothing clips at large size; HUD clusters may grow (the candles' labels are icons, so they do not grow).
+
+### 22.2 Text speed
+
+`settings.textSpeed` sets the dialogue typewriter rate (7.5), the bubble and toast hold factor (7.1), and the minigame start card's auto-start delay (16.1).
+
+### 22.3 Reduced motion
+
+- Active when `settings.reducedMotion === 'on'`, or `'system'` and `matchMedia('(prefers-reduced-motion: reduce)')` matches (watched for changes). The UI sets `data-motion="reduce"` on `#ep-ui` and `#ep-modal`.
+- Then: no `pop`, `bob`, `wilt`, `wiggle`, `flicker`, `deal` or `flip`; transitions become opacity fades of 120 ms or less; the bloom appears at once; the credits page instead of rolling; the mail card has no tilt; the shutter flash is a short dim; the "+n" Hearts float fades in place.
+- The UI tells the engine nothing; the engine reads the same setting for camera shake and particles.
+
+### 22.4 Not by colour alone
+
+Needs use wax height, flame size and a droop; locked items use a padlock and silhouette; style tags have letters; toggles have a knob position and a check; the active mode token has a rim.
+
+### 22.5 Live regions
+
+- `#ep-sr` has a polite region (`role="status"`) and an assertive one (`role="alert"`).
+- Toasts are read politely; save failures assertively; speech lines politely and throttled (7.1); wish completion and bond level-ups politely.
+- Panel opens move focus into the panel, which is announced by its `aria-labelledby` title.
+
+### 22.6 Pointer and touch
+
+All targets at least 24 CSS px. Hover-only information is also available on focus and long press. Touch is a nice-to-have: taps act as clicks, long press as hover.
+
+### 22.7 Contrast
+
+Text pairs listed in 3.1 all pass WCAG AA (4.5:1). `--locked` is decoration only.
+
+---
+
+## 23. Events
+
+### 23.1 The UI listens to (bus `EpEvents`)
+
+| Event | What the UI does |
+| --- | --- |
+| `sim.event` `say` | speech bubble (7.1), or a docked cheer during activities (16.4) |
+| `sim.event` `thought` | thought bubble (7.2) |
+| `sim.event` `hearts` | "+n" float at the Hearts chip |
+| `sim.event` `wish.rolled` | deal the wish cards |
+| `sim.event` `wish.completed` | flip the card, toast |
+| `sim.event` `aspiration.tier` | toast, journal dot |
+| `sim.event` `sticker` | toast, journal dot |
+| `sim.event` `unlock` | toast, catalog sparkle |
+| `sim.event` `mail.arrived` | toast, journal dot |
+| `sim.event` `delivery` | toast, orders chip |
+| `sim.event` `mood.band` | portrait and sticker change |
+| `sim.event` `bond.level` | cat tab pip, toast |
+| `sim.event` `interaction.start` / `interaction.end` | queue animation; cat panel "doing now" |
+| `sim.event` `time.day` | day card, race-day ribbon |
+| `sim.event` `mode` | switch HUD layout (4.3) |
+| `sim.event` `onboarding.step` | dialogue box and highlight (7.5, 19) |
+| `sim.event` `housewarming` | `ready`: toast; `done`: credits (18) |
+| `ui.toast` | show the toast (the raw sim `toast` is ignored to avoid doubles) |
+| `mode.changed` | HUD layout, including `title` |
+| `build.opened` / `build.closed` | build HUD on and off |
+| `input.click` | live mode: open the bloom or walk (6.3); close the bloom on outside clicks |
+| `input.hover` | name tags (5.10), auto-fade (5.9) |
+| `input.key` | the UI-owned actions: `toggleBuild`, `catalog`, `journal`, `photo`, `fullscreen`, `pause`, `speed1..3`, `cancel`, `confirm` (outside activities), arrows in live, and new `cats`, `toggleHud`, `help` |
+| `action.dispatched` | gentle toast for rejected player actions (8.2) |
+| `activity.started` / `activity.ended` | start card, result card |
+| `settings.changed` | re-apply text size, speed and motion (when the app changes settings, for example after an import) |
+| `save.result` | toasts and title notices |
+| `app.visibility` | pause the typewriter and bubble timers while hidden |
+| `photo.captured` | the photo preview card |
+| new: `activity.skippable` (R5) | show Skip |
+
+Build-mode-dev handles `rotate`, `sell`, `duplicate`, `eyedropper`, `undo`, `redo`, new `store`, arrows and `confirm` in build. The engine maps keys to `ActivityInput` in activities.
+
+### 23.2 The UI emits
+
+| Event | When |
+| --- | --- |
+| `ui.panel { panel, open }` | every panel open and close |
+| `ui.menu { target, open }` | bloom open and close |
+| `audio.cue` | UI sounds: `ui.click`, `ui.hover` (petals and tokens only, throttled 80 ms), `ui.open`, `ui.close`, `ui.confirm`, `ui.back`, `ui.nope`, `ui.toggle`, `ui.tab`, `ui.page`, `ui.toast`, `ui.petals`, `ui.queueAdd`, `ui.queueCancel`, `ui.speed`, `ui.pause`, `ui.hearts`, `ui.wish`, `ui.sticker`, `ui.unlock`, `ui.aspiration`, `mail.open`, `mail.close`, `photo.shutter`, `mode.build`, `mode.live`, `mode.photo`, and `blip` while typing |
+| `settings.changed` | the player changed a setting (the UI is the only settings editor) |
+| new: `app.request` (R3) | Continue, New game, Load from file, Export, Quit to title |
+| new: `photo.request` (R3) | Snap, and filter previews |
+| new: `activity.skip`, `activity.leave` (R5) | Skip and Leave in the minigame overlay |
+
+Everything that changes the game goes through `deps.dispatch`: `walkTo`, `interact`, `queue.cancel`, `time.setSpeed`, `time.togglePause`, `mode.set`, `options.set`, `catalog.order` (live), `wardrobe.wear`, `wardrobe.streak`, `mail.read`, `photo.save`, `photo.delete`, `title.set`, `trade.accept`, `onboarding.next`, `onboarding.skip`.
+
+### 23.3 Gaps (requested in `CONTRACT_REQUEST.md`)
+
+| Id | Need | Proposed change |
+| --- | --- | --- |
+| R1 | Keys with no `KeyAction` | add `'secondary' \| 'cats' \| 'toggleHud' \| 'help' \| 'store'` |
+| R2 | Build must place its tools bar and catalog body inside UI-owned frames | add `Ui.region(id: 'buildTop' \| 'buildBar' \| 'catalog'): HTMLElement` |
+| R3 | The UI cannot reach save or capture without the app | add bus events `'app.request'` and `'photo.request'` |
+| R4 | The photo album needs the PNGs | add `UiDeps.loadPhoto: (meta: PhotoMeta) => string \| null` |
+| R5 | Minigame Skip and Leave need the app | add bus events `'activity.skippable'`, `'activity.skip'`, `'activity.leave'` |
+
+Until these land, the UI works around them: R1 keys are read by a small UI keydown listener with the same guard (20.2); R2 falls back to build appending its own `kit.panel` elements to `deps.root`; R3 to R5 features show disabled with a tooltip.
+
+---
+
+## 24. String keys the UI needs
+
+All in a `ui` domain file (`src/content/strings/ui.ts`), owned by the writer. No dashes, short lines, cats' voices where marked. The UI never builds sentences from pieces except with `{name}`, `{cat}` and `{n}`.
+
+| Prefix | Examples |
+| --- | --- |
+| `ui.hud.*` | `ui.hud.queue.label`, `ui.hud.queue.cancel`, `ui.hud.queue.freeWill`, `ui.hud.day`, `ui.hud.speed.pause`, `ui.hud.speed.n`, `ui.hud.realTime`, `ui.hud.raceDay`, `ui.hud.hearts.tip`, `ui.hud.orders`, `ui.hud.carrying`, `ui.hud.hidden` |
+| `ui.need.<key>.name`, `ui.need.<key>.help` | for the six needs and the five cat needs |
+| `ui.mood.<band>` | `mopey` to `great` words |
+| `ui.wish.*` | `ui.wish.none`, `ui.wish.done`, `ui.wish.allDone.<cat>`, `ui.wish.reward` |
+| `ui.mode.*` | token names and tooltips with keys |
+| `ui.bloom.*` | `ui.bloom.more`, `ui.bloom.back`, `ui.bloom.empty.<cat>` |
+| `ui.toast.*` | one per row of 8.2 |
+| `ui.build.*` | tool names and tips, `ui.build.paused`, `ui.build.cosy`, `ui.build.try` |
+| `build.err.<PlacementError>` | thirteen reasons, gently worded |
+| `ui.catalog.*` | title, Pickle lines, filters, sorts, badges, basket, order button, empty |
+| `ui.journal.*` | tab names, page titles, every empty state (in cat voices) |
+| `ui.cats.*` | panel title, doing-now phrases, bond tooltip |
+| `ui.wardrobe.*` | slot names, tabs |
+| `ui.mail.*`, `ui.trade.*`, `ui.race.*` | headers, buttons, empty states |
+| `ui.photo.*` | filter names, snap, keep, retake, save PNG, said-by line |
+| `ui.activity.*` | start, skip, pause menu, result card lines |
+| `ui.title.*` | logo text, subtitle, buttons, notices, export reminder |
+| `ui.confirm.*` | each confirm title and body |
+| `ui.settings.*` | every label, option and help line |
+| `ui.keys.*` | help card lines |
+| `credits.*` | the roll |
+| `ui.sr.*` | screen reader phrasing ("{cat} says: {n}") |
+
+---
+
+## 25. What other specs and modules must match
+
+- **Engine:** emits the `KeyAction` bindings in 20.1 with the guard in 20.2; calls `ui.setScale` on boot and resize; uses the scale rule in 2.3 (2.5 at 1280 × 720, 2.75 at 1440 × 800, 4 at 1920 × 1080); `pointer.entity` includes Ellie, cats, visitors and smart objects; draws emotes and item or spot highlights on the hints layer; previews photo filters.
+- **Sim:** `menuFor` returns petals in display order with a `reason` key for every disabled one; rejected `PlayerAction`s return a `StringKey` reason in the `ui.*` or `build.err.*` space; Ellie's `agent.current` progress fields are filled for the queue ring.
+- **Cat AI and sim:** cat discoveries are flags, so the journal can show them: `known.<cat>.like.<tag>`, `known.<cat>.dislike.<tag>`, `known.<cat>.quirk.<quirkId>`.
+- **Game designer:** items carry `room.<roomKind>` tags for the catalog room filter (untagged items show everywhere); every aspiration tier has goal and reward string keys `asp.<id>.tier<n>.goal` and `.reward`; every `InteractionDef` has an `icon` (petals and queue cards need one); wishes keep titles to 40 characters and petal labels to 22.
+- **Writer:** the keys in section 24; cat-voiced empty states; no dashes.
+- **Build-mode-dev:** builds sections 9 and 10 with `ui.kit`, adds `data-hl` ids from 19, and handles the build key actions.
+- **Integrator:** wires `app.request`, `photo.request`, `activity.skip`/`leave`/`skippable`, `loadPhoto`, the stage DOM in 2.1, `audio.unlock()` on first gesture, and soft pause relies on `time.setSpeed` being accepted in live.
+- **Audio:** the cue names in 23.2 exist in `SimpleCueName` today.
+
+---
+
+## 26. Checks before the UI is done
+
+- Screenshots at 1440 × 800, 1280 × 720 and 1920 × 1080 for: title, live HUD by day and night, bloom near each edge, two bubbles plus a toast, build with the drawer on each side, live catalog, each journal tab with content and empty, cat panel, wardrobe, mail reader, photo mode and preview, minigame start, skip and result, settings at large text, credits.
+- Every text at the smallest scale is 12 px or larger (a unit test over the computed `--fs-*` values at u = 2.5 and `--ts` 0.9).
+- Keyboard-only run: start a game, queue two actions, cancel one, open and close every panel, place an item in build, take a photo, all without the mouse.
+- Reduced motion on: no running animations except opacity fades.
+- Unit tests: bloom layout and clamping, bubble placement and the 2-bubble limit with its priority queue, the key guard, the Esc stack, soft pause bookkeeping, toast merging, text size and speed maths.
