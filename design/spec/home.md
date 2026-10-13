@@ -441,3 +441,340 @@ Columns: `orient.` uses the codes in §1; `placement` uses §1.1; `light r` is t
 | `garden_bird_bath` | `item.garden_bird_bath.name` | garden | 1×1 | 1 | out | Cottage | (40) | fixture | `bird_bath` | bird_watch | - | - | Y |
 | `garden_washing_line` | `item.garden_washing_line.name` | garden | 4×1 | 2 | out | - | (30) | fixture | `washing_line` | hang_washing | - | - | Y |
 | `front_mailbox` | `item.front_mailbox.name` | front | 1×1 | 1 | front | - | (20) | fixture | `mailbox#red` | check_mail | - | - | Y |
+
+---
+
+## 5. Paint
+
+Paint applies per room: one wall paint (all of that room's wall faces) and one floor paint (all of that room's floor tiles). Patterns are 16 × 16 tileable. Wallpaper motifs show on back-wall faces; side walls and cutaways use the paint's base colour.
+
+- **Cost:** free to apply once unlocked, with undo and redo. Reason: paint is the cheapest way to make the place hers (pillar 3), and charging per coat adds friction for nothing.
+- **Cosy:** a non-default wall paint and a non-default floor paint each add **6** item value to that room, and either one adds the category `paint` for Variety (§6.2). A paint with a style tag counts as **one item** of that tag toward a set's item count. It never satisfies a set's light or wall-item requirement.
+- The garden grass and the garden wall can't be painted. The patio (column 21) and the front step take `floor.patio.*` paints.
+- Colours are suggestions from game 1's palette family; the pixel-artist may adjust within it.
+
+### 5.1 Wall paints (18)
+
+| Id | Name key | Pattern | Colours | Tag | Unlock | Default in |
+| --- | --- | --- | --- | --- | --- | --- |
+| `wall.plain.lavender` | `paint.wall.plain.lavender` | plain | #c9a2ff | - | start | bedroom |
+| `wall.plain.dusk` | `paint.wall.plain.dusk` | plain | #6f6488 | - | start | living |
+| `wall.plain.plaster` | `paint.wall.plain.plaster` | plain | #e6e6f0 | - | start | spare |
+| `wall.plain.plum` | `paint.wall.plain.plum` | plain | #3d3452 | - | start | |
+| `wall.plain.wine` | `paint.wall.plain.wine` | plain | #8a2f52 | - | start | |
+| `wall.plain.ink` | `paint.wall.plain.ink` | plain | #2a2233 | - | start | |
+| `wall.plain.cream` | `paint.wall.plain.cream` | plain | #efe4d0 | - | start | |
+| `wall.tiles.mint` | `paint.wall.tiles.mint` | tiles | #bfe3f2 / #efe6f5 grout | - | start | bathroom |
+| `wall.tiles.cream` | `paint.wall.tiles.cream` | tiles | #fbf5ee / #cfc6d9 grout | - | start | kitchen |
+| `wall.stripes.plum` | `paint.wall.stripes.plum` | stripes | #3d3452 / #6f6488 | - | start | |
+| `wall.wood.oak_panel` | `paint.wall.wood.oak_panel` | wood | #c9a24f / #6b4a3a | Cottage | asp:homemaker:1 | |
+| `wall.paper.roses` | `paint.wall.paper.roses` | wallpaper (roses) | #efe4d0 / #e5718f / #3f6b4f | Cottage | asp:homemaker:1 | |
+| `wall.paper.bats` | `paint.wall.paper.bats` | wallpaper (bats) | #2a2233 / #8e6cc2 | Goth | asp:homemaker:2 | |
+| `wall.check.wine` | `paint.wall.check.wine` | checks | #8a2f52 / #2a1d20 | Goth | asp:homemaker:2 | |
+| `wall.paper.ferns` | `paint.wall.paper.ferns` | wallpaper (ferns) | #efe6f5 / #3f6b4f | Plant | asp:homemaker:2 | |
+| `wall.paper.paws` | `paint.wall.paper.paws` | wallpaper (paw prints) | #f7b7c3 / #3e2c30 | Cat | asp:royalty:2 | |
+| `wall.paper.race_stripe` | `paint.wall.paper.race_stripe` | stripes (one bold band) | #e6e6f0 / #b0304f | Gym | asp:hyrox:2 | |
+| `wall.paper.moons` | `paint.wall.paper.moons` | wallpaper (moons and stars) | #221c2d / #ffe066 | Goth | asp:homemaker:3 | |
+| `wall.paper.geo` | `paint.wall.paper.geo` | wallpaper (70s circles) | #e9c46a / #6b4a3a | Retro | asp:collector:1 | |
+| `wall.paper.neon_grid` | `paint.wall.paper.neon_grid` | wallpaper (grid) | #0f0b14 / #c9a2ff / #8fc8ff | Neon | asp:collector:2 | |
+
+(That's 20 rows: 10 at start, 8 MVP unlocks, 2 full scope.)
+
+### 5.2 Floor paints (16)
+
+| Id | Name key | Pattern | Colours | Tag | Unlock | Default in |
+| --- | --- | --- | --- | --- | --- | --- |
+| `floor.carpet.plum` | `paint.floor.carpet.plum` | plain (carpet) | #3d3452 | - | start | bedroom |
+| `floor.carpet.lavender` | `paint.floor.carpet.lavender` | plain (carpet) | #cfc6d9 | - | start | |
+| `floor.carpet.ink` | `paint.floor.carpet.ink` | plain (carpet) | #2a2233 | - | start | |
+| `floor.wood.oak` | `paint.floor.wood.oak` | wood | #c9a24f / #6b4a3a | - | start | living |
+| `floor.tiles.hex_white` | `paint.floor.tiles.hex_white` | tiles (hex) | #fbf5ee / #cfc6d9 | - | start | bathroom |
+| `floor.check.ink_cream` | `paint.floor.check.ink_cream` | checks | #2a2233 / #efe4d0 | Retro | start | kitchen |
+| `floor.plain.concrete` | `paint.floor.plain.concrete` | plain | #6f6488 at 40% grey | - | start | spare |
+| `floor.patio.stone` | `paint.floor.patio.stone` | tiles (flags) | #cfc6d9 / #6f6488 | - | start | patio, front step |
+| `floor.wood.walnut` | `paint.floor.wood.walnut` | wood | #6b4a3a / #3e2c30 | - | asp:homemaker:1 | |
+| `floor.tiles.terracotta` | `paint.floor.tiles.terracotta` | tiles | #c9a24f / #b0304f | Cottage | asp:homemaker:1 | |
+| `floor.plain.rubber` | `paint.floor.plain.rubber` | plain (speckled rubber) | #2a2233 / #8e6cc2 flecks | Gym | asp:hyrox:1 | |
+| `floor.wood.painted_white` | `paint.floor.wood.painted_white` | wood | #fbf5ee / #cfc6d9 | Cottage | asp:homemaker:2 | |
+| `floor.patio.brick` | `paint.floor.patio.brick` | tiles (brick) | #b0304f / #6b4a3a | Cottage | asp:homemaker:2 | |
+| `floor.check.wine_plum` | `paint.floor.check.wine_plum` | checks | #8a2f52 / #3d3452 | Goth | asp:homemaker:3 | |
+| `floor.wood.herringbone` | `paint.floor.wood.herringbone` | wood (herringbone) | #c9a24f / #6b4a3a | Retro | asp:homemaker:3 | |
+| `floor.stripes.lavender` | `paint.floor.stripes.lavender` | stripes | #cfc6d9 / #8e6cc2 | - | asp:collector:1 | |
+
+Paint counts: 36 paints, 18 at start (incl. the 8 room defaults), 32 MVP. Paints are not catalog items and don't count toward catalog completion.
+
+---
+
+## 6. The Cosy score
+
+### 6.1 Overview
+
+Every scored room (`bedroom`, `bathroom`, `spare`, `living`, `kitchen`, `garden`) has a Cosy score from 0 to 100:
+
+```
+cosy(R) = clamp( round( Value + Variety + Light + Plants + Sets + Cats + Clutter ), 0, 100 )
+```
+
+| Term | Max | One-line reason |
+| --- | --- | --- |
+| Value | 30 | Buying things should always move the needle; it's the most direct lever. |
+| Variety | 10 | A room needs a mix of kinds of things, not 12 lamps. |
+| Light | 15 | "Lamps matter at night" (BRIEF §4). Dark rooms at night feel bare. |
+| Plants | 10 | Plants are cheap, friendly and one of the seven styles. |
+| Sets | 20 | Sets are the decorating goal. Without one a room tops out at 80, so 85+ needs a theme. |
+| Cats | 15 | The cats are the stars (pillar 2): a room the cats like is a cosy room. |
+| Clutter | 0 to −10 | Salem's mess matters a little, never a lot (pillar 1). |
+
+Two readings of the same formula:
+
+| Reading | Used for | Time and lights | Live cat bonus | Mess |
+| --- | --- | --- | --- | --- |
+| `cosyLive(R)` | Ellie's Cosy need, the HUD | the real time of day and real light states | yes | yes |
+| `cosyRated(R)` | the Build-mode meter, Home Maker milestones, the housewarming | night (s = 0) with every light on and lanterns lit | no | no (overcrowding only) |
+
+Reason for two readings: decorating should be judged on the design, not on whether Salem just knocked a vase over or the sun is up. The rated reading also shows, while building, how the room will feel at night.
+
+**Home Cosy** = floor-area-weighted mean of `cosyRated` over the six scored rooms (floor tiles from §2.2: 42, 24, 36, 70, 56, 120; total 348).
+
+### 6.2 The terms
+
+All counts use the room membership rule in §1. Surface items count in their host's room.
+
+**Item value `v(i)`**
+
+```
+v(i) = clamp( round(2 × sqrt(price)), 2, 24 )
+```
+
+- Price-0 items (secret keepsakes, the framed print) have v = 12.
+- Fixtures use their value price (§4.5).
+- Non-default wall paint and floor paint add 6 each.
+- **Copies:** the 2nd and 3rd copy of the same id in one room count v/2. The 4th and later count 0.
+- Examples: a 15-Heart lamp gives 8, a 60-Heart sofa 15, a 180-Heart canopy bed 24 (capped).
+
+Reasons: the square root means cheap things still count (a 10-Heart candle is worth 6, more than half of a 40-Heart lamp's 13) while big pieces aren't mandatory. The copy rule stops 20 candles from maxing a room.
+
+**Value** = `30 × min(1, V / T_R)`, where V is the sum of v(i) in the room and T_R is the room's target from §2.2 (bedroom 100, bathroom 60, spare 90, living 160, kitchen 130, garden 150).
+
+**Variety** = `10 × min(1, C / 6)`, where C is the number of distinct catalog categories among the room's items (§4.4 `category`, plus `paint` when any paint is non-default). Fixtures count with their category. Reason for 6: a finished room has its function piece plus about five supporting kinds (seating, light, rug, wall decor, plant).
+
+**Light**
+
+- A tile is lit by a light if `(dx² + dy²) ≤ (r + 0.5)²`, measured between tile centres, where r is the light radius. Light passes over furniture but not through walls, doors or the archway: a light only lights its own room.
+- Light origins: a floor light at its anchor tile, a surface light at its host's tile, and a wall light at the floor tile directly south of its wall tile.
+- `litOn` = the fraction of the room's floor tiles lit by lights that are **on**. `litAll` = the same with every light counted.
+- `Lnight = 15 × min(1, litOn / 0.5)`. Half the floor lit at night gives full marks, so 2 to 3 lamps per room is enough.
+- `Lday = 15 × min(1, 0.5 + litAll)`. Daylight gives half marks, and lamps top it up even when switched off, because a lamp in the corner still reads as cosy by day.
+- Daylight factor s: 1 from 07:30 to 18:30, 0 from 20:30 to 05:30, linear between (centred on the fixed 06:30 sunrise and 19:30 sunset, §2.4).
+- **Light** = `s × Lday + (1 − s) × Lnight`. Rated uses s = 0 with every light on.
+
+Light states (proposal for sim.md):
+- Indoor lights switch on automatically when s drops below 0.5 and switch off when Ellie goes to sleep. They switch back on if she gets up before dawn.
+- `toggle_light` overrides the automatic state until the next dusk.
+- Garden lanterns (`light_lantern` items) never switch on by themselves. One `light_lantern` lights every lantern in the garden, and they stay lit until sunrise. Reason: lighting the lanterns is a ritual and a game 1 callback, while indoor lamps shouldn't be a chore.
+
+**Plants** = `10 × min(1, plantCount / P_R)`. Each Plant-tagged item (including the tree fixture) counts 1, or 2 if its footprint covers 2 or more tiles. P_R is from §2.2 (bedroom 2, bathroom 1, spare 2, living 3, kitchen 2, garden 5).
+
+**Sets** = `min(20, best + 0.5 × secondBest)` over the sets the room satisfies (§6.3). A third set adds nothing. An item may count toward several sets at once. Reason: one strong theme is the main win, but mixing two themes still pays a bit.
+
+**Cats** = `15 × (comfort_george + comfort_salem + comfort_shadow + comfort_peaches) / 4`, where each comfort is 0 to 1:
+
+| Cat | Comfort rule (sum, capped at 1) | Why |
+| --- | --- | --- |
+| George | +0.5 per item offering `cat_perch_high` or `cat_throne` | The King wants height. |
+| Salem | +0.5 per item offering `cat_play` or `cat_box` | Chaos needs equipment. |
+| Shadow | +0.5 per item offering `cat_hide` | Dark, quiet spots (under the bed counts). |
+| Peaches | +0.5 if the room gets a sunbeam (a south, east or west window, or the garden, or a `cat_sunbathe` item); +0.5 if it has a music source (`listen_records`, `listen_radio`) or a warm thing (`cat_warm`) | Sun, music and warmth. |
+| All four | +0.25 per item of category `cat` offering `cat_nap` | A proper cat bed pleases everyone. |
+| Live only | +0.25 for each cat currently in the room whose personality need is ≥ 60 | A happy cat in the room is cosy right now. |
+
+**Clutter** (sum, floored at −10):
+
+- Live only: −2 per mess object in the room (a knocked-over item, a dirty plate or mug left out), and −1 per empty delivery box older than one game day.
+- Live and rated: overcrowding. Let `b` = the fraction of the room's floor tiles covered by non-rug floor items. Score −1 for every full 5% of `b` above 50%.
+- Clearing mess is a normal interaction (put back, `wash_dishes`, flatten the box). Nothing is ever lost.
+
+### 6.3 Set bonuses
+
+"Distinct" means different item ids. Copies count only where a rule says so. A styled paint counts as one tagged item toward an item count (§5).
+
+| Set id | Name key | Bonus | Room | Exact rule | MVP |
+| --- | --- | --- | --- | --- | --- |
+| `goth_parlour` | `set.goth_parlour.name` | 20 | any indoor | ≥ 5 distinct Goth items, including ≥ 1 `lighting` item and ≥ 1 `wall`-placed item | Y |
+| `cat_palace` | `set.cat_palace.name` | 20 | any | ≥ 5 distinct Cat items which, between them, offer ≥ 3 of: `cat_perch_high`, `cat_hide`, `cat_play` or `cat_box`, `cat_nap`, `cat_scratch` | Y |
+| `home_gym` | `set.home_gym.name` | 20 | any | ≥ 4 distinct Hyrox station items (items offering a `train_*` interaction or `run_treadmill`) plus ≥ 1 other Gym item (mat, medal rack, trophy, or the race board fixture) | Y |
+| `night_garden` | `set.night_garden.name` | 20 | garden only | ≥ 4 `lighting` items (copies count), ≥ 3 Plant items (copies count; the tree counts), and ≥ 1 item offering `sit` | Y |
+| `cottage_kitchen` | `set.cottage_kitchen.name` | 16 | any indoor | ≥ 5 distinct Cottage items, including ≥ 1 `kitchen` item | Y |
+| `retro_lounge` | `set.retro_lounge.name` | 16 | any indoor | ≥ 4 distinct Retro items, including `record_player` or `record_shelf` | Y |
+| `royal_court` | `set.royal_court.name` | 16 | any indoor | `cat_throne` and `cat_crown_cushion`, plus ≥ 2 other distinct Goth items | Y |
+| `plant_corner` | `set.plant_corner.name` | 12 | any | ≥ 5 Plant items (copies count) whose tiles all fit inside one 4 × 4 tile box. Wall plants use the floor tile south of their wall tile; surface plants use their host's tile. | Y |
+| `candlelit_bath` | `set.candlelit_bath.name` | 12 | bathroom only | a `bath` item offering `take_bath`, ≥ 2 `lighting` items (copies count) and ≥ 1 Plant item | Y |
+| `neon_den` | `set.neon_den.name` | 16 | any indoor | ≥ 4 distinct Neon items, including ≥ 1 `electronics` item and ≥ 1 `lighting` item | N |
+
+When a set completes in Live mode (or on leaving Build mode), play a short chime and show `set.<id>.done`; the cat whose taste it matches comments (George for Royal Court and Goth Parlour, Salem for Cat Palace, Peaches for Retro Lounge and Night Garden, Shadow for Candlelit Bath, any cat otherwise). Home Maker milestones read set completions (see §9).
+
+Reachability (why these thresholds):
+- **Goth Parlour** can be built from start items alone: `armchair_velvet`, `nightstand_coffin`, `lamp_candelabra` (light), `plant_snake`, `poster_moth` (wall). That's 160 Hearts, about the first hour's earnings, so the first set lands early.
+- **Cottage Kitchen**: the starting kitchen already has 3 distinct Cottage items (`chair_basic`, `table_small_round`, `rusk_tin`). `fairy_lights` and `vase_bud` (28 Hearts) finish it. That's the first "oh!" moment, and it's in the room where the coffee ritual starts.
+- **Home Gym** needs Hyrox Hero tier 1 (the 4th station), plus the race board already on the wall. Training unlocks the gym, which feels right.
+- **Cat Palace** needs Cat Royalty tier 1 (`cat_tree_small`, `cat_bed_round`).
+- **Plant Corner** needs Home Maker tier 1 (two wall plants).
+- **Night Garden** needs Home Maker tier 1 (a bench or picnic blanket) and 4 lanterns (60 Hearts).
+- **Neon Den** is full scope only, because most Neon items come from Collector.
+
+### 6.4 Hint rules (the Build meter)
+
+The meter shows `cosyRated` for the room under the cursor (or the room of the selected item), plus one hint. After every placement, move, sell, paint or undo, recompute and pick a hint:
+
+1. Build the candidate list, each with a predicted **gain** in points (the rated score's rise if the hint were followed with one cheap item):
+
+| Hint id | Condition | Gain | String key and params |
+| --- | --- | --- | --- |
+| `set_near` | some set misses exactly one requirement | that set's effect on the Sets term | `cosy.hint.set_near` {set, need}; `need` is a key like `cosy.need.goth_item`, `cosy.need.light`, `cosy.need.wall_item`, `cosy.need.cat_feature.hide` |
+| `dark` | rated Light < 10 | 15 − Light | `cosy.hint.dark` |
+| `cat` | the lowest cat comfort in the room is < 0.5 | 15 × (0.5 − comfort) / 4, rounded up | `cosy.hint.cat.<cat>`: George wants height, Salem a toy or a box, Shadow a hiding spot, Peaches music or something warm (or a window perch if the room has no sunbeam) |
+| `plants` | Plants < 10 | 10 − Plants | `cosy.hint.plants` |
+| `variety` | Variety < 10 | 10/6 per missing category | `cosy.hint.variety.<category>`, naming the first missing category in the room's list below |
+| `value` | Value < 30 | min(30 − Value, 3) | `cosy.hint.value` |
+| `set_idea` | no set is at least half met | 0.25 × the best set's bonus | `cosy.hint.set_idea` {set}: the set whose rule is closest to met |
+| `crowded` | overcrowding penalty < 0 | the penalty | `cosy.hint.crowded` |
+
+2. Choose the highest gain. Break ties in table order (`set_near` first, `crowded` last). One exception: `set_near` wins outright whenever its gain is ≥ 8, because finishing a set is the best moment in Build mode.
+3. If the rated score is ≥ 95, show `cosy.hint.done.<cat>` instead: a cat's approval line, with the cat picked as `roomIndex mod 4` so it's deterministic.
+4. The meter shows a ghost segment of `+gain` on top of the current score. Clicking the hint opens the catalog filtered to what it names (a tag, category or cat feature).
+5. In Live mode there's no meter. When Ellie's live Cosy is under 40 for a whole game hour, one cat may say the current hint as a thought bubble, at most once per game day. It's never a nag.
+
+Variety category lists, in hint order:
+
+| Room | Categories |
+| --- | --- |
+| bedroom | beds, lighting, storage, rugs, walldecor, plants, tables, cat |
+| bathroom | bath, lighting, plants, walldecor, rugs, storage |
+| spare | gym, lighting, rugs, walldecor, plants, seating |
+| living | seating, electronics, lighting, rugs, walldecor, plants, tables, cat |
+| kitchen | kitchen, tables, seating, lighting, plants, walldecor, cat |
+| garden | garden, lighting, plants, seating, cat, decor |
+
+### 6.5 Worked examples
+
+Computed with the rules above (rated, s = 0, all lights on, no sets).
+
+| Room at the start | Value | Variety | Light | Plants | Cats | Rated | Live by day |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| bedroom | 15.9 (V 53) | 6.7 (4) | 9.3 (13 of 42 lit) | 0 | 7.5 | **39** | 42 |
+| bathroom | 13.5 (V 27) | 1.7 | 0 | 0 | 0 | **15** | 23 |
+| spare | 3.7 (V 11) | 1.7 | 0 | 0 | 1.9 | **7** | 15 |
+| living | 11.6 (V 62) | 3.3 | 0 | 0 | 5.6 | **21** | 28 |
+| kitchen | 18.5 (V 80) | 6.7 | 0 | 0 | 5.6 | **31** | 38 |
+| garden | 8.4 (V 42) | 3.3 | 0 | 4.0 | 3.8 | **20** | 27 |
+
+Starting Home Cosy (rated) = **22**. The flat is liveable by day and gloomy at night, so the first lamps and plants make a visible difference straight away.
+
+A decorated living room (2 to 4 hours in): the starting four items plus `record_shelf`, `armchair_velvet`, `rug_bat`, `lamp_candelabra`, `lamp_floor_arc`, `poster_moth`, `sconce_iron`, `plant_snake`, `plant_monstera`, `cat_tree_small`, `nightstand_coffin` and `cat_toy_basket` (about 390 Hearts of purchases). Value 30, Variety 10, Light 15 (59 of 70 lit), Plants 6.7, Cats 13.1, Goth Parlour 20: **95**. Reason this is fine: a single room at 95 is the reward for focusing; the housewarming needs the whole flat.
+
+### 6.6 Thresholds other specs use (proposals)
+
+| Use | Threshold | Why |
+| --- | --- | --- |
+| Housewarming available | Home Cosy (rated) ≥ 60 and every scored room ≥ 40 | From the starting 22, that's roughly 4 to 6 hours: every room has had attention (including the bathroom and the spare room) without needing the late unlocks. |
+| Home Maker tier 1 | any room rated ≥ 45 | Lands in the first 20 to 40 minutes (the bedroom starts at 39). |
+| Home Maker tier 2 | first set completed | Usually Cottage Kitchen or Goth Parlour, in the first hour. |
+| Home Maker tier 3 | 3 rooms rated ≥ 65 and 3 different sets completed | Mid game. |
+| Home Maker tier 4 | Home Cosy ≥ 80 | The decorator's finale; after the housewarming. |
+| Ellie's Cosy need | eases toward `cosyLive` of her current room at up to 30 points per game hour, holds on the front step and while asleep | So walking through a door doesn't snap her mood. |
+
+---
+
+## 7. Bruce, Poe and secrets
+
+### 7.1 Bruce's five hiding spots
+
+Spots 2 to 4 are anchored to an item, so they follow it when it's moved. The default tiles below are for the starting layout.
+
+| # | Spot id | Default tile | Layer | Anchor rule | If the anchor is missing |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `bruce.fence` | (29,9), sitting on the east fence, facing west | 2 | fixed on the lot | always available |
+| 2 | `bruce.under_table` | (16,12), under the kitchen table | 0 | the first placed item offering `eat` with a footprint of 2 × 2 or more (`table_small_round`, `table_dining_long`); Bruce sits on its bottom-left tile | unavailable until such a table is placed |
+| 3 | `bruce.behind_tv` | (7,8), peeking out from behind the right end of the TV | 1 | the first placed item offering `watch_tv`: its anchor + (w − 1, 0) | unavailable until a TV is placed |
+| 4 | `bruce.fridge_top` | (15,8), on top of the fridge | 2 | the first placed item offering `fridge_snack` | unavailable until a fridge is placed |
+| 5 | `bruce.delivery_box` | the delivery box tile, (6,14) by default | 0 | any empty delivery box on the floor in Live mode | appears only while a box exists |
+
+- Window peeks (cosmetic, not one of the five): from the patio outside `win.kitchen_e` at (21,9) and outside `win.spare_e` at (21,2).
+- **After all five** (`secret:bruce_all5`): `bruce_wall_cushion` arrives, and Bruce lives on the garden wall. His home tile is the cushion's tile if it's placed, otherwise (27,0) on layer 2.
+- Never stuck: every anchor item is a starting item that can always be re-bought (`table_small_round` 40, `tv_small_unit` 70, `fridge_basic` 70), and the journal's Bruce page says which spot is missing.
+
+### 7.2 Secret unlocks
+
+| Secret id | Trigger | Item |
+| --- | --- | --- |
+| `secret:bruce_all5` | Bruce spotted in all five spots | `bruce_wall_cushion` |
+| `secret:housewarming` | the housewarming night plays | `frame_grazie` (only if `personal.ts` `framedPrint` is true) |
+| `secret:knighted` | George knights her | `plaque_sir_ellie` |
+| `secret:zoomies_photo` | a photo with Salem doing 3 a.m. zoomies in frame | `frame_zoomies` |
+| `secret:headbang_peaches` | Ellie headbangs while Peaches bops in the same room | `poster_peaches_rock` |
+| `secret:salem_boxes50` | Salem has sat in 50 boxes | `box_throne_salem` |
+| `secret:dunks10` | 10 perfect rusk dunks | `rusk_tin_gold` |
+| `secret:pickle20` | 20 Pickle deliveries received | `figurine_pickle` |
+
+Poe trades (full scope): `raven_silhouette` and `vase_black_crackle` for 1 trinket, `garden_lantern_paper` and `plant_black_rose` for 2, `garden_gargoyle` for 3, `cabinet_curio` for 5. Poe lands on `garden_bird_bath`.
+
+---
+
+## 8. Interaction ids used by this catalog
+
+sim.md and play.md define numbers, slots and animations for these ids. This list is what the catalog references, so every id here must exist there (or be renamed in both places).
+
+| Id | Who | One line |
+| --- | --- | --- |
+| `sit`, `nap`, `sleep` | Ellie | Sit; short nap; full sleep (beds only). |
+| `read_book` | Ellie | Read (Calm). Shadow's lap-sit happens here at high bond. |
+| `dress_up`, `admire_self` | Ellie | Change outfit; check the mirror (small Fun). |
+| `admire` | Ellie | Look at a piece of decor (tiny Fun or Calm, a cat may comment). |
+| `view_photos` | Ellie | Look through the photo album. |
+| `watch_tv`, `play_console`, `play_handheld`, `play_arcade` | Ellie | Screens and Critterbound. |
+| `use_laptop`, `order_catalog` | Ellie | Laptop browsing; open Pickle's catalog. |
+| `listen_records`, `listen_radio`, `browse_records`, `dance`, `headbang` | Ellie | Music (Heavy, Lo-fi and Cosy stations); browse the sleeves. |
+| `make_coffee`, `make_tea`, `grab_rusk`, `fridge_snack`, `make_sushi`, `make_toast`, `cook_simple`, `eat`, `wash_dishes` | Ellie | Food and drink; `make_sushi` starts the sushi activity at a counter. |
+| `take_bath`, `freshen_up` | Ellie | Bath (Calm); quick wash. |
+| `fill_bowls` | Ellie | Feed the cats. |
+| `toggle_light`, `light_lantern` | Ellie | Lamps; light every garden lantern. |
+| `water_plant`, `hang_washing`, `bird_watch`, `stargaze`, `check_mail`, `open_race_board` | Ellie | Small home and garden actions; the race board starts a race or shows PBs. |
+| `train_skierg`, `train_row`, `train_sled_push`, `train_sled_pull`, `train_wallball`, `train_sandbag`, `train_kettlebell`, `train_farmers`, `run_treadmill`, `stretch` | Ellie | Hyrox training activities. |
+| `play_laser`, `play_feather` | Ellie with a cat | Toys from the toy basket. Salem loves the laser. |
+| `bow_to_george` | Ellie | Bow to George at his throne or cushion (Royalty). |
+| `cat_nap`, `cat_perch_high`, `cat_perch_lid`, `cat_hide`, `cat_play`, `cat_box`, `cat_scratch`, `cat_eat`, `cat_sunbathe`, `cat_warm`, `cat_throne` | cats | Cat smart-object uses. `cat_perch_lid` is Peaches on the record player lid; `cat_box` is Salem's favourite. |
+
+Not tied to an item: `sit_grass` and `lie_grass` (any grass tile, for the coffee-and-rusk ritual and stargazing).
+
+---
+
+## 9. What other specs and modules must match
+
+- **types.ts / contracts (architect):** room ids `bedroom`, `bathroom`, `spare`, `living`, `kitchen`, `garden`, `front`. Rotation 0 = facing down (south), 1 = left (west), 2 = up (north), 3 = right (east). Placement codes from §1.1. A suggested item shape:
+
+  ```ts
+  type ItemCategory = 'seating' | 'beds' | 'tables' | 'storage' | 'kitchen' | 'bath' | 'gym' | 'lighting'
+    | 'plants' | 'cat' | 'walldecor' | 'rugs' | 'electronics' | 'garden' | 'decor' | 'front';
+  type StyleTag = 'Goth' | 'Cottage' | 'Neon' | 'Gym' | 'Cat' | 'Plant' | 'Retro';
+  type Placement = 'floor' | 'in' | 'out' | 'rug' | 'wall' | 'window' | 'surface' | 'front';
+  type Unlock =
+    | { kind: 'start' } | { kind: 'fixture' }
+    | { kind: 'aspiration'; aspiration: 'hyrox' | 'royalty' | 'homemaker' | 'collector'; tier: 1 | 2 | 3 | 4 }
+    | { kind: 'bond'; cat: CatName; level: 1 | 2 | 3 | 4 }
+    | { kind: 'poe'; trinkets: number }
+    | { kind: 'secret'; secret: string };
+  interface ItemDef {
+    id: ItemId; name: StringKey; category: ItemCategory;
+    footprint: { w: number; h: number } | 'slot'; orientations: 1 | 2 | 4; placement: Placement;
+    tags: readonly StyleTag[]; price: number; unlock: Unlock; art: SpriteKey;
+    interactions: readonly InteractionId[]; light: number; slots: number; mvp: boolean;
+    maxCopies?: number; valueOverride?: number;
+  }
+  ```
+
+- **play.md:** aspiration ids `hyrox`, `royalty`, `homemaker`, `collector`, and which items each tier unlocks (§4.4); bond-level unlocks; the Poe trinket prices; the secret ids (§7.2); the Hearts band (§4.3); the housewarming and Home Maker thresholds (§6.6); and the 30-minute delivery time.
+- **sim.md:** the Cosy need rule (§6.6); light auto-switching (§6.2); sunbeam hours and geometry (§2.4) for Peaches; the cat comfort features (§6.2), which should match what each cat's AI seeks; the interaction ids (§8).
+- **build-mode-dev:** the map (§2.1), back-wall tiles (§2.5), the placement rules (§1.1, including never blocking a door's inside tile), fixtures (§3.2), surface slots, Bruce anchors (§7.1), and the hint rules (§6.4).
+- **pixel-artist:** 123 distinct item art bases (80 in MVP), 36 paints, window facings, and the band-name rule for sleeves (§4.1).
+- **writer:** `item.<id>.name` and `item.<id>.desc` for 124 items and 5 fixtures, `room.*`, `paint.*`, `set.<id>.name` and `set.<id>.done`, `cosy.hint.*`, `cosy.need.*`, and `item.frame_grazie.text` (exactly "Grazie per essere te stessa").
+- **personal.ts (writer):** a boolean `framedPrint`, default `true`.
