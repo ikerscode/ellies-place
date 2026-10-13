@@ -8,6 +8,9 @@ import type { Facing } from '../../core/types';
 import { PAL } from './palette';
 import type { Anchor, Grid, Palette, PixelRect, SpriteDef, SpriteDir } from './types';
 
+/** `SpriteDef.outline` value for sprites drawn without an outline (tiles, overlays). */
+export const NO_OUTLINE = 'none';
+
 /** RGBA pixels of a compiled sprite: the grid plus a 1 px outline on every side. */
 export interface Raster {
   readonly w: number;
@@ -24,8 +27,9 @@ export function parseHex(hex: string): readonly [number, number, number] {
 
 /**
  * Game 1 makeSprite as pure data: the output is (w + 2) x (h + 2). An outline pixel is
- * drawn wherever an empty cell touches a filled one on its 4 sides. Characters missing
- * from the palette leave a hole (the registry tests forbid that).
+ * drawn wherever an empty cell touches a filled one on its 4 sides (skipped when the
+ * outline is `'none'`). Characters missing from the palette leave a hole (the registry
+ * tests forbid that).
  */
 export function rasterize(rows: Grid, pal: Palette, outline: string = PAL.ink.outline): Raster {
   const h = rows.length;
@@ -45,10 +49,12 @@ export function rasterize(rows: Grid, pal: Palette, outline: string = PAL.ink.ou
     data[i + 2] = rgb[2];
     data[i + 3] = 255;
   };
-  const out = parseHex(outline);
-  for (let y = -1; y <= h; y++) {
-    for (let x = -1; x <= w; x++) {
-      if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) put(x + 1, y + 1, out);
+  if (outline !== NO_OUTLINE) {
+    const out = parseHex(outline);
+    for (let y = -1; y <= h; y++) {
+      for (let x = -1; x <= w; x++) {
+        if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) put(x + 1, y + 1, out);
+      }
     }
   }
   const cache = new Map<string, readonly [number, number, number]>();
