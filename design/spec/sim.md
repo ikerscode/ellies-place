@@ -8,7 +8,7 @@ Owner: `game-designer#systems`, Wave 1. Every number the simulation needs: time,
 - Interaction effects listed as totals are **net**: while an interaction advertises a positive change on a need, that need's base decay is suspended for the actor (decay modifiers in §2.3 still apply to the *other* needs).
 - Interaction ids are `<object>.<verb>` (`bed.sleep`, `cat.pet`). Interaction **tags** are `snake_case` (§4.2). Player-facing text is a string key (`mood.band.3`); the writer fills in the words.
 - **MVP** rows must ship; **Full** rows are full scope.
-- Never punish: no need ever causes a failure, an injury, a loss of items or progress, or a forced action. The only effects of low values are listed in §2.5 and §6.6.
+- Never punish: no need ever causes a failure, an injury, a loss of items or progress, or a forced action. The only effects of low values are listed in §2.5 (Ellie) and §8.1–§8.2 (cats).
 
 ---
 
@@ -39,7 +39,7 @@ Speed changes **how many ticks run per real second**, never the size of a tick.
 
 - Movement and animation are **per tick** (tiles per tick), so walking looks proportionally faster at ×2 and ×3, like other life sims.
 - The loop runs at most **12 ticks per frame**; if it falls further behind it drops the backlog (the sim simply runs slower in real time). Determinism is unaffected because ticks are never skipped, only delayed.
-- `Speed` stays `0 | 1 | 2 | 3`. Fast-forward is a separate flag `time.fastForward: boolean` (contract note, §15).
+- `Speed` stays `0 | 1 | 2 | 3`. Fast-forward is a separate flag `time.fastForward: boolean` (contract note, §16.2).
 
 ### 1.3 Sleep fast-forward
 
@@ -59,7 +59,7 @@ Speed changes **how many ticks run per real second**, never the size of a tick.
 | New game starts | Day 1, 09:00, a **Thursday** | Daylight for the tour; the first Saturday (race day) is day 3, about an hour of play in, after she has met the gym. |
 | Weekday | `weekday = (day + 2) mod 7`, with 0 = Monday … 5 = Saturday, 6 = Sunday | Day 1 → 3 (Thursday). |
 | Saturday | Race day (play.md owns what happens) | Brief §4. |
-| Daily roll time | 00:00 | All once-a-day random rolls happen here, in the order in §13. |
+| Daily roll time | 00:00 | All once-a-day random rolls happen here, in the order in §14. |
 
 ### 1.5 Light phases (for lighting, lamps and quirks)
 
@@ -69,7 +69,7 @@ Speed changes **how many ticks run per real second**, never the size of a tick.
 | --- | --- | --- | --- |
 | Night | 21:00–05:00 | 0.65 | Lamps matter. Stargazing window. |
 | Dawn | 05:00–07:00 | 0.65 → 0 (linear) | |
-| Day | 07:00–18:30 | 0 | Sunbeams (§10). |
+| Day | 07:00–18:30 | 0 | Sunbeams (§11). |
 | Dusk | 18:30–21:00 | 0 → 0.65 (linear) | |
 
 - "**Lamps count**" (for Cosy lighting in home.md) whenever `darkness ≥ 0.3`: about 19:40–05:55.
@@ -137,7 +137,7 @@ Multipliers on base decay. They stack multiplicatively.
 
 Heavy music is **not** noise for Ellie. She loves it.
 
-### 2.4 Restoring (summary, full list in §4.4)
+### 2.4 Restoring (summary, full list in §4.3)
 
 | Need | Main sources (net totals) |
 | --- | --- |
@@ -148,7 +148,7 @@ Heavy music is **not** noise for Ellie. She loves it.
 | Calm | Rusk ritual +30 (+15 on a perfect dunk); bath +27; reading +15; stargazing +12; cat on lap +15/h; sleep +4/h. |
 | Cosy | Decorating, lamps at night, plants, cats nearby: all through the room score (home.md). Lighting a lamp or lanterns advertises the Cosy gain it will cause. |
 
-**Waking rule for `bed.sleep`.** She wakes at the first chunk boundary (§6.5) where Energy ≥ 98 **and** either the time is 05:30–10:00 or the sleep started between 06:00 and 20:00 (a day sleep). Hard cap: 10 game hours. She never oversleeps past 10:00.
+**Waking rule for `bed.sleep`.** Sleep runs as 60-game-minute chunks; each chunk counts as a completed action (§15 #4) and the next starts automatically. At each chunk boundary she wakes if: Energy ≥ 98 and the time is 05:30–10:00; or Energy ≥ 98 and the sleep started between 06:00 and 20:00 (a day sleep); or the time has reached 10:00; or she has slept 10 game hours. She never oversleeps past 10:00, and a short night just means a coffee tomorrow.
 
 ### 2.5 Thresholds: mopey and slow
 
@@ -361,7 +361,7 @@ Effects are **net totals** at the listed duration (rates where marked `/h`). Adv
 | `box.flatten` | tidy | Delivery box | 2 | Removes the box; Calm +1 | Yes | No cat inside; ≥ 2 boxes on the lot | MVP |
 | `grass.stargaze` | stargaze, garden_sit | Garden grass | 30 | Calm +12, Fun +8 | Yes (no wishes made) | 21:00–04:30, not raining | MVP |
 | `lanterns.light` | lanterns | Garden lanterns | 3 | Calm +2; lanterns lit until 02:00 | Yes | 19:30–01:00 | MVP |
-| `lamp.toggle` | lamp | Any lamp | 1 | Calm +1 when switching on at night | Yes (on at dusk in her room; off when leaving bed) | | MVP |
+| `lamp.toggle` | lamp | Any lamp | 1 | Calm +1 when switching on at night | Yes (on at dusk in the room she is in; off when she goes to sleepeaving bed) | | MVP |
 | `front_door.run` | run, exercise | Front door (Ellie leaves the lot) | 40 | Fitness +14, Calm +8, Fun +4; exercise modifier costs ~ Energy −11, Hunger −5 | Yes | 06:00–21:00 | MVP |
 | `gym.<station>.train` | train_hyrox, exercise | Each of 8 stations | 20 | Fitness +10, Fun +5 (× result), skill (play.md); exercise modifier costs ~ Energy −5.5, Hunger −2.5 | Yes (auto-play) | Station placed | MVP |
 | `race_board.race` | race, exercise | Race board | play.md | play.md | No | | MVP |
@@ -371,7 +371,7 @@ Effects are **net totals** at the listed duration (rates where marked `/h`). Adv
 | `plant.water` | plant | Any plant | 2 | Calm +4 | Yes (each plant once a day) | | Full |
 | `camera.photo` | photo | Photo mode | player | Fun +5 for the first shot of each subject per day | No | | MVP |
 | `door.answer` | visitor | Front door | 3 | Fun +3, Pickle's line | Yes | Pickle present | MVP |
-| `bruce.spot` | visitor | Bruce | 1 | Fun +4, `moodlet.bruce_spotted` | No (see §11.1 for passing by) | Bruce visible | MVP |
+| `bruce.spot` | visitor | Bruce | 1 | Fun +4, `moodlet.bruce_spotted` | No (see §12.1 for passing by) | Bruce visible | MVP |
 | `poe.trade` | visitor | Poe at the bird bath | 5 | Fun +4; opens trade (play.md) | No | Poe present | MVP |
 | `poe.watch` | visitor | Poe at the bird bath | 5 | Fun +3, Calm +2 | Yes | Poe present | Full |
 
@@ -396,7 +396,7 @@ Counts: 47 MVP Ellie interactions (brief asks for 25) and 7 Full, 54 in total (b
 
 - **Partial progress keeps its gains.** Rates apply every tick; totals are spread evenly over the duration. Cancelling keeps what was gained.
 - **Minigame interactions** apply their totals × result factor when the minigame ends (or is skipped). While an activity overlay is open the sim keeps running, forced to ×1, so the cats keep living behind it; the previous speed returns afterwards.
-- **Repeat cap:** an interaction's need effects drop to 50 % for its 3rd and later uses in one game day by the same actor (except sleep, eating, `bowls.fill`, gym, run). Nothing ever goes negative.
+- **Repeat cap (Ellie only):** an interaction's need effects drop to 50 % for its 3rd and later uses in one game day. Exempt: `bed.sleep`, naps, eating and cooking, `bowls.fill`, coffee and the rusk ritual (they have their own coffee rule, §2.4), gym stations, `front_door.run` and tidying. Nothing ever goes negative. Cats have no repeat cap; their quirks have their own cooldowns.
 - **Effects never push a need below its floor or above 100.**
 
 ---
@@ -425,12 +425,12 @@ score = max(0, base) × P_tag × B × F_dist × N × R × U × Q
 | `costTerm` weight 0.5 | Costs count half | Training is still attractive at full Energy; costs bite only when that need is already low. |
 | `careTerm` ÷ T | T = 4 for `bowls.fill` (all cats), T = 1 for single-cat targets | Ellie looks after the cats on her own, so cat Food and Affection recover with free will on. |
 | `P_tag` | Ellie: the highest `Ellie ×` among the interaction's tags (§4.2). Cats: the highest personality multiplier among its tags (§8.4) | Personality as numbers. |
-| `B` (bond) | Social tags (`cat_social`, `pet`, `brush`, `pick_up`, `lap_sit`, `near_ellie`, `follow_ellie`, `request`, `play_*`): `B = 0.7 + 0.006 × bond` (0.7 at 0, 1.0 at 50, 1.3 at 100). All other interactions: 1 | Cats who like her seek her out more, and she seeks them. |
+| `B` (bond) | Social tags (`cat_social`, `pet`, `brush`, `pick_up`, `lap_sit`, `near_ellie`, `follow_ellie`, `request`, `play_laser`, `play_wand`): `B = 0.7 + 0.006 × bond` (0.7 at 0, 1.0 at 50, 1.3 at 100). All other interactions: 1 | Cats who like her seek her out more, and she seeks them. |
 | `F_dist` | `1 / (1 + d / D0)`, d = octile tile distance to the slot (+2 per layer change for cats). D0 = 15 for Ellie, 12 for cats | Prefer near things. Across the whole 30 × 17 lot (d ≈ 34) it is ×0.31 for Ellie, so far favourites still win sometimes. |
 | `N` (noise) | Uniform 0.85–1.15 from the state RNG, one draw per candidate per decision | Variety without randomness taking over. |
 | `R` (recency) | Same interaction id done by this actor within 60 game min: ×0.5; within 180: ×0.8; else 1 | Stops loops (coffee, coffee, coffee). Sleep, eat and `bowls.fill` are exempt. |
 | `U` (urgency) | If any need n has v_n < 20 and the candidate advertises Δn > 0: ×2.5 | Guarantees low needs recover (soak invariant). |
-| `Q` (quirk/schedule) | From §5.4 and §10–§11 (time windows, quirks, requests) | Schedules and personality beats. |
+| `Q` (quirk/schedule) | From §5.4 and §10–§13 (time windows, quirks, requests) | Schedules and personality beats. |
 
 **Threshold.** Candidates with score < 0.25 are dropped. If nothing is left: Ellie plays an idle (mood-based) and free will waits for the next trigger; cats pick `idle` (§8.8).
 
@@ -473,7 +473,7 @@ curve(v) = A × ((100 − v) / 100)^p + 0.15
 | Re-trigger after idle fallback | Another 160 ticks | |
 | Never picks | `autonomous: false` interactions: race, catalog, photo, dress, trades, `bruce.spot`, Knighting, anything that opens a full-screen UI | Free will does sensible life things, not the player's choices. |
 | Minigame interactions | Run as auto-play (result factor 1.0) without showing the minigame | Keeps the soak meaningful. |
-| Night bias (Q) | `bed.sleep` ×2.5 at 22:00–02:00, ×1.5 at 21:00–22:00 and 02:00–05:00, ×0.3 at 09:00–19:00. Every other candidate ×0.6 from 23:30 to 05:00, except `read`, `stargaze`, `lanterns`, `lamp` | She keeps a sensible bedtime (soak target §14). |
+| Night bias (Q) | `bed.sleep` ×2.5 at 22:00–02:00, ×1.5 at 21:00–22:00 and 02:00–05:00, ×0.3 at 09:00–19:00. Every other candidate ×0.6 from 23:30 to 05:00, except `read`, `stargaze`, `lanterns`, `lamp` | She keeps a sensible bedtime (soak target §15 #6). |
 | Energy 0–10 | `sleep` and `nap` candidates ×2 on top of urgency | Strong pull to bed, never a pass-out. |
 | Cat requests (Q) | A pending cat request (§8.7) gives matching candidates ×1.5 for 30 game min | The cats can ask her for things. |
 | Wishes (Q) | Candidates that would complete an active daily wish: ×1.3 | Free will helps, but the player still does most wishes. |
@@ -586,7 +586,7 @@ If an interaction `requires` a hand item Ellie doesn't hold, the sim prepends th
 
 | Rule | Value |
 | --- | --- |
-| Appears | On the front step with each delivery (§11.3). Build-mode instant orders leave one box on the front step too. |
+| Appears | On the front step with each delivery (§12.3). Build-mode instant orders leave one box on the front step too. |
 | Lot cap | 3 boxes. A 4th recycles the oldest box with no cat in it (if all have cats, the new box simply doesn't appear). |
 | Auto-recycle | A box with no cat in it disappears after 48 game hours. |
 | Salem | §10.3. |
@@ -716,7 +716,7 @@ Cat-only interactions (autonomous). Effects are for the acting cat.
 | `music.vibe` | music_vibe | Within 5 tiles of a playing record player | ≤ 30 | Peaches Vibes +20/h (+25/h Lo-fi or Cosy); Play +4/h | | MVP |
 | `device.warm` | warm_device | Laptop or console used in the last 30 game min | ≤ 45 | Peaches Vibes +20/h; Nap +5/h | | MVP |
 | `record_player.lid_sit` | music_vibe | Record player lid, when off | 20 | Peaches Vibes +5 | A hint: Q ×1.5 when Vibes < 50 and Ellie is in the room | MVP |
-| `ellie.near` | near_ellie | 1–4 tiles from Ellie (Shadow 3–5) | 20 | Affection +6/h | Ellie must be seated, lying or asleep | MVP |
+| `ellie.near` | near_ellie | 1–4 tiles from Ellie (Shadow 3–5) | 20 | Affection +6/h | Ellie must be seated, lying or asleep (waived for Shadow's secret softness, §10.4) | MVP |
 | `ellie.follow` | follow_ellie | Ellie's current room | until in her room, + 5 min | Affection +4/h; Salem Chaos +6/h | §10.3 | MVP |
 | `ellie.request` | request | Walk to 2 tiles from Ellie | 2, then waits ≤ 30 | none (creates a request, §8.7) | | MVP |
 | `ellie.lap_sit` | lap_sit | Ellie seated (sofa, chair, grass) | ≤ 45 | Affection +15/h; Nap +6/h; Peaches Vibes +10/h; Ellie Calm +15/h and `moodlet.cat_on_lap` | Shadow needs bond ≥ 60 and Ellie reading | MVP |
@@ -1032,7 +1032,7 @@ At least one left-wall window, one back-wall window and one right-wall window ac
 
 | Rule | Value | Reason |
 | --- | --- | --- |
-| Rain roll | At 00:00, p = 0.15 | Occasional rain, as in the audio brief. |
+| Rain roll | At 00:00, p = 0.18 (about 4 rain days a month after the exclusions) | Occasional rain, as in the audio brief. |
 | Never | Day 1, Saturdays, or two days in a row | Race day and the first day stay dry. |
 | Rain window | Start uniform 06:00–18:00, lasts 120–360 game min | |
 | Effects | No sunbeams; outdoor interactions ×0.3 in free will (never forbidden); Ellie's Calm decay ×0.6 indoors; Peaches watches from a window (`window.sit` Q ×1.5) | Rain is cosy, not a loss. |
@@ -1056,13 +1056,13 @@ Run: 30 game days, free will on, no player input, seed fixed. Start from a new g
 | 3 | Daily mean mood | ≥ 50 on every day; time with mood < 25 ≤ 5 % of the run. |
 | 4 | Actions complete | Every agent completes ≥ 1 action per game hour. Sleep and naps count because they run in 60-minute chunks (§5.5, §2.4). |
 | 5 | Stuck | No agent without progress (no position change and no action progress) for > 2 game hours. |
-| 6 | Bedtime | Ellie starts `bed.sleep` between 21:30 and 01:00 on ≥ 80 % of days and wakes between 05:30 and 10:00 on every day. |
+| 6 | Bedtime | Ellie starts `bed.sleep` between 21:00 and 01:00 on ≥ 80 % of days and wakes between 05:30 and 10:00 on every day. |
 | 7 | Bonds | Every cat gains ≥ 15 bond over the 30 days; no cat ever loses more than 2 in a day; levels never drop. |
 | 8 | Salem | Shares Ellie's room ≥ 40 % of her awake time; 3 a.m. zoomies happen on 14–28 nights. |
 | 9 | Peaches | Basks in a sunbeam ≥ 60 game min on ≥ 70 % of dry days. |
 | 10 | Shadow | Trust gain happens on ≥ 50 % of days. |
 | 11 | Visitors | Bruce 15–45 visits, max 2 per day; Poe 12–24 visits; Pickle 0 (no orders in an idle soak). |
-| 12 | Weather | 2–8 rain days, never two in a row, never on a Saturday. |
+| 12 | Weather | 1–9 rain days, never two in a row, never on a Saturday. |
 | 13 | Caps | Ellie's queue ≤ 4; moodlets ≤ 8 and sum ≤ 25; mess ≤ 12; boxes ≤ 3; trinkets ≤ 99; Salem knocks ≤ 3 per day. |
 | 14 | Ranges | Every need in [floor, 100]; bond in [0, 100]; no NaN, undefined or Infinity. |
 | 15 | Hearts | Inside play.md's band. The mood multiplier stays in [0.8, 1.5]. |
