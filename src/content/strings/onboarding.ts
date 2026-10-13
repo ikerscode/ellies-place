@@ -23,10 +23,10 @@ export const onboarding = {
   // Salem: needs and the action queue
   'onboard.salem.hi.01': "{name}! You LIVE here now! I live here too! HI!",
   'onboard.salem.needs.01': "See the bars? That's how you're doing! I can't read them!",
-  'onboard.salem.needs.02': "When one's low you go slow. Eat something! Nap! Pet me!",
+  'onboard.salem.needs.02': "When one's low you go slow! Eat something! Or pet me!",
   'onboard.salem.queue.01': 'Pick lots of things and they wait in a line up top!',
   'onboard.salem.queue.02': "Changed your mind? Click one and it's gone! Like ham!",
-  'onboard.salem.freeWill.01': "Pick nothing and you'll pick something yourself! Clever!",
+  'onboard.salem.freeWill.01': "Do nothing for a bit and you'll find something to do! Clever!",
   'onboard.salem.handoff.01': "Peaches is by the records. She's very calm. I'm NOT!",
 
   // Peaches: the record player and mood

@@ -5,7 +5,7 @@
 export const ui = {
   // Title screen
   'ui.title.name': "Ellie's Place",
-  'ui.title.tagline': 'Four cats. One flat. Many opinions.',
+  'ui.title.tagline': 'Your place. The cats have notes.',
   'ui.title.newGame': 'Move in',
   'ui.title.continue': 'Go home',
   'ui.title.settings': 'Settings',

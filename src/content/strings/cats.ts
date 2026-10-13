@@ -28,7 +28,7 @@ export const cats = {
   'cat.george.pillow.02': 'You may have the edge. The edge is generous.',
   'cat.george.sitOn.01': 'You were using this. Now we are.',
   'cat.george.sitOn.02': 'We are not on your laptop. We are guarding it.',
-  'cat.george.bow.01': 'A bow. Lower next time. Lovely.',
+  'cat.george.bow.01': 'A bow. Lower next time. But a bow.',
   'cat.george.bow.02': 'The peasant bows. The King notices. Briefly.',
   'cat.george.knight.01': 'Kneel. We dub thee Sir {name}. Rise. Fetch snacks.',
   'cat.george.knight.02': 'Sir {name}. Our most loyal knight. Our only knight.',
@@ -134,7 +134,7 @@ export const cats = {
   'cat.peaches.headbang.02': "My head's going. I can't stop it. Don't stop it.",
   'cat.peaches.heavy.01': 'Shadow left. More floor for us.',
   'cat.peaches.grass.01': "Coffee in the grass? I'll take the sunny side.",
-  'cat.peaches.lowMood.01': 'Put something slow on. I will lie on your feet.',
+  'cat.peaches.lowMood.01': "Put something slow on. I'll lie on your feet.",
   'cat.peaches.food.01': "Dinner? Mm. I'll wander over in a bit.",
   'cat.peaches.nap.01': 'Just resting my eyes. For the whole album.',
   'cat.peaches.newItem.01': 'New lamp? Is it warm? Oh, very warm. Good lamp.',
@@ -142,7 +142,7 @@ export const cats = {
   'cat.peaches.cosy.01': 'Lamp on. Bit cosier. Yeah, that.',
   'cat.peaches.race.01': 'Nice pace. Sounded like a drum fill.',
   'cat.peaches.caption.01': 'Golden hour. The light did most of the work.',
-  'cat.peaches.bed.01': 'Your feet are warm. I live here now.',
+  'cat.peaches.bed.01': "Your feet are warm. That's where I'm sleeping.",
 } as const satisfies Readonly<Record<string, string>>;
 
 /**

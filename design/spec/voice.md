@@ -7,7 +7,7 @@ Owner: writer. Every player-facing line in Ellie's Place follows this page. Pers
 - **British English.** Colour, favourite, cosy, telly, post, biscuit, mum, realise. Sushi is always vegetarian when Ellie makes it.
 - **Short.** Most lines are one or two sentences. Some are one word. Mix the lengths so a run of bubbles doesn't read like a metronome.
 - **Specific beats general.** "Salem is in the box. Salem lives in the box now." beats "Salem loves boxes!"
-- **Funny first, warm underneath.** The cats are devoted to Ellie and would rather die than say so (except Salem, who says so every four seconds).
+- **Funny first, warm underneath.** The cats are devoted to Ellie and would sooner eat cucumber than say so (except Salem, who says so every four seconds).
 - **No romance.** No confessions, no love letters, no hearts text from game 1. The giver never appears or speaks. Mail from the giver lives only in `src/content/personal.ts`, and he writes it himself.
 - **No IP.** No names, creatures, catchphrases, items or invented-language words from The Sims, Pokémon, Nintendo or any other game or show. The life sim and the monster RPG are ours. Real band names appear only as text on record sleeves, with no lyrics.
 - **Punctuation.** No em or en dashes, and no `--` standing in for one. Use three full stops for a trailing pause (`...`), never the single ellipsis character. Straight quotes and apostrophes only, because the pixel font is ASCII-first. `é` in "café" is the one exception.
@@ -16,7 +16,7 @@ Owner: writer. Every player-facing line in Ellie's Place follows this page. Pers
 
 ## Banned phrases and patterns
 
-The unit test in `tests/unit/strings/` enforces most of these.
+The unit test in `tests/unit/strings/` enforces most of these, plus some voice rules: George never says "I" or "me", Shadow never uses "!", every Poe line ends with "Caw.", and Pickle stops at two ribbits a line.
 
 - Em dash, en dash, `--`, and the `…` character
 - "Honestly?", "Here's the thing", "a testament to", "not just X but Y"
@@ -50,11 +50,14 @@ Limits count characters after placeholders are filled with typical values (`{nam
 
 ## Key naming
 
-`domain.subject.situation.nn`, lower camelCase segments, two-digit variant numbers.
+`domain.subject.situation.nn`: a lower-case domain, then camelCase segments, then a two-digit variant number for speech. Ids from content tables keep their own spelling (`item.sofa_small.name`).
 
-- `cat.george.pet.01`, `cat.salem.box.03`, `visitor.bruce.fence.02`, `ellie.morning.01`
-- `int.makeCoffee`, `wish.bowToGeorge`, `onboard.george.bed.01`, `ui.need.energy`, `mail.pickleFirst.body`
-- Lines that share everything but the number are interchangeable variants. Code picks one with `variants('cat.george.pet')`.
+- **Speech:** `cat.<cat>.<situation>.nn`, `visitor.<bruce|poe|pickle>.<situation>.nn`, `ellie.<situation>.nn`. Lines that share everything but the number are interchangeable variants, numbered 01, 02... with no gaps, so code can pick one with the seeded RNG by counting keys under the prefix.
+- **Common situations:** `pet`, `idle`, `food`, `nap`, `bed`, `morning`, `newItem`, `approve`/`disapprove` (George on new furniture), `race`, `caption` (photo captions), `lowMood`, `grass`, plus each cat's own (`box`, `ham`, `knock`, `zoomies`, `laser` for Salem; `sunbeam`, `record`, `lid` for Peaches; `heavy`, `lap`, `trust` for Shadow; `fish`, `pillow`, `bow`, `knight` for George).
+- **Onboarding:** `onboard.<speaker>.<step>.nn`, in play order, and `onboard.ui.*` for its buttons.
+- **Content:** `int.<interactionId>`, `wish.<wishId>`, `asp.<id>.name|desc|tier.<1-4>`, `mail.<mailId>.subject|body`, `item.<itemId>.name|desc`, `room.<roomId>`.
+- **UI keyed by contract enums,** so code can build the key: `ui.need.<EllieNeed>`, `ui.catNeed.<CatNeed>`, `ui.bond.<0-4>`, `ui.mood.<MoodBand>`, `ui.phase.<DayPhase>`, `ui.mode.<GameMode>`, `ui.speed.<0-3>`, `ui.day.<Weekday>`, `ui.category.<ItemCategory>`, `ui.style.<StyleTag>`, `ui.cosy.<CosyFactor>`, `ui.journal.<JournalTab>`, `ui.radio.<RadioStation>`, `ui.hyrox.<HyroxStation>`, `ui.toast.place.<PlacementError>`.
+- **Other UI:** `ui.<area>.<thing>`; toasts are `ui.toast.*`, hints `ui.hint.*`.
 
 ## The voices
 
@@ -79,7 +82,7 @@ Few words. Dry, warm, a bit tired in the mornings. She speaks rarely, so each li
 
 Royal "we", formal, judgemental, secretly devoted. He inspects everything, approves of little, and sits wherever Ellie wanted to sit. He wants fish in the sushi and never gets it. After the Knighting he calls her "Sir {name}".
 
-- Avoid: "I" or "me" (it is always "we" and "us"), being openly soft, slang.
+- Avoid: "I" or "me" (it is always "we" and "us"), being openly soft, slang. The one exception is the brief's own tour line, "This is your bed. It was mine. You may borrow it."
 
 1. The King permits this. Briefly.
 2. We have inspected the new sofa. We have notes.
