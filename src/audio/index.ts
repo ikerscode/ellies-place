@@ -1,5 +1,12 @@
 /**
- * Audio: engine ported from game 1 plus music state machine.
- * Owner: audio-dev. Wave 0 stub so imports resolve; the owner replaces this.
+ * Audio: game 1's procedural engine, arrangements, music state machine, ambience, sfx.
+ * Owner: audio-dev. Wave 1 typed stub; the owner replaces the body, keeping the signature.
+ * Contract: design/spec/contracts.md section "audio". src/audio may keep a local Cue
+ * union that is a superset of core AudioCue.
  */
-export {};
+import { notImplemented, type CreateAudio } from '../core';
+
+export type { AudioApi, AudioDeps, AudioCue, MusicContext, MusicTrack } from '../core';
+
+/** Listens to 'audio.cue' and 'music.context' on the bus; unlock() on first gesture. */
+export const createAudio: CreateAudio = () => notImplemented('createAudio');
