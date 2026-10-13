@@ -64,26 +64,37 @@ export function lift(g: Grid, n = 1): Grid {
 }
 
 /**
- * Turns game 1 style fillRect data into a grid plus palette: one character per distinct
- * colour, assigned in order of first use from `a`..`z`.
+ * Turns game 1 style fillRect data into grids plus one shared palette: one character per
+ * distinct colour, assigned in order of first use from `a`..`z`. Each entry of `layers`
+ * becomes one grid of size w x h; rect (x, y) lands on grid cell (x + ox, y + oy).
  */
-export function rectsToGrid(w: number, h: number, rects: readonly PixelRect[], ox = 0, oy = 0): { grid: Grid; palette: Palette } {
+export function rectsToGrids<K extends string>(
+  w: number,
+  h: number,
+  layers: Readonly<Record<K, readonly PixelRect[]>>,
+  ox = 0,
+  oy = 0,
+): { grids: Record<K, Grid>; palette: Palette } {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
   const byColour = new Map<string, string>();
-  let g = blank(w, h);
-  for (const r of rects) {
-    const c = r.c.toLowerCase();
-    let ch = byColour.get(c);
-    if (!ch) {
-      ch = chars[byColour.size];
-      if (!ch) throw new Error('rectsToGrid: too many colours');
-      byColour.set(c, ch);
+  const grids = {} as Record<K, Grid>;
+  for (const name of Object.keys(layers) as K[]) {
+    let g = blank(w, h);
+    for (const r of layers[name]) {
+      const c = r.c.toLowerCase();
+      let ch = byColour.get(c);
+      if (!ch) {
+        ch = chars[byColour.size];
+        if (!ch) throw new Error('rectsToGrids: too many colours');
+        byColour.set(c, ch);
+      }
+      g = fill(g, r.x + ox, r.y + oy, r.w, r.h, ch);
     }
-    g = fill(g, r.x + ox, r.y + oy, r.w, r.h, ch);
+    grids[name] = g;
   }
   const palette: Record<string, string> = {};
   for (const [c, ch] of byColour) palette[ch] = c;
-  return { grid: g, palette };
+  return { grids, palette };
 }
 
 export interface DefOptions {

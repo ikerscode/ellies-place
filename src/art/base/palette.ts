@@ -73,6 +73,8 @@ export const PAL = {
   /** Outfit and prop accents from game 1 that sit outside the ramps. */
   extra: {
     white: '#ffffff',
+    /** Game 1 star clip yellow (an outfit, not a Neon item). */
+    starClip: '#ffe066',
     chefShade: '#d9d2e3',
     bucket: '#8a9a6a',
     bucketBrim: '#6f7f52',
