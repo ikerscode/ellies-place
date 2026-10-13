@@ -66,3 +66,14 @@ export function pick<T>(state: RngState, items: readonly T[]): T {
   const i = nextInt(state, 0, items.length - 1);
   return items[i] as T;
 }
+
+/**
+ * Derives an independent child stream (for an activity or a plugin) from the parent.
+ * Advances the parent exactly once, so forking is itself deterministic.
+ */
+export function forkRng(state: RngState, salt = 0): RngState {
+  const base = nextU32(state);
+  // Mix the salt in with a different odd constant so sibling forks differ.
+  const mixed = (Math.imul((base ^ toU32(salt)) >>> 0, 0x9e3779b1) ^ 0x85ebca6b) >>> 0;
+  return createRng(mixed);
+}
