@@ -132,7 +132,7 @@ export const visitors = {
   'visitor.bruce.salem.01': "The small one keeps waving. I don't wave back. Much.",
 
   // Poe: clipped, ends lines with "Caw.", obsessed with shiny things.
-  'visitor.poe.arrive.01': 'Caw. Office hours.',
+  'visitor.poe.arrive.01': 'Office hours. Caw.',
   'visitor.poe.arrive.02': 'Your bird bath. My office. Caw.',
   'visitor.poe.trade.01': "That's shiny. I'll take it. Caw.",
   'visitor.poe.trade.02': 'One trinket, one lamp. Fair trade. Caw.',

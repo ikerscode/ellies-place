@@ -36,11 +36,13 @@ The unit test in `tests/unit/strings/` enforces most of these.
 | Wish titles | `wish.` | 40 characters |
 | Speech bubbles | `cat.`, `visitor.`, `ellie.`, `onboard.` | 70 characters |
 | Toasts and hints | `ui.toast.`, `ui.hint.` | 80 characters |
-| Other UI labels | `ui.` | 32 characters |
+| Confirm prompts and taglines | `*Confirm`, `*.tagline` | 80 characters |
+| Other UI labels | `ui.`, `onboard.ui.` | 32 characters |
 | Mail subject | `mail.*.subject` | 40 characters |
 | Mail body | `mail.*.body` | 4 lines, each 56 characters or fewer, split with `\n` |
 | Item names | `item.*.name` | 28 characters |
 | Item blurbs | `item.*.desc` | 80 characters |
+| Anything else | | 80 characters |
 
 Limits count characters after placeholders are filled with typical values (`{name}` as "Ellie", `{cat}` as "Peaches", `{n}` as "50").
 
