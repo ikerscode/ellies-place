@@ -590,3 +590,284 @@ If an interaction `requires` a hand item Ellie doesn't hold, the sim prepends th
 | Auto-recycle | A box with no cat in it disappears after 48 game hours. |
 | Salem | §10.3. |
 
+---
+
+## 8. The cats
+
+### 8.1 Movement speeds (all actors)
+
+Tiles per real second at ×1 (divide by 20 for tiles per tick).
+
+| Actor | Walk | Run / zoomies | Reason |
+| --- | --- | --- | --- |
+| Ellie | 3.0 × `walkMul` (§2.5) | n/a | Crosses the 30-tile lot in 10 s. |
+| George | 3.0 | 5.0 | Regal pace. |
+| Salem | 4.0 | 7.0 | Small and everywhere at once. |
+| Shadow | 2.8 | 5.0 | Big, unhurried. |
+| Peaches | 3.0 | 5.0 | Laid-back. |
+| Bruce, Poe, Pickle | 3.0 (Poe flies 6.0) | n/a | |
+
+Cats below 20 in any need walk ×0.9 (looks grumpy, nothing else).
+
+### 8.2 Shared needs
+
+| Need | Start | Decay/h awake | Decay/h asleep | Floor | Reason |
+| --- | --- | --- | --- | --- | --- |
+| Food | 60 | 4.0 | 2.0 | 10 | Two bowl fills a day (each +60) keep every cat fed. |
+| Play | 70 | 5.0 | 1.0 | 10 | Mostly self-served with toys and zoomies; Ellie's play is a bonus. |
+| Affection | 70 | 4.0 | 1.0 | 10 | A pet or two plus time near Ellie covers it. |
+| Nap | 70 | 5.0 | restores | 10 | ~14 h awake costs 70; ~10 h of naps at +7–9/h restore it. Real cats nap a lot, and sleeping cats are cosy to look at. |
+
+**Floors** mean a neglected cat sits at 10, shows a thought icon and walks a bit slower. Nothing worse ever happens: no sickness, no leaving, no bond loss from neglect.
+
+Per-cat decay multipliers:
+
+| Cat | Food | Play | Affection | Nap | Reason |
+| --- | --- | --- | --- | --- | --- |
+| George | 1.0 | 0.8 | 0.9 | 1.0 | Too dignified to need much play. |
+| Salem | 1.1 | 1.3 | 1.2 | 0.85 | Goofy, hungry, clingy, always awake. |
+| Shadow | 1.0 | 0.7 | 0.5 | 1.2 | Unimpressed; sleeps the most. |
+| Peaches | 1.0 | 0.8 | 1.0 | 1.1 | Laid-back. |
+
+### 8.3 Personality needs
+
+| Cat | Need | Start | Decay/h | Satisfied by (rates while doing it) |
+| --- | --- | --- | --- | --- |
+| George | Royalty | 60 | 4.0 awake, 2.0 asleep | Layer-2 perch +15/h (+8/h while dozing there); `george.bow` +30; `claim_spot` +12; being served first at `bowls.fill` (within 8 tiles) +12; sitting on what Ellie uses +10; Ellie's pillow at night +10/h; `inspect` +3 each; `cat.brush` +6; `george.knight` +40 |
+| Salem | Chaos | 60 | 6.0 awake, 3.0 asleep | `self.zoomies` +25 (+30 at 3 a.m.); `surface.knock` +15; `box.sit` +20/h; `box.nap` +5/h; `toy.play` +8; `cat.play_laser` +15; `cat.play_wand` +10; `ellie.follow` +6/h; `window.sit` +8/h; `bird_bath.watch` +10/h; `inspect` +3 |
+| Shadow | Solitude | 60 | 4.0/h while any other actor is within 3 tiles; 1.5/h otherwise (awake or asleep). ×2 in a room playing Heavy | `hide.sit` (dark spot) +25/h; layer-2 perch +10/h; any tile with no actor within 5 tiles and `darkness ≥ 0.3` or under cover +8/h |
+| Peaches | Vibes | 60 | 4.0 awake, 2.0 asleep | `sunbeam.bask` +25/h; `music.vibe` +20/h (Lo-fi or Cosy +25/h); `device.warm` +20/h; `ellie.lap_sit` +10/h; `peaches.headbang_together` +20; `record_player.lid_sit` +5; garden grass in sun counts as a sunbeam |
+
+### 8.4 Personality multipliers per tag
+
+Used as `P_tag` in the score (§5.1). For effects Ellie causes on a cat (petting, play), the cat-side need gains and the bond gain are also multiplied by `clamp(P_tag, 0.5, 1.5)`. A dash means the cat never picks it.
+
+| Tag | George | Salem | Shadow | Peaches | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `eat` | 1.0 | 1.1 | 1.0 | 1.0 | Salem is always first at the bowl after George. |
+| `treat_ham` | 1.0 | 1.6 | 1.0 | 1.0 | Salem loves ham. |
+| `treat` | 1.0 | 1.3 | 1.0 | 1.1 | |
+| `nap` | 1.0 | 0.9 | 1.1 | 1.2 | |
+| `nap_bed` | 1.0 | 0.9 | 1.2 | 1.2 | |
+| `nap_ellie_bed` | 1.3 | 1.1 | 0.8 | 1.1 | George's pillow. Shadow prefers the dark under it. |
+| `nap_box` | 0.6 | 1.5 | 1.0 | 0.9 | |
+| `perch_high` | 1.6 | 1.0 | 1.3 | 0.8 | The King sits high. Shadow likes the wardrobe top. |
+| `perch_window` | 1.2 | 1.1 | 0.9 | 1.3 | Peaches likes warm sills. |
+| `hide_dark` | 0.6 | 0.7 | 1.6 | 0.7 | |
+| `box_sit` | 0.5 | 1.8 | 1.0 | 0.8 | Salem lives in the box now. |
+| `scratch` | 1.0 | 1.2 | 1.0 | 0.9 | |
+| `groom` | 1.4 | 0.8 | 1.0 | 1.0 | George licks his paw when idle. |
+| `zoomies` | 0.3 | 1.8 | 0.5 | 0.6 | |
+| `knock` | — | 1.7 | — | — | Only Salem knocks things off. |
+| `play_toy` | 0.7 | 1.5 | 0.6 | 0.9 | |
+| `play_laser` | 0.7 | 1.6 | 0.6 | 0.9 | |
+| `play_wand` | 0.9 | 1.5 | 0.8 | 1.0 | |
+| `pet` | 1.0 | 1.3 | 0.7 | 1.2 | |
+| `brush` | 1.3 | 0.9 | 1.0 | 1.3 | Grooming is a royal service. |
+| `pick_up` | 0.8 | 1.3 | 0.5 | 1.0 | Shadow is gated below bond 40 (§10.4). |
+| `lap_sit` | 0.9 | 1.2 | 1.0 | 1.3 | Shadow gated below bond 60. |
+| `near_ellie` | 1.0 | 1.3 | 1.0 | 1.1 | Shadow keeps 3–5 tiles away. |
+| `follow_ellie` | 0.5 | 1.7 | 0.3 | 0.7 | Salem follows her everywhere. |
+| `request` | 1.2 | 1.4 | 0.6 | 1.0 | |
+| `bow` | 1.8 | — | — | — | |
+| `knight` | 1.8 | — | — | — | |
+| `claim_spot` | 1.7 | — | — | — | |
+| `inspect` | 1.8 | 1.2 | 0.6 | 0.7 | George inspects everything. |
+| `sunbeam` | 1.0 | 0.8 | 0.5 | 1.8 | |
+| `music_vibe` | 0.8 | 1.0 | 0.6 (0 for Heavy) | 1.7 | |
+| `warm_device` | 1.1 | 1.0 | 0.8 | 1.5 | |
+| `watch_bird` | 1.0 | 1.4 | 1.0 | 0.9 | |
+| `garden_roll` | 0.6 | 1.3 | 0.7 | 1.4 | |
+| `cheer` | 1.2 | 1.5 | 0.6 | 1.0 | George judges; Shadow cheers quietly. |
+
+### 8.5 Likes and dislikes (style tags and situations)
+
+Used for George's verdicts (§10.2), cat happiness (§8.9) and thought icons. Dislikes never cause losses; they only produce a line or an icon and change where a cat chooses to be.
+
+| Cat | Likes | Dislikes |
+| --- | --- | --- |
+| George | Goth, Retro, layer-2 perches, items priced ≥ 150 Hearts, being served first | Neon, Gym items, being picked up below bond 60 (he accepts at a lower rate) |
+| Salem | Cat, Neon, boxes, ham, anything new | The bath (he runs past it) |
+| Shadow | Goth, Plant, dark corners, quiet | Neon, Heavy music, three or more actors within 3 tiles |
+| Peaches | Cottage, Plant, Retro, music, sun | Rain (sits at the window looking pensive) |
+
+### 8.6 Cat interactions
+
+Cat-only interactions (autonomous). Effects are for the acting cat.
+
+| Id | Tags | Who | Min | Effects | Notes | Scope |
+| --- | --- | --- | --- | --- | --- | --- |
+| `bowl.eat` | eat | Own bowl | 8 | Food +60 | Only with a serving in the bowl; chosen when Food < 65 | MVP |
+| `spot.nap` | nap | Sofa, rug, floor | ≤ 60 chunk | Nap +7/h | | MVP |
+| `cat_bed.nap` | nap_bed | Cat bed | ≤ 60 chunk | Nap +9/h | | MVP |
+| `bed.cat_nap` | nap_ellie_bed | Ellie's bed (4 cat slots: pillow, side, foot, corner) | ≤ 60 chunk | Nap +9/h; Affection +6/h while Ellie is in the bed | | MVP |
+| `box.nap` | nap_box, box_sit | Delivery box | ≤ 60 chunk | Nap +8/h (+ Chaos +5/h for Salem) | | MVP |
+| `perch.sit` | perch_high | Any layer-2 slot | 30 | George Royalty +15/h; Shadow Solitude +10/h; dozing (Nap < 50): Nap +7/h, Royalty +8/h | | MVP |
+| `window.sit` | perch_window, watch_bird | Window sill | 30 | Play +6/h; Salem Chaos +8/h; Peaches Vibes +12/h if a sunbeam is on it | | MVP |
+| `hide.sit` | hide_dark | Under bed, closet, behind sofa | 45 | Shadow Solitude +25/h; dozing Nap +6/h | | MVP |
+| `box.sit` | box_sit | Delivery box | 20 | Salem Chaos +20/h; Play +5/h | Counts once per box for the 50-box sticker | MVP |
+| `scratcher.scratch` | scratch | Scratcher or sofa side | 3 | Play +5; Salem Chaos +3 | Never damages anything | MVP |
+| `self.groom` | groom | Anywhere | 5 | George Royalty +3; others Play +1 | Also the idle fallback | MVP |
+| `self.zoomies` | zoomies | Route through ≥ 3 rooms | 3–6 | Salem Chaos +25; Play +15; costs Nap −4 | Cooldown 90 game min per cat | MVP |
+| `surface.knock` | knock | Small decor in a surface slot | 2 | Salem Chaos +15, Play +5 | §10.3 caps and trinkets | MVP |
+| `toy.play` | play_toy | Floor toy (starter toy mouse) | 10 | Play +20; Salem Chaos +8 | | MVP |
+| `sunbeam.bask` | sunbeam | Sunbeam tiles (§11) | until the beam leaves, ≤ 60 | Peaches Vibes +25/h; dozing Nap +7/h | Follows the beam (§10.5) | MVP |
+| `music.vibe` | music_vibe | Within 5 tiles of a playing record player | ≤ 30 | Peaches Vibes +20/h (+25/h Lo-fi or Cosy); Play +4/h | | MVP |
+| `device.warm` | warm_device | Laptop or console used in the last 30 game min | ≤ 45 | Peaches Vibes +20/h; Nap +5/h | | MVP |
+| `record_player.lid_sit` | music_vibe | Record player lid, when off | 20 | Peaches Vibes +5 | A hint: Q ×1.5 when Vibes < 50 and Ellie is in the room | MVP |
+| `ellie.near` | near_ellie | 1–4 tiles from Ellie (Shadow 3–5) | 20 | Affection +6/h | Ellie must be seated, lying or asleep | MVP |
+| `ellie.follow` | follow_ellie | Ellie's current room | until in her room, + 5 min | Affection +4/h; Salem Chaos +6/h | §10.3 | MVP |
+| `ellie.request` | request | Walk to 2 tiles from Ellie | 2, then waits ≤ 30 | none (creates a request, §8.7) | | MVP |
+| `ellie.lap_sit` | lap_sit | Ellie seated (sofa, chair, grass) | ≤ 45 | Affection +15/h; Nap +6/h; Peaches Vibes +10/h; Ellie Calm +15/h and `moodlet.cat_on_lap` | Shadow needs bond ≥ 60 and Ellie reading | MVP |
+| `furniture.inspect` | inspect | A newly placed item | 2 | George Royalty +3; Salem Chaos +3; Play +2 | §10.2 | MVP |
+| `spot.claim` | claim_spot | The seat or bed slot Ellie just queued | ≤ 4 | George Royalty +12 | §10.2 | MVP |
+| `garden.roll` | garden_roll | Garden grass in sun | 3 | Play +8; Peaches Vibes +6 | | Full |
+| `bird_bath.watch` | watch_bird | Near the bird bath or a garden window | 15 | Play +8/h; Salem Chaos +10/h | | Full |
+| `race.cheer` | cheer | Race sideline | race | Affection +5; bond +2 | play.md runs the race | Full |
+| `idle` | (none) | Current spot | 1–3 | none | Fixed score 0.3 (§8.8) | MVP |
+
+Cat side of Ellie's interactions (applied to the target cat, × `clamp(P_tag, 0.5, 1.5)`):
+
+| Ellie interaction | Cat effects | Bond base (§9.3) |
+| --- | --- | --- |
+| `cat.pet` | Affection +20 | +2 |
+| `cat.brush` | Affection +20; George Royalty +6 | +3 |
+| `cat.pick_up` | Affection +12 | +3 |
+| `cat.play_wand` | Play +25; Salem Chaos +10 | +4 |
+| `cat.play_laser` | Play +30; Salem Chaos +15. Salem "wins" (catches the dot) at the end every time | +4 |
+| `cat.talk` | Affection +4 | +1 |
+| `george.bow` | Royalty +30 (once per 2 game h; later bows get a line and +0) | +4 |
+| `george.knight` | Royalty +40 | +5 |
+| `fridge.give_ham` | Salem Food +20, Affection +10, Chaos +5 (food part ≤ 2 per day) | +3 |
+| `treat_jar.give` | Food +8, Affection +8 | +2 |
+| `bowls.fill` | Refills each empty bowl (1 serving); George Royalty +12 if within 8 tiles | +1 to each cat that eats from it within 2 game h |
+| `peaches.headbang_together` | Vibes +20, Play +10 | +4 |
+
+Counts: 24 MVP cat-only interactions plus 10 MVP Ellie-to-cat ones (brief asks for 12 MVP, 25 full); 3 Full.
+
+### 8.7 Accepting, refusing and requests
+
+When Ellie starts a social interaction on a cat:
+
+```
+pAccept = clamp(0.55 + 0.4 × (P_tag − 1) + bond / 250 + (Affection < 50 ? 0.15 : 0), 0.25, 1.0)
+asleep → pAccept × 0.5
+```
+
+| Rule | Value | Reason |
+| --- | --- | --- |
+| Hard gates | Shadow `cat.pick_up` below bond 40: always refuses. Shadow `ellie.lap_sit` needs bond ≥ 60. | Slow trust from the brief. |
+| Refusal | The cat steps 2–3 tiles away with a line; Ellie still gets Fun +1; **no bond change** | Refusals are characterful, not punishing. |
+| Free will | Never targets a sleeping cat | |
+| Examples | Salem pet at bond 35: 0.55 + 0.12 + 0.14 = 0.81. Shadow pet at bond 8: 0.55 − 0.12 + 0.03 = 0.46. George pet at bond 85: 0.89 | |
+
+**Requests.** A cat with a need below 35 that only Ellie can fix walks to her and asks (`ellie.request`):
+
+| Cat need | When it asks | Ellie candidates boosted ×1.5 for 30 game min |
+| --- | --- | --- |
+| Food | Own bowl empty | `bowls.fill` (Salem also boosts `fridge.give_ham`) |
+| Affection | Any cat | `cat.pet`, `cat.brush`, `cat.pick_up` on that cat |
+| Play | Salem, Peaches | `cat.play_wand`, `cat.play_laser` on that cat |
+| Vibes | Peaches, music off | `record_player.listen` (and through it `record_player.play`) |
+| Royalty | George | `george.bow` |
+
+Cooldown: 120 game min per cat per need. The request shows the need icon in a thought bubble over the cat.
+
+### 8.8 Idle and fallback
+
+- `idle` has a fixed score of 0.3 for cats (loaf, look around, tail flick, George's paw lick).
+- A cat with nothing above 0.3 for two decisions in a row wanders to a random reachable tile in its room or the next room (score fixed 0.28, so idle still wins half the time with noise).
+
+### 8.9 Cat happiness (for home.md's Cosy)
+
+```
+happiness = 0.6 × mean(Food, Play, Affection, Nap) + 0.4 × personalityNeed  (+5 if the cat's current room has ≥ 2 items in a liked style), capped at 100
+```
+
+Home.md's Cosy formula uses the mean happiness of the cats currently in the room.
+
+### 8.10 Thought and speech bubbles (frequency)
+
+| Bubble | Trigger | Chance | Cooldown |
+| --- | --- | --- | --- |
+| Thought (icon) | Any need < 30, or an active request | 1.0 | Every 900–1800 ticks per cat, shown 60 ticks |
+| Speech | End of an interaction with Ellie | 0.4 | Global 400 ticks between any two speech bubbles; per cat 1200 ticks |
+| Speech | End of a cat-only interaction | 0.15 | same |
+| Speech | Quirk fires (§10) | 0.8 | same |
+| Speech | Bond level up | 1.0 (ignores cooldowns) | |
+| Speech | Refusal (§8.7) | 1.0 | same |
+| Speech | Furniture verdict (George) | 0.9 | same |
+| Speech | Sees a visitor | 0.5 | same |
+
+UI decides how long a bubble stays up.
+
+---
+
+## 9. Bond
+
+### 9.1 Levels
+
+| Level | Range | Key | Placeholder |
+| --- | --- | --- | --- |
+| 0 | 0–19 | `bond.level.0` | <!-- Aloof --> |
+| 1 | 20–39 | `bond.level.1` | <!-- Curious --> |
+| 2 | 40–59 | `bond.level.2` | <!-- Friendly --> |
+| 3 | 60–79 | `bond.level.3` | <!-- Close --> |
+| 4 | 80–100 | `bond.level.4` | <!-- Inseparable --> |
+
+**Levels never go down.** Once a level is reached, the bond value can't fall below that level's lower bound.
+
+### 9.2 Starting bonds
+
+| Cat | Start | Level | Reason |
+| --- | --- | --- | --- |
+| George | 25 | 1 | He tolerates her. He'd never say more. |
+| Salem | 35 | 1 | Loves everyone; first to level 2. |
+| Shadow | 8 | 0 | Slow trust is his whole arc. |
+| Peaches | 25 | 1 | Easy-going. |
+
+### 9.3 Gains
+
+Each source gives base points × `clamp(P_tag, 0.5, 1.5)` for that cat (§8.4).
+
+| Source | Base | Notes |
+| --- | --- | --- |
+| `cat.pet` | +2 | |
+| `cat.brush` | +3 | |
+| `cat.pick_up` | +3 | |
+| `cat.play_wand`, `cat.play_laser` | +4 | |
+| `cat.talk` | +1 | |
+| `fridge.give_ham` (Salem), `treat_jar.give` | +3, +2 | |
+| `george.bow` | +4 | |
+| `george.knight` | +5 | Once. |
+| `peaches.headbang_together` | +4 | |
+| `ellie.lap_sit` (the cat chose it) | +3 per session | |
+| Eating from a bowl Ellie filled within 2 game h | +1 | Once per fill per cat. |
+| Shadow trust: Ellie still nearby (§10.4) | +1 per 10 game min | Own cap: +6 per game day; not counted in the soft cap. |
+| Photo of the cat (first per cat per day) | +1 | |
+| Cat present in a room where Ellie does that cat's favourite thing (George: being bowed to in public is covered; Salem: any `play_*`; Peaches: music on; Shadow: reading) | +1 per game hour | Max +3 per day. |
+| Race cheer | +2 | Full scope. |
+
+**Daily soft cap:** the first **10 points** per cat per game day count fully; further gains count ×0.3. The day resets at 00:00.
+
+**Pace check.** Playing with a cat on purpose earns about 8–10 a day. George 25 → 80 takes about 7 game days (about 3 hours at ×1, less with ×2/×3 and sleep fast-forward). Shadow 8 → 80 takes 7–9 days if she sits near him, which fits his slow-trust arc. All four at level 4 lands around 8–10 hours of play, in step with the catalog's 8–10 hour target.
+
+### 9.4 Gentle loss (the only one)
+
+| Source | Loss | Limits |
+| --- | --- | --- |
+| Over-handling: a 3rd social interaction on the same cat within 20 game min while that cat's Affection ≥ 90 | −1, with a "that's enough" line | Max −2 per cat per game day; never below the current level's floor; never from neglect, refusals, Heavy music or anything else |
+
+### 9.5 Rewards per level
+
+Level-up also pays Hearts (flat, no mood multiplier). Suggested amounts for play.md: level 1 **15**, level 2 **25**, level 3 **40**, level 4 **60**. Each level emits `bondLevelUp { cat, level }` and unlocks catalog items under the unlock key `bond:<cat>:<level>` (home.md assigns at least one item per cat to levels 2, 3 and 4).
+
+| Cat | Level 1 | Level 2 | Level 3 | Level 4 |
+| --- | --- | --- | --- | --- |
+| George | Claims her pillow at night (§10.2) | Joins her on the sofa (`ellie.near` on the same sofa); approves new furniture more often (+0.2) | Outfit `outfit.george_crown` | `george.knight` once → title `title.sir_ellie`; he calls her "Sir Ellie" from then on; sleeps on the bed |
+| Salem | Follows her room to room (§10.3) | Brings her a gift once a day (p 0.5): a Shiny Trinket dropped at her feet | Outfit `outfit.cat_ears` | Sleeps on the bed; joins any `record_player.dance` with a hop animation |
+| Shadow | Turns up at a polite distance for the rusk ritual and stargazing (§10.5) | `cat.pick_up` allowed | Sits on her lap while she reads (§10.4); outfit `outfit.frost_scarf` | Comes when called (`cat.call`); sleeps on the bed |
+| Peaches | Sits on the record player lid as a hint (§10.5) | `peaches.headbang_together` | Outfit `outfit.peaches_headphones` | Sleeps on the bed; lap sit while she listens to music |
+
+All four at level 4 sleeping on the bed while Ellie sleeps is the Cat Royalty final tier (play.md). At night, every level-4 cat gets Q ×3 on its own bed slot (George pillow, Salem side, Peaches foot, Shadow corner), so the scene happens within a night or two of the last level-up.
+
