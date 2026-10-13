@@ -55,27 +55,36 @@ export const ui = {
   'ui.catNeed.solitude': 'Solitude',
   'ui.catNeed.vibes': 'Vibes',
 
-  // Bond levels, low to high
-  'ui.bond.1': 'Wary',
-  'ui.bond.2': 'Tolerated',
-  'ui.bond.3': 'Friendly',
-  'ui.bond.4': 'Trusted',
-  'ui.bond.5': 'Family',
+  // Bond levels (BondLevel 0..4), low to high
+  'ui.bond.0': 'Wary',
+  'ui.bond.1': 'Tolerated',
+  'ui.bond.2': 'Friendly',
+  'ui.bond.3': 'Trusted',
+  'ui.bond.4': 'Family',
 
-  // Mood, low to high
-  'ui.mood.1': 'Mopey',
-  'ui.mood.2': 'Meh',
-  'ui.mood.3': 'Fine',
-  'ui.mood.4': 'Content',
-  'ui.mood.5': 'Glowing',
+  // Mood bands (MoodBand), low to high
+  'ui.mood.mopey': 'Mopey',
+  'ui.mood.low': 'Meh',
+  'ui.mood.okay': 'Fine',
+  'ui.mood.good': 'Content',
+  'ui.mood.great': 'Glowing',
 
-  // Modes
+  // Times of day (DayPhase)
+  'ui.phase.morning': 'Morning',
+  'ui.phase.day': 'Afternoon',
+  'ui.phase.evening': 'Evening',
+  'ui.phase.night': 'Night',
+
+  // Modes (GameMode)
   'ui.mode.live': 'Live',
   'ui.mode.build': 'Build',
-  'ui.mode.toggle': 'Live / Build (B)',
+  'ui.mode.activity': 'Playing',
+  'ui.mode.photo': 'Photo',
+  'ui.mode.cutscene': 'Watching',
+  'ui.mode.toggle': 'Live or Build (B)',
 
-  // Speeds
-  'ui.speed.pause': 'Pause',
+  // Speeds (Speed 0..3)
+  'ui.speed.0': 'Pause',
   'ui.speed.1': 'x1',
   'ui.speed.2': 'x2',
   'ui.speed.3': 'x3',
