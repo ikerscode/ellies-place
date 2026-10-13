@@ -576,3 +576,229 @@ All 6 critters can be befriended in one or two sessions: starter (1), meadow (2)
   realSecondsPlayed: n }
 ```
 
+---
+
+## 5. Life activities
+
+### 5.1 Records (`record_player`, living room, start item)
+
+**Stations.** Three procedural stations, all original music from `audio-dev`:
+
+| Station id | Feel | Tempo | Listen effects per game hour | Cats |
+| --- | --- | --- | --- | --- |
+| `station.heavy` | The metal remix of the home theme | 140 bpm (prompts at 70 half-time) | Fun +14, Calm +0 | Shadow leaves the room when it starts (`ev.music_heavy`). Peaches bops. George tolerates it from the highest perch. |
+| `station.lofi` | Dusty beats, rain hiss | 80 bpm | Fun +10, Calm +8 | Everyone naps more nearby. |
+| `station.cosy` | Soft, warm, the record player's game 1 tune | 90 bpm | Fun +8, Calm +10 | Peaches purrs louder. |
+
+Music plays house-wide but listen effects apply in the same room or one room away. A station keeps playing until stopped (`record.stop`) or until Ellie sleeps.
+
+**Sleeves.** The `record_shelf` (start item) holds sleeves she can browse (`record.browse`, 10 game minutes, Fun +3). Sleeves are text only:
+
+| Sleeve key | Text | Station it starts |
+| --- | --- | --- |
+| `record.sleeve.ptv` | Pierce the Veil | Heavy |
+| `record.sleeve.deftones` | Deftones | Heavy |
+| `record.sleeve.suicideboys` | Suicideboys | Heavy |
+| `record.sleeve.lofi_a`, `_b` | original titles from the writer | Lo-fi |
+| `record.sleeve.cosy_a`, `_b` | original titles from the writer | Cosy |
+
+Band names appear only as printed text on the sleeve. No logos, art, lyrics or sound-alikes. The Heavy station is the same procedural track whatever sleeve starts it; each sleeve only changes the seed of the drum fills.
+
+**Interactions.**
+
+| Id | Needs | Minigame | Notes |
+| --- | --- | --- | --- |
+| `record.play.<station>` | none | none | Peaches gets off the lid if she was sitting on it as a hint. |
+| `record.listen` | Station listen effects, 30 min | none | Sitting on the sofa or the floor. |
+| `act.dance` | Fun +12, Fitness +2, Energy -4, Calm +3 | Yes, 20 s | Any station. |
+| `act.headbang` | Fun +15, Fitness +3, Energy -5 | Yes, 15 s | Heavy only. |
+
+**Dance minigame (`act.dance`).**
+
+- **Instruction:** `act.dance.instr` "Hit the arrows on the beat."
+- **Length:** 20 s, 20 prompts at the station's prompt tempo.
+- **Controls:** the four arrow keys (or tap the matching quarter of the screen).
+- **Scoring per prompt:** within 90 ms = 1.0, within 180 ms = 0.6, else 0. Score = mean.
+- **Miss:** wrong arrow or outside 180 ms.
+
+**Headbang minigame (`act.headbang`).**
+
+- **Instruction:** `act.headbang.instr` "Nod on the big beat."
+- **Length:** 15 s, 16 downbeats (half-time 70 bpm).
+- **Controls:** action key.
+- **Scoring per beat:** within 90 ms = 1.0, within 180 ms = 0.6, else 0. A combo counter grows with each hit of 0.6 or more and shows on screen.
+- **Miss:** a downbeat with no press within 180 ms.
+- **Peaches joins** if she is in the room and her bond is level 2 or more: from combo 8 she headbangs too (`ev.peaches_headbang`). This sets `stk.peaches_headbang`.
+
+Both minigames use the shared Hearts and XP-free rule (no skill). Counters: `danceCount`, `headbangCount` (3 headbangs unlocks `out.band_tee`), `recordMinutes` (3 game hours unlocks `out.vinyl_clip`).
+
+### 5.2 Photo mode (P)
+
+**Open:** press P in Live mode, or the camera button. The sim pauses. Esc or P closes.
+
+**Frame.**
+
+- A 4:3 viewfinder in three sizes, S 96 x 72, M 160 x 120, L 240 x 180 logical px. `[` and `]` (or the mouse wheel) change size; arrows or mouse drag move it. Default M, centred on Ellie.
+- Space, Enter or click takes the photo, with a shutter sound and a white flash.
+
+**Filters** (Tab or the filter buttons, keys `photo.filter.<id>`):
+
+| Filter id | Look |
+| --- | --- |
+| `none` | As seen. |
+| `polaroid` | A cream border (8 px sides, 20 px bottom), slightly lifted blacks, warm cast. The caption is written on the bottom strip. |
+| `night` | Blue-violet tint, crushed highlights, a few star specks added. |
+| `warm` | Golden-hour tint, soft glow on light sources. |
+
+**Tags.** When the photo is taken, the game records tags from the frame contents (an actor counts if at least 40 % of its sprite is inside the frame):
+
+- Subjects: `ellie`, `george`, `salem`, `shadow`, `peaches`, `bruce`, `poe`, `pickle`, `all_four` (all four cats).
+- States: `sleeping` (any cat asleep), `in_box`, `zoomies`, `eating`, `on_lap`, `sunbeam`.
+- Context: `night` (20:00 to 06:00), `garden`, `outfit` (Ellie wearing any non-default outfit piece), `lanterns`, `stars`.
+- Special: `zoomies_3am` = `salem` + `zoomies` between 02:00 and 04:00.
+
+**Caption.** One automatic caption from a cat, picked by this rule:
+
+1. Pick the speaker: the cat with the largest visible area in the frame. If no cat is in frame, the speaker is the nearest cat in the house (they comment from off-frame).
+2. Pick the context, in this priority: `bruce` (Bruce in frame, the speaker comments and Bruce's photo caption is always `photo.cap.bruce.<n>`, him denying it), `all_four`, `zoomies_3am`, `in_box`, `sleeping`, `on_lap`, `eating`, `sunbeam`, `outfit`, `night`, `self` (the speaker is in frame alone), `ellie` (only Ellie in frame), `generic`.
+3. Key: `photo.cap.<speaker>.<context>.<n>`, with 3 variants each where the context makes sense for that cat (at least 40 keys for MVP, 120 full). Seeded pick, never the same as the previous caption.
+
+**Album.**
+
+- The album lives in the journal (`journal.photos`). Capacity 100 photos. When it is full, taking a photo asks her to choose one to take out (`photo.album_full`), or cancel. Nothing is ever removed automatically.
+- Each photo can be saved as PNG (`photo.save_png`), at 3x scale with the filter and caption baked in.
+- Storage: a photo is stored as its rendered pixels at 1x (save-dev picks the encoding). Budget: the whole album must fit in 1.5 MB of the save.
+
+**Effects.** Fun +5 for each photo, counted for at most 3 photos per game hour. Hearts: 1 per photo for the first 3 photos of each game day. `photosTaken += 1`. Cats in frame get `ev.photographed` (George poses, Shadow turns away, Salem walks up to the lens).
+
+### 5.3 Stargazing and star wishes (`act.stargaze`)
+
+**When and where:** 21:00 to 04:30, on a garden grass tile, `garden.stargaze` ("Lie down and watch the sky"). Not offered in rain.
+
+**Minigame** (not a scored minigame, so no misses and no Skip button needed; it simply ends):
+
+- **Instruction:** `act.stargaze.instr` "Watch the sky. Click a shooting star to make a wish."
+- **Length:** 25 s, standing for 60 game minutes.
+- **Stars:** 2 to 4 shooting stars, seeded, never in the first 3 s, at least 4 s apart, each visible for 1.2 s. A star wish boon from yesterday (`sky`) guarantees at least 3.
+- **Catching a star:** action key or click while it streaks. Time slows, and three star-wish lines appear (`star.wish.<category>.<n>`, a callback to game 1's wishes, written fresh). She picks one; its category gives a small boon:
+
+| Category | Boon | Reason |
+| --- | --- | --- |
+| `cats` | Next morning every cat starts with Affection +15 | |
+| `home` | Her next catalog order arrives instantly | |
+| `race` | +0.02 to every `P` in her next race | Only adds. |
+| `luck` | +10 Hearts now | |
+| `sky` | Her next stargaze has at least 3 shooting stars | |
+
+The three lines offered are three different categories, seeded. Missing a star costs nothing.
+
+**Effects (per session):** Calm +20, Fun +6, Energy -3. Hearts: 2 per star wish (max 3 a night). Counters: `stargazes += 1`, `starWishes += n` (first star wish unlocks `out.star`, first stargaze unlocks `out.moon`, 3 stargazes unlock `out.scarf`, 10 star wishes give `stk.wish_star_10`).
+
+**Constellations (once each, ever):**
+
+| Id | When it appears | What happens | Reward |
+| --- | --- | --- | --- |
+| `const.cat` | The first stargaze on day 3 or later | A cat shape joins up across the sky over 5 s, with a George line `star.const.cat.george` | `stk.cat_constellation` |
+| `const.heart` | The first stargaze after the housewarming, or on day 10 or later, whichever comes first | A heart shape of stars, with a Peaches line `star.const.heart.peaches` | `stk.heart_constellation`, gift item `star_map_print` |
+
+Both are then shown in the journal (`journal.secrets`). They never appear again in the sky.
+
+**Cats:** `ev.stargaze`. Peaches lies next to her. Salem stares at the stars, then at her, then falls asleep. Shadow sits on the fence.
+
+### 5.4 Garden lanterns (`garden_lanterns`, start catalog item)
+
+| Id | When | Effect |
+| --- | --- | --- |
+| `lantern.light` | 18:00 to 02:00 | Lanterns stay lit until 06:00. Calm +5 on lighting. While lit, the garden counts them as light for Cosy (per `home.md`), and Ellie gets Calm +3 per game hour in the garden. `lanternNights += 1` (once per night). 5 lantern nights unlock `out.firefly`. |
+| `lantern.out` | any time lit | Turns them off. |
+
+### 5.5 Other life interactions
+
+Reading, the bath, sleep and naps are `sim.md` interactions. play.md only needs these ids and flags to exist for wishes, stickers and aspirations:
+
+| Id | Flag or counter it must set |
+| --- | --- |
+| `read.book` | `readMinutes`, and `shadowOnLap` while Shadow is on her lap |
+| `bath.soak` | `bathsTaken` |
+| `bed.sleep` | `nightsSlept`, and at 03:00 a check of which cats are on her bed (`catsOnBed`) |
+| `nap.sofa` | `napsTaken` |
+| `cat.bow` | `bowedToGeorge` (per day) |
+| `cat.play_laser`, `cat.play_feather` | per cat; `cat.play_laser` with Salem has a result `salemWins` (she lets the dot rest where Salem pounces) |
+| `cat.pet`, `cat.brush` | per cat |
+| `george.knight` | George only, bond level 4. Sets `knighted`. |
+| `bruce.spot` | clicking Bruce in a hiding place; per spot id |
+| `poe.trade` | per trade |
+
+---
+
+## 6. Wardrobe
+
+### 6.1 How it works
+
+- Open from the mirror (`mirror.dress`) or the wardrobe (`wardrobe.dress`). The sim pauses. Changing takes 5 game minutes.
+- **Slots:** `head`, `clip`, `neck`, `top`, `feet`. One item per slot, or empty. A head item and a clip can be worn together.
+- **Her look stays fixed:** hair, nose ring, tattoos and face never change. Default tops show her shoulders and arms (ELLIE.md). The cosy jumper, gym hoodie, pyjamas and raincoat cover her arms; that is her choice to wear.
+- Drawn over the sprite in the style of game 1's `drawOutfit`. The game 1 items reuse game 1's drawings.
+- Each cat reacts to each new outfit piece once (`outfit.react.<cat>.<outfit>` falls back to `outfit.react.<cat>.generic.<n>`).
+- Wearing a non-default piece sets the `outfit` photo tag. Changing outfit counts for `wish.wear_outfit`.
+
+### 6.2 Outfits (36 rows: 20 MVP, 36 full)
+
+Game 1 items are marked G1.
+
+| # | Id | Slot | Name key (placeholder) | Unlock source | MVP |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `out.crown` | head | `out.crown.name` "George's crown" (G1) | George bond level 4: after he knights her | Y |
+| 2 | `out.chefhat` | head | `out.chefhat.name` "Royal chef's hat" (G1) | Make sushi 3 times | Y |
+| 3 | `out.bucket` | head | `out.bucket.name` "Salem's fishing hat" (G1) | Salem bond level 2 | Y |
+| 4 | `out.headphones` | head | `out.headphones.name` "Peaches' headphones" (G1) | Peaches bond level 2 | Y |
+| 5 | `out.catears` | head | `out.catears.name` "Café cat ears" (G1) | Start | Y |
+| 6 | `out.beanie` | head | `out.beanie.name` "Black beanie" | Start | Y |
+| 7 | `out.sweatband` | head | `out.sweatband.name` "Sweatband" | Aspiration Hyrox Hero tier 1 | Y |
+| 8 | `out.delivery_cap` | head | `out.delivery_cap.name` "Pickle's spare cap" | 10 catalog orders | F |
+| 9 | `out.moonless_hood` | head | `out.moonless_hood.name` "Shadow's hood" | Shadow bond level 2 | F |
+| 10 | `out.flower_crown` | head | `out.flower_crown.name` "Flower crown" | First Plant Corner set bonus | F |
+| 11 | `out.firefly` | clip | `out.firefly.name` "Firefly hair clip" (G1) | Light the garden lanterns on 5 nights | Y |
+| 12 | `out.moon` | clip | `out.moon.name` "Moon hair pin" (G1) | First stargaze | Y |
+| 13 | `out.star` | clip | `out.star.name` "Star clip" (G1) | First star wish | F |
+| 14 | `out.feather` | clip | `out.feather.name` "Poe's feather" (G1) | First Poe trade | Y |
+| 15 | `out.bow` | clip | `out.bow.name` "Market ribbon" (G1) | Comes in Pickle's first new-stock box (day 2) | F |
+| 16 | `out.paw_clip` | clip | `out.paw_clip.name` "Paw clip" | Aspiration Cat Royalty tier 1 | Y |
+| 17 | `out.sushi_clip` | clip | `out.sushi_clip.name` "Tiny maki clip" | First sushi with 5 stars | F |
+| 18 | `out.vinyl_clip` | clip | `out.vinyl_clip.name` "Record clip" | 3 game hours of records | F |
+| 19 | `out.scarf` | neck | `out.scarf.name` "Frost scarf" (G1) | Stargaze 3 times | Y |
+| 20 | `out.bell_choker` | neck | `out.bell_choker.name` "Bell choker" | Aspiration Cat Royalty tier 3 | Y |
+| 21 | `out.spike_choker` | neck | `out.spike_choker.name` "Spiked choker" | Start | Y |
+| 22 | `out.medal_ribbon` | neck | `out.medal_ribbon.name` "Finisher medal" | Finish a first race | F |
+| 23 | `out.knight_sash` | neck | `out.knight_sash.name` "Knight's sash" | `mail.george.knighthood` (the morning after the knighting) | F |
+| 24 | `out.bandana` | neck | `out.bandana.name` "Critter bandana" | Beat Old Wren in Critterbound | F |
+| 25 | `out.tank_black` | top | `out.tank_black.name` "Black vest" | Start (default) | Y |
+| 26 | `out.race_kit` | top | `out.race_kit.name` "Race kit" | Aspiration Hyrox Hero tier 2 | Y |
+| 27 | `out.cosy_jumper` | top | `out.cosy_jumper.name` "Cosy jumper" | Aspiration Home Maker tier 2 | Y |
+| 28 | `out.band_tee` | top | `out.band_tee.name` "Band tee" | Headbang 3 times | Y |
+| 29 | `out.gym_hoodie` | top | `out.gym_hoodie.name` "Hero hoodie" | Aspiration Hyrox Hero tier 4 | F |
+| 30 | `out.dungarees` | top | `out.dungarees.name` "Garden dungarees" | Aspiration Home Maker tier 4 | F |
+| 31 | `out.pyjamas` | top | `out.pyjamas.name` "Moon pyjamas" | Sleep 3 nights | F |
+| 32 | `out.raincoat` | top | `out.raincoat.name` "Raincoat" | First time she goes into the garden while it rains | F |
+| 33 | `out.boots` | feet | `out.boots.name` "Chunky boots" | Start (default) | Y |
+| 34 | `out.trainers` | feet | `out.trainers.name` "Race trainers" | Aspiration Hyrox Hero tier 3 | Y |
+| 35 | `out.cat_slippers` | feet | `out.cat_slippers.name` "Cat slippers" | Aspiration Cat Royalty tier 4 | Y |
+| 36 | `out.striped_socks` | feet | `out.striped_socks.name` "Striped socks" | Poe trade (trade table in `home.md`) | F |
+
+MVP count: 20 (target 15). Full count: 36 (target 30). Start outfits: 6 (catears, beanie, spike choker, black vest, boots, plus empty slots).
+
+**Band tee design note (original):** a black tee with a cracked moon and a moth print, and a spiky, unreadable "logo" scrawl. It must not resemble any real band's logo or artwork, and it carries no readable band name.
+
+### 6.3 Streak colours
+
+The green streaks are the default. Other colours change only the streak pixels.
+
+| Id | Colour | Unlock |
+| --- | --- | --- |
+| `streak.green` | Default green | Start |
+| `streak.violet` | Violet | Peaches bond level 4 |
+| `streak.teal` | Teal | Critterbound: all 6 critters befriended |
+| `streak.crimson` | Deep red | 5 game hours of the Heavy station |
+| `streak.frost` | Pale ice blue | `const.heart` seen |
+| `streak.peach` | Soft peach | Housewarming |
+
