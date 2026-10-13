@@ -42,6 +42,9 @@ Frozen by the lead on Tue 13 Oct 2026. This file beats every `design/spec/*.md` 
 | 14 | Band measure | `play.md` R(d): unlocked and affordable, cheapest first, `W = 150 + heartsEarnedTotal`. N = 124 full (123 with the framed print off), N = count of MVP-flagged items in MVP. `home.md`'s "owned" reading is void. |
 | 15 | Delivery | 30 game minutes in Live mode; box at (6,14) or the nearest free living-room tile; instant in Build mode. |
 | 16 | All economy numbers | Live in one `ECONOMY` table in `src/content/data/`. |
+| 17 | Time during minigames | `sim.md` wins: the sim keeps running, forced to ×1, while an activity overlay is open (the cats keep living behind it); the previous speed returns afterwards. The architect's "pause" default is void. |
+| 18 | Interaction ids | `sim.md` §4.3 / §8.6 ids win (e.g. `sofa.sit`). `home.md` item rows that use other ids (`sit`, `cat_nap`) are mapped to the `sim.md` id by the data owner (game-designer#data). |
+| 19 | Placement error strings | The 6 new placement errors get strings from the Wave 2 writer. |
 
 ## 4. Contracts v2 (architect applies before Wave 2)
 
