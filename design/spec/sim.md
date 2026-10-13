@@ -38,7 +38,7 @@ Speed changes **how many ticks run per real second**, never the size of a tick.
 | Sleep fast-forward | 200 | 10 | n/a | Automatic, see §1.3. 3.3 ticks per frame at 60 fps fits the 2 ms tick budget. |
 
 - Movement and animation are **per tick** (tiles per tick), so walking looks proportionally faster at ×2 and ×3, like other life sims.
-- The loop runs at most **12 ticks per frame**; if it falls further behind it drops the backlog (the sim simply runs slower in real time). Determinism is unaffected because ticks are never skipped, only delayed.
+- The loop runs at most **12 ticks per frame**. If it falls further behind, it discards the extra real time instead of piling up ticks, so the game runs a little slower in real time. Every tick is still a full 0.05-minute step, so results never depend on frame rate.
 - `Speed` stays `0 | 1 | 2 | 3`. Fast-forward is a separate flag `time.fastForward: boolean` (contract note, §16.2).
 
 ### 1.3 Sleep fast-forward
@@ -72,7 +72,7 @@ Speed changes **how many ticks run per real second**, never the size of a tick.
 | Day | 07:00–18:30 | 0 | Sunbeams (§11). |
 | Dusk | 18:30–21:00 | 0 → 0.65 (linear) | |
 
-- "**Lamps count**" (for Cosy lighting in home.md) whenever `darkness ≥ 0.3`: about 19:40–05:55.
+- "**Lamps count**" (for Cosy lighting in home.md) whenever `darkness ≥ 0.3`: about 19:40–06:05.
 - "**Night**" in quirk rules means 22:00–06:00 unless a rule says otherwise.
 
 ### 1.6 Real-time mode
@@ -83,7 +83,7 @@ Speed changes **how many ticks run per real second**, never the size of a tick.
 | Need decay | Uses wall-clock game time: 1 game minute per 60 real seconds, so needs move 60× slower than at ×1. |
 | Interaction progress | Uses **action time**: 0.05 action minutes per tick, exactly as at ×1. A 30-minute bath still takes 30 real seconds and gives its full effect. |
 | Speed controls | Hidden. Free will still runs (§5). |
-| Sleep | Allowed, never fast-forwards. Sleep ends after its normal action time (an 8-hour sleep is 8 real minutes); she may then sit up and stargaze at a 2 a.m. wall clock, which is fine. |
+| Sleep | Allowed, never fast-forwards. The waking rule uses only Energy ≥ 98 and the 10-hour cap, both in action time, so a full sleep takes at most 10 real minutes; she may then get up at a 2 a.m. wall clock and stargaze, which is fine. |
 | Daily rolls | Fire when the wall clock passes 00:00, or once on load if the day changed. Missed days are **not** replayed (no catch-up, no penalty). |
 
 So every system takes two deltas per tick: `dtGameMin` (decay, schedules) and `dtActionMin` (interaction progress). Outside real-time mode both are 0.05.
@@ -846,7 +846,7 @@ Each source gives base points × `clamp(P_tag, 0.5, 1.5)` for that cat (§8.4).
 | Eating from a bowl Ellie filled within 2 game h | +1 | Once per fill per cat. |
 | Shadow trust: Ellie still nearby (§10.4) | +1 per 10 game min | Own cap: +6 per game day; not counted in the soft cap. |
 | Photo of the cat (first per cat per day) | +1 | |
-| Cat in the same room while Ellie does its favourite thing (George: she eats at the table, he supervises; Salem: any `play_*` with another cat or toy; Peaches: music on; Shadow: she reads) | +1 per game hour | Max +3 per day. |
+| Cat in the same room while Ellie does its favourite thing (George: she eats at the table, he supervises; Salem: she plays the console, he watches the screen; Peaches: music on; Shadow: she reads) | +1 per game hour | Max +3 per day. |
 | Race cheer | +2 | Full scope. |
 
 **Daily soft cap:** the first **10 points** per cat per game day count fully; further gains count ×0.3. The day resets at 00:00.
