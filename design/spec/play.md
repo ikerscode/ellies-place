@@ -325,3 +325,254 @@ Medal names: `medal.<id>.name`. George presents the royal medal himself (`race.g
 
 During the race, after each station George says one line from `race.george.<station>.<grade>` (8 stations x 4 grades = 32 keys) and one line at the finish from `race.george.finish.<medal>` (5 keys). On a skipped station he says `race.george.skip.<n>` (3 variants), which is approving, never disappointed. Salem cheers with `race.salem.cheer.<n>` (4 variants) on Perfect-grade stations. Shadow says one line per race, at the finish only, `race.shadow.finish.<n>` (3 variants). Peaches bops to the race music in the background.
 
+---
+
+## 3. Kitchen
+
+### 3.1 Kitchen skill
+
+`skill.kitchen` (0 to 10, curve in 1.4) rises from sushi and the coffee machine minigame. Each level widens every sushi and coffee timing window and band by 3 % (level 10 = +30 %), and unlocks small things to discover:
+
+| Level | Unlock |
+| --- | --- |
+| 2 | Plating layout `plate.fan` |
+| 3 | Recipe variant "rainbow roll" (avocado slices on top, `sushi.variant.rainbow`) |
+| 5 | Latte art shapes `art.leaf` and `art.cat` (from the start she has `art.heart`) |
+| 7 | Plating layout `plate.tower` and an inari side pocket option |
+| 10 | Plating layout `plate.royal`, George's line `sushi.george.royal_plate` (he still asks for fish) |
+
+### 3.2 Veggie sushi (`act.sushi`)
+
+**Starts from:** the kitchen counter, interaction `kitchen.make_sushi`. Ingredients are always in the fridge (no shopping, no cost).
+
+**Instruction:** `act.sushi.instr` "Rice, fillings, roll, slice. No fish."
+
+**Steps** (about 26 s total):
+
+| Step | Length | Controls | Play | Scoring | Miss |
+| --- | --- | --- | --- | --- | --- |
+| 1. Nori | 1 s | none | The sheet lays itself on the bamboo mat. | none | none |
+| 2. Rice | up to 5 s | hold | Hold to spread rice. A coverage bar fills at 30 %/s. Release in the band **85 to 100 %** (leaves the top strip bare). Auto-release at 115 %. | 85 to 100 % = 1.0; 70 to 84 % or 101 to 110 % = 0.6; else 0.3 | below 70 % or above 110 % |
+| 3. Fillings | up to 6 s | keys 1 to 5, or click | Pick up to 3 of: avocado (`ing.avocado`), cucumber (`ing.cucumber`), carrot (`ing.carrot`), pickled radish (`ing.radish`), inari (`ing.inari`). Press action to confirm. If nothing is picked after 6 s, avocado and cucumber are chosen for her. | Variety: 1 filling 0.6, 2 fillings 0.9, 3 fillings 1.0. +0.1 (max 1.0) for a pairing: avocado + cucumber, carrot + pickled radish, inari + cucumber. | none (no wrong answers) |
+| 4. Roll | up to 4 s | hold | Hold to roll. A tightness gauge rises at 30 %/s. Release in **70 to 90 %**. | 70 to 90 % = 1.0; 60 to 69 % or 91 to 95 % = 0.6; else 0.3 | outside 60 to 95 % |
+| 5. Slice | 6 s | action key per cut | The knife glides along the roll at a steady speed past 5 guide marks (makes 6 pieces). Press as it crosses each mark. | Per cut: within 4 px = 1.0, within 8 px = 0.6, else 0.2. Mean of 5. | each cut outside 8 px |
+| 6. Plate | up to 4 s | Left/Right then action | Choose a layout (`plate.row` from the start, more from kitchen skill). Garnish is automatic. The fish moment happens here (below). | none | none |
+
+**Score:** `s = 0.25 x rice + 0.25 x roll + 0.35 x slice + 0.15 x variety`. Shown as neatness stars: `max(1, ceil(s x 5))` out of 5 (`sushi.stars`).
+
+**Inari note:** inari is a filling choice like the rest. If picked, it also adds two inari pockets beside the roll on the plate (art only).
+
+**George asks for fish (every time).** At the plate step George appears on the counter (cat-ai listens for `ev.sushi_start` and walks him in with top priority; if he cannot arrive in time he appears at the plate step anyway from off-screen left). His bubble: `sushi.george.ask.<n>` (6 variants, e.g. "Where is the fish."). Two buttons appear, both refusals:
+
+- `sushi.deny.a` "No fish, George."
+- `sushi.deny.b` "It's veggie, Your Majesty."
+
+Either one plays George's reply `sushi.george.denied.<n>` (6 variants), he sits on the counter offended for 30 game minutes, and the counter `fishDenied += 1`. There is no option to give him fish. There is no fish in the fridge to give. If she ignores the buttons for 3 s, button A is chosen.
+
+**Result:** she carries a `plate_sushi` (carryable). Eating it is a separate interaction (3.5).
+
+| Field | Value |
+| --- | --- |
+| Time | 30 game minutes |
+| Needs (making) | Fun +6, Calm +4 |
+| Hearts | Shared formula |
+| XP | Shared formula to `skill.kitchen` |
+| Counters | `sushiMade += 1`, `fishDenied += 1`, `bestSushi = max(...)`, filling flags for wishes |
+| Cats | `ev.sushi_start` (George), `ev.sushi_done` (Salem sniffs the cucumber end, gets nothing, is thrilled anyway) |
+| Unlock | 3rd sushi made unlocks `out.chefhat` |
+
+### 3.3 Coffee (`act.coffee_kettle`, `act.coffee_machine`)
+
+Both give a carried `mug_coffee`. Drinking happens while carrying (sitting, standing, or in the grass with a rusk).
+
+**Kettle** (start item `kettle`): no minigame, 8 game minutes, coffee quality 0.5.
+
+**Machine** (catalog item `coffee_machine`): optional 15 s minigame. Free will uses the machine without the minigame at quality 0.6.
+
+| Step | Length | Controls | Play | Scoring | Miss |
+| --- | --- | --- | --- | --- | --- |
+| 1. Tamp | up to 4 s | hold | Pressure gauge rises at 30 %/s. Release in 60 to 80 %. | in band 1.0; within 10 % of band 0.6; else 0.3 | outside the 0.6 zone |
+| 2. Pull | 4 s | action | The shot bar fills over 4 s. Press to stop between 70 and 85 % (the crema line). | same bands | same |
+| 3. Pour (optional) | 5 s | action x3 | The milk jug sways left and right (1.2 s cycle). Press when it is centred, three times, to draw the shape (heart from the start; leaf and cat at kitchen 5). Choosing "black" (`coffee.black`) skips this step. | Per pour: within 8 % of centre 1.0, within 18 % 0.6, else 0.2. Mean of 3. | per pour outside 18 % |
+
+**Score:** with milk `0.3 x tamp + 0.3 x pull + 0.4 x pour`, black `0.5 x tamp + 0.5 x pull`.
+
+**Coffee effects (on drinking, for both):**
+
+| Field | Value | Reason |
+| --- | --- | --- |
+| Energy | +12 at once, then +1 every 10 game minutes for 2 game hours (+12) | BRIEF: "a short boost". 24 total covers about three training sessions. |
+| Diminishing | 3rd and later coffees in one game day give half the Energy. Calm and Fun stay the same. | Keeps sleep the real Energy source without ever making coffee bad. |
+| Calm | +4, plus +3 if quality >= 0.7 | |
+| Fun | +2 | |
+| Hearts | Machine minigame only: shared formula | |
+| XP | Machine minigame only: to `skill.kitchen` | |
+| Flags | `lastCoffeeAt` (for the race `coffee` bonus and `wish.morning_coffee`) | |
+
+### 3.4 The rusk dunk in the grass (`act.rusk_dunk`)
+
+The signature ritual. It should feel slow and warm.
+
+**Set-up.**
+
+1. A coffee from 3.3 (`mug_coffee` carried).
+2. A rusk from the `rusk_jar` on the kitchen counter (start item, refills itself): interaction `kitchen.grab_rusk`, gives carried `rusk`. She can carry the mug and the rusk together (this is the one two-item carry).
+3. `garden.sit_grass` on any grass tile. With both carried, the petal menu offers **Dunk** (`act.rusk_dunk`). With only a rusk she eats it dry (Hunger +8, no minigame). With only a coffee she just drinks it in the grass (coffee effects + Calm +6).
+
+At night or in rain the same ritual works. In rain she sits on the back step under the overhang instead (same tile rules as `sit_grass` but on the step).
+
+**Minigame.**
+
+- **Instruction:** `act.rusk_dunk.instr` "Hold to dunk. Let go before it gives up."
+- **Length:** 3 dunks, about 18 s.
+- **Controls:** hold the action key (or press and hold on the mug).
+- **Play:** holding lowers the rusk into the coffee and a soak meter rises. The rusk darkens, crumbs drift, and from 70 % it starts to wobble (a clear visual tell, plus a soft creak sound). Releasing lifts it out and she takes a bite. Each dunk the rusk is shorter and soaks faster.
+- **Soak rate:** `35 %/s x [1.0, 1.15, 1.3][dunk] x jitter`, jitter seeded per dunk in 0.9 to 1.1.
+- **Bands per dunk:**
+
+| Soak at release | Result | Dunk score |
+| --- | --- | --- |
+| 0 to 49 % | `rusk.crunchy` "Crunchy" | 0.3 |
+| 50 to 74 % | `rusk.nice` "Nice" | 0.6 |
+| **75 to 90 %** | **`rusk.perfect` "Perfect dunk"** | **1.0** |
+| 91 to 99 % | `rusk.close` "Close one" | 0.6 |
+| 100 % (auto at full soak) | `rusk.plop` "Plop" | 0.0, counts as a miss |
+
+A plop is not a loss: the bit falls in, she fishes it out with a spoon (`rusk.plop.line.<n>`), and the next dunk goes on with a new end of the rusk.
+
+- **Score:** mean of the 3 dunk scores.
+- **Miss:** a plop. Skip after 2 plops follows the shared rule (pass = 0.5, and the pass also counts as 1 perfect dunk for Calm, not for the sticker).
+
+**Effects.**
+
+| Field | Value | Reason |
+| --- | --- | --- |
+| Time | 30 game minutes sitting | |
+| Calm | **+15, plus +10 per perfect dunk** (max +45) | "A perfect dunk gives a big Calm boost." The biggest single Calm source in the game. |
+| Hunger | +10 | |
+| Fun | +4 | |
+| Hearts | Shared formula, plus 1 per perfect dunk | |
+| Coffee | The coffee is drunk as part of the ritual (3.3 effects apply) | |
+| Counters | `perfectDunks += n` (sticker `stk.rusk_10` at 10), `ritualsDone += 1` | |
+| Cats | `ev.ritual_start`. Peaches walks over and lies in the sun beside her (by day; by night she sits beside her). Shadow settles 3 to 4 tiles away, facing the other way. George watches from a high spot. Salem tries to sit on the rusk jar on the way. | BRIEF 10.3. |
+
+### 3.5 Eating and other kitchen interactions
+
+Listed so wishes can point at them. `sim.md` may tune these; the ids are what wishes depend on.
+
+| Id | Needs | Time | Notes |
+| --- | --- | --- | --- |
+| `eat.sushi` | Hunger +45, Fun +4; +Calm 4 if seated at a table | 20 min | Needs `plate_sushi` carried. Sets `ateAtTable` when seated. |
+| `kitchen.make_toast` | Hunger +20 when eaten | 10 min | No minigame. Sets `toastAt`. |
+| `fridge.snack` | Hunger +12 | 5 min | |
+| `kitchen.grab_rusk` | none until eaten | 2 min | |
+| `cat.feed` (cat bowls) | per `sim.md` | 5 min | Order of filling is recorded for `wish.serve_george_first`. |
+| `cat.treat_ham` | Salem Food and Affection per `sim.md` | 3 min | Salem only. Ham comes from the fridge, free. `hamGiven += 1`. |
+
+---
+
+## 4. Critterbound
+
+A tiny original creature-befriending RPG that Ellie plays on the TV and console (`tv_console`, living room, start item) or on the `handheld` (catalog item, played in bed). It has its own screen and its own small save summary inside the main save.
+
+### 4.1 Names and words (IP rules)
+
+Original words only. The UI never uses: trainer, gym, evolve, ball, wild X appeared, HP, PP, faint, type chart, or any other Pokémon term.
+
+| Concept | Our word | Key |
+| --- | --- | --- |
+| A creature | critter | `cb.word.critter` |
+| Your team | crew (max 6) | `cb.word.crew` |
+| A battle | spar | `cb.word.spar` |
+| Health | Pep | `cb.word.pep` |
+| A move | trick | `cb.word.trick` |
+| Catching | befriending, with a Snack Tin | `cb.word.befriend`, `cb.word.snack_tin` |
+| Getting stronger | Grit stars (0 to 5) | `cb.word.grit` |
+| Opponents | wanderers | `cb.word.wanderer` |
+| Element | kind: Spark, Splash, Sprout | `cb.kind.spark`, `cb.kind.splash`, `cb.kind.sprout` |
+
+### 4.2 The kind triangle
+
+**Spark beats Splash** (a zap travels through water). **Splash beats Sprout** (a flood washes the seedlings away). **Sprout beats Spark** (roots ground the charge).
+
+| Attacker vs defender | Multiplier |
+| --- | --- |
+| Strong (as above) | x1.5 |
+| Weak (the reverse) | x0.67 |
+| Same kind or neutral trick | x1.0 |
+
+The in-game help card shows the triangle as three icons in a loop (`cb.help.triangle`).
+
+### 4.3 The six critters
+
+All designs and names are original. Each is 16 x 16 px. Short art notes are for the pixel artist.
+
+| Id | Name key (placeholder) | Kind | Pep | Pow | Guard | Speed | Kind trick (power 8) | Art note | Where |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `crit.fizzlet` | `cb.crit.fizzlet` "Fizzlet" | Spark | 22 | 7 | 3 | 6 | `cb.trick.static_pop` "Static Pop" | A round puff of fluff whose fur stands on end and crackles. Two dot eyes, tiny feet. | Starter |
+| `crit.plipp` | `cb.crit.plipp` "Plipp" | Splash | 24 | 6 | 4 | 5 | `cb.trick.drizzle_dash` "Drizzle Dash" | A raindrop-shaped newt with a curly tail and a drip on its nose. | Starter |
+| `crit.mossby` | `cb.crit.mossby` "Mossby" | Sprout | 26 | 5 | 5 | 4 | `cb.trick.bramble_hug` "Bramble Hug" | A pebble-shaped hedgehog covered in moss, one sprout on top. | Starter |
+| `crit.kettlecoil` | `cb.crit.kettlecoil` "Kettlecoil" | Spark | 24 | 6 | 5 | 3 | `cb.trick.steam_whistle` "Steam Whistle" | A tiny snail whose shell is a little kettle that whistles and sparks. | Meadow grass |
+| `crit.brineling` | `cb.crit.brineling` "Brineling" | Splash | 22 | 6 | 5 | 5 | `cb.trick.bubble_pinch` "Bubble Pinch" | A sea-glass crab that hides in jars. | Pond edge |
+| `crit.thistlepup` | `cb.crit.thistlepup` "Thistlepup" | Sprout | 23 | 7 | 3 | 6 | `cb.trick.burr_toss` "Burr Toss" | A puppy-shaped ball of burrs that sticks to everything. | Meadow grass |
+
+Every critter also knows `cb.trick.bump` "Bump" (power 5, no kind).
+
+### 4.4 Spar rules (simple numbers)
+
+- Turn order: higher Speed goes first. Ties: the player's critter goes first.
+- **Damage** = `max(1, trickPower + Pow - Guard) x kindMultiplier`, rounded half up, then +1 on a seeded 50 % roll. Example: Fizzlet's Static Pop on Brineling: `(8 + 7 - 5) x 1.5 = 15`, so 15 or 16.
+- **Menu** (four petals, the main game's own style): `cb.cmd.trick` (choose one of two tricks), `cb.cmd.snack` (restore 8 Pep, 2 uses per spar), `cb.cmd.swap` (change crew member, uses the turn), and in befriendable spars `cb.cmd.befriend`, otherwise `cb.cmd.scoot` (leave a meadow spar, always works).
+- **Opponent choice:** uses its kind trick unless that would be weak against the target, then Bump. 25 % of turns it picks at random instead (seeded).
+- **Grit:** each crew member that took part in a won spar gains 1 Grit star (max 5). Each star gives +2 max Pep and +1 Pow. Opponents have fixed Grit.
+- **Pep at 0:** the critter "curls up for a nap" (`cb.nap`) and swaps out. If the whole crew naps, the spar ends with `cb.spar.rest` "Everyone needs a nap." She wakes up at the Nap Nook with the crew fully restored. Nothing is lost. All Pep also refills after every spar.
+
+### 4.5 Befriending
+
+- Only in meadow and pond spars (not wanderer spars).
+- Using a Snack Tin takes the turn. Chance = `0.35 + 0.65 x (1 - pep / maxPep)`. **The third attempt in the same spar always succeeds.** Snack Tins never run out.
+- A befriended critter joins the crew at Grit 0 with full Pep. Already-owned kinds of critter can't be befriended twice; their spar offers `cb.cmd.scoot` and Snack Tin is greyed with `cb.befriend.have`.
+
+### 4.6 The map (one screen)
+
+One 30 x 17 tile screen, its own tiny tile set (`art.cb.*`), drawn in a slightly brighter palette so it reads as "a game on the TV".
+
+| Area | What happens |
+| --- | --- |
+| Nap Nook (start, bottom left) | Choose a starter on first play. Walk in to restore the crew. Save point (auto-saves on leaving the screen too). |
+| Meadow (tall grass, centre) | Each step in tall grass has an encounter chance; first encounter no sooner than 6 steps, average one per 10 steps (seeded). Encounters: Thistlepup 60 %, Kettlecoil 40 %. Wild critters have Grit 0 to 1. |
+| Pond (top centre) | Same encounter rule on the reeds. Brineling 100 %. After spar 1, the starter Ellie did not pick (the first of the two in the order Fizzlet, Plipp, Mossby) waits shyly at the pond edge as a one-time befriendable spar. |
+| Wooden bridge (centre right) | Wanderer spar 1: **Pip** (`cb.npc.pip`), one critter: the kind her starter beats, Grit 0. |
+| Dock (top right) | Wanderer spar 2: **Marlow** (`cb.npc.marlow`), two critters at Grit 1: one her starter beats, one neutral. Opens after spar 1. |
+| Lantern Hill (far right) | Wanderer spar 3: **Old Wren** (`cb.npc.old_wren`), two critters at Grit 2: one that beats her starter, one neutral. Opens after spar 2. Winning gives the last missing starter as a gift (`cb.wren.gift`). |
+
+Never stuck: after **2 lost spars against the same wanderer**, the next attempt shows `cb.cmd.shake_paws` "Shake paws" from the first turn. It ends that spar as a win (the shared Skip rule).
+
+All 6 critters can be befriended in one or two sessions: starter (1), meadow (2), pond Brineling (1), shy starter at the pond (1), Old Wren's gift (1).
+
+### 4.7 Sessions, effects and the save summary
+
+- Opening Critterbound pauses the house sim (shared rule). A session can be any length. She can leave at any moment with Esc; progress inside Critterbound is always kept.
+- On leaving, the house clock moves forward by `min(120, 10 x realMinutesPlayed)` game minutes, rounded to whole minutes.
+
+| Field | Value |
+| --- | --- |
+| Needs per real minute played (cap +40 Fun per session) | Fun +6, Calm +1, Energy -1 |
+| Handheld in bed | Same, plus Calm +4 per session; counts for `wish.handheld_bed` |
+| Hearts | 10 per new critter befriended; 25 for each wanderer beaten the first time; 5 for other won spars (max 3 a day). All x moodMult. |
+| Cats | `ev.console_on`: Peaches comes to lie by the warm console. Salem sits in front of the TV and paws at the critters. |
+| Stickers | `stk.critter_starter`, `stk.critter_all6`, `stk.critter_champion` |
+| Outfit | Beating Old Wren unlocks `out.bandana` |
+
+**Save summary** stored in the main save as `critterbound`:
+
+```
+{ starter: 'fizzlet' | 'plipp' | 'mossby' | null,
+  crew: { id: CritterId, grit: 0..5 }[],      // max 6
+  wanderersBeaten: 0..3,
+  lossesVs: { pip: n, marlow: n, wren: n },
+  pos: { tx, ty },
+  sessions: n,
+  realSecondsPlayed: n }
+```
+
