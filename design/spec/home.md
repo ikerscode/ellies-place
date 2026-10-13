@@ -172,3 +172,268 @@ Reason for the hour windows: east 06:30 to 11:00 and west 15:00 to 19:30 give a 
 `(29,0)` is the wall-fence corner post and takes nothing. Wall items wider than 1 need that many adjacent free back-wall tiles in the same room.
 
 `window` items (curtain-like and the cat window perch) go on the 14 window tiles listed in §2.4, one per tile.
+
+---
+
+## 3. Starting furniture
+
+The place starts sparse on purpose (BRIEF §3). 18 catalog items (21 instances) plus 5 fixtures. Rotation codes are from §1.
+
+### 3.1 Placement map
+
+```
+                11111111112222222222
+      012345678901234567890123456789
+ty 0  ###^^#####^###R#^^###=========
+ty 1  #WWbbBBL#TTTt#ssssss#pggggggg|
+ty 2  #bbbbBBb#tttt#ssssss>pggggggg|
+ty 3  <bbbbBBb#tttS#ssssss#pggggggg|
+ty 4  #Mbbbbbb#tttt#ssssssDpggggYYg|
+ty 5  #bbbbbbb#tttt#ssssss#pggggYYg|
+ty 6  #bbbbbbb#tttt#ssssss#pggggggg|
+ty 7  ####d#####d#####d####pggUgggg|
+ty 8  #PllllVVlll#CCCFkkkk#pggggggg|
+ty 9  #llllllllll#kkkkkkkk>pggggggg|
+ty10  <llllllllllakkkkkkkk#pggggggg|
+ty11  <llllOOOlllakkkkXXHk#pggggggg|
+ty12  #llllllllll#kkkHXXkkDpggggggg|
+ty13  #llllllllll#kkkkkkkk#pgNNNNgg|
+ty14  #llllllllll#QQkkkkkk#pggggggg|
+ty15  #####D#vv######vv####pggggggg|
+ty16  hh.moZo..hhhhhhhhhhhh---------
+```
+
+Overlay letters: `W` wardrobe, `B` bed, `L` small lamp, `M` standing mirror, `T` bath, `S` bathroom sink, `R` race board (on the wall), `P` record player, `V` TV unit (console on top), `O` sofa, `C` counters (kettle and rusk tin on top), `F` fridge, `X` small table, `H` chairs, `Q` cat bowls, `Y` tree, `U` bird bath, `N` washing line, `Z` doormat, `m` mailbox.
+
+### 3.2 Placement table
+
+| Instance | Item id | Room | Anchor (tx,ty) | Rot | Tiles covered | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `start.bed` | `bed_double_basic` | bedroom | (5,1) | 0 | (5..6, 1..3) | Headboard on the north wall. A double, so all four cats fit on it for Cat Royalty tier 4. George's pillow is the left pillow tile (5,1). |
+| `start.wardrobe` | `wardrobe_basic` | bedroom | (1,1) | 0 | (1..2, 1) | Shadow's top-of-wardrobe perch (layer 2). |
+| `start.lamp` | `lamp_small_floor` | bedroom | (7,1) | 0 | (7,1) | The only light in the flat at night on day 1. |
+| `start.mirror` | `mirror_standing` | bedroom | (1,4) | 3 | (1,4) | Faces east; Ellie stands at (2,4) to dress up. |
+| `start.bath` | `bath_basic` | bathroom | (9,1) | 0 | (9..11, 1) | Under the frosted window. |
+| `start.sink_bath` | `sink_bath_basic` | bathroom | (12,3) | 1 | (12,3) | Faces west, against the east wall. |
+| `start.tv` | `tv_small_unit` | living | (6,8) | 0 | (6..7, 8) | Against the back wall. Surface slot 0 holds the console, slot 1 is free. |
+| `start.console` | `console_home` | living | on `start.tv` slot 0 | - | - | Peaches' warm spot while it's on. |
+| `start.records` | `record_player` | living | (1,8) | 0 | (1,8) | The record player from game 1, in the corner. Peaches sits on the lid when it's off. |
+| `start.sofa` | `sofa_basic` | living | (5,11) | 2 | (5..7, 11) | Faces up (north) toward the TV, 2 tiles away. |
+| `start.counter1` | `counter_basic` | kitchen | (12,8) | 0 | (12,8) | Free surface slot. |
+| `start.counter2` | `counter_basic` | kitchen | (13,8) | 0 | (13,8) | Slot 0: `rusk_tin`. |
+| `start.counter3` | `counter_basic` | kitchen | (14,8) | 0 | (14,8) | Slot 0: `kettle_basic`. |
+| `start.rusks` | `rusk_tin` | kitchen | on `start.counter2` | - | - | Added to the brief's list so the coffee-and-rusk ritual works from minute one. |
+| `start.kettle` | `kettle_basic` | kitchen | on `start.counter3` | - | - | |
+| `start.fridge` | `fridge_basic` | kitchen | (15,8) | 0 | (15,8) | Bruce's "on top of the fridge" spot. (16,8) stays free for the door. |
+| `start.table` | `table_small_round` | kitchen | (16,11) | 0 | (16..17, 11..12) | Bruce's "under the kitchen table" spot. 2 free surface slots (the laptop can go here). |
+| `start.chair1` | `chair_basic` | kitchen | (15,12) | 3 | (15,12) | Faces east, into the table. |
+| `start.chair2` | `chair_basic` | kitchen | (18,11) | 1 | (18,11) | Faces west, into the table. |
+| `start.bowls` | `cat_bowls_basic` | kitchen | (12,14) | 0 | (12..13, 14) | Four bowls in one item. |
+| `start.doormat` | `doormat_basic` | front | (5,16) | 0 | (5,16) | Rug layer on the front step. |
+| `fix.race_board` | `race_board` | spare | wall (14,0) | 0 | wall (14,0) | Fixture. The only thing in the spare room: a corkboard that says "this will be the gym". Opens the race board from day 1. |
+| `fix.tree` | `garden_tree_old` | garden | (26,4) | 0 | (26..27, 4..5) | Fixture. The canopy draws on the overhead layer and covers (25..28, 2..5). George climbs it. |
+| `fix.bird_bath` | `garden_bird_bath` | garden | (24,7) | 0 | (24,7) | Fixture. Poe lands here. |
+| `fix.washing_line` | `garden_washing_line` | garden | (23,13) | 0 | posts (23,13) and (26,13); (24..25,13) walkable under the line | Fixture. |
+| `fix.mailbox` | `front_mailbox` | front | (3,16) | 0 | (3,16) | Fixture. |
+
+Walk check: every door's inside tile, both archway sides, (5,14) inside the front door and (19,12) inside the back door are free. A path exists from the bed to the grass: (4,6), door (4,7), living, arch (11,10), kitchen, back door (20,12), patio (21,12).
+
+The suggested spot for `gym_sled_track` (once unlocked) is (22,3) rotation 0, covering (22, 3..10): right outside the gym patio door, along the house. Build mode highlights this spot the first time the track is placed.
+
+**Fixtures** can be moved and rotated in Build mode but not sold, duplicated or bought. They aren't catalog items and don't count toward catalog completion. Reason: the race board, bird bath (Poe), mailbox (mail) and tree are anchors for systems and secrets; losing one could strand a feature (pillar 1).
+
+---
+
+## 4. Catalog: Pickle's Deliveries
+
+### 4.1 Rules
+
+- **124 catalog items** (123 if the framed print is switched off) plus 5 fixtures. **74 are MVP.** **40 are unlocked at the start**, and 18 of those are already placed.
+- **Unlocking** an item makes it buyable. It does not give a free copy. Pickle's next delivery note mentions what's new (`mail.pickle.new_stock`).
+  - Exceptions that arrive as a free first copy: **secret** items, and **Poe trades** (she paid in Shiny Trinkets). After that they're buyable at the listed price.
+- **Price** is in Hearts. Selling always refunds the full listed price (BRIEF §8). A price-0 item refunds 0 and stays in the catalog at 0, so selling it loses nothing.
+- **Copies:** unlimited, except `frame_grazie` and `bruce_wall_cushion` (max 1 each; both are free to re-order).
+- **Delivery** (proposal, play.md may override): in Live mode an order arrives 30 game minutes later. Pickle knocks at the front door, a delivery box appears at (6,14) (or the nearest free living-room tile), and the item goes to the Build-mode tray. In Build mode it's placed instantly. Salem gets in every box.
+- **Surface items** (`slot`) need a free surface slot. Hosts and their slots are in the `slots` column.
+- **`frame_grazie`** exists only when `personal.ts` has `framedPrint: true` (default `true`). It unlocks at the housewarming (`secret:housewarming`), arrives in that night's last delivery box, costs 0 and shows only the line "Grazie per essere te stessa" (string key `item.frame_grazie.text`, never translated or added to). When the flag is false it's removed from the catalog, from completion counts, and from the housewarming rewards.
+- **`bruce_wall_cushion`** goes only on the garden wall (row 0, tx 21..28). It's where Bruce lives once he moves in.
+- **Band names:** `record_shelf`, `record_player` and the record sleeves show "Pierce the Veil", "Deftones" and "Suicideboys" as plain text on plain coloured sleeves. No logos, artwork or lyrics (BRIEF §20). No poster or other item carries a band name.
+- **Laptop:** a plain silver laptop with no logo. It is where she orders (`order_catalog`) and it's warm for Peaches.
+- **Art key** `base#palette` means one sprite grid (`base`) with a palette map (`palette`), using game 1's `makeSprite` palette maps. The catalog has 123 distinct bases (80 in MVP).
+- **Plants never wilt.** `water_plant` gives a small Calm boost and a sparkle, and nothing bad happens if she never waters (pillar 1).
+
+### 4.2 Unlock codes
+
+| Code | Meaning | Count |
+| --- | --- | --- |
+| `start` | Buyable from minute one | 40 |
+| `asp:hyrox:N` | Hyrox Hero aspiration, tier N reached | 8 |
+| `asp:royalty:N` | Cat Royalty aspiration, tier N | 10 |
+| `asp:homemaker:N` | Home Maker aspiration, tier N | 32 |
+| `asp:collector:N` | Collector aspiration, tier N (full scope only) | 7 |
+| `bond:<cat>:N` | That cat's bond reaches level N (1..4) | 13 |
+| `poe:N` | Poe trades it for N Shiny Trinkets | 6 |
+| `secret:<id>` | Found by doing something (see §7.2) | 8 |
+
+Reasons:
+- **40 at start (32%)** covers every category and gives each MVP style at least 3 items, so the first session already has real choices. The Goth Parlour set is buildable from start items alone (§6.5). Cottage Kitchen is 2 cheap purchases away from the starting kitchen. A first set inside the first 10 to 20 minutes is the hook.
+- **Home Maker carries the most unlocks (32).** It is the decorating aspiration, so decorating unlocks more decorating. Its tier 1 is front-loaded (10 items) to land inside the first hour.
+- **Bond items are each cat's taste:** George gets royal things, Salem gets catnip, a neon cat and a box castle, Shadow gets a felt cave and a dim moon lamp, and Peaches gets sun, music and warmth.
+- **Poe and Collector items are full scope** (non-MVP), so MVP doesn't depend on the trinket loop or the fourth aspiration.
+
+### 4.3 Price bands and why
+
+| Band | Hearts | Examples |
+| --- | --- | --- |
+| Tiny decor and surface items | 5 to 15 | vase, candles, kettle, books, scratch post |
+| Small furniture, wall decor, rugs | 15 to 45 | chairs, posters, lamps, plants, cat beds |
+| Medium furniture | 45 to 95 | sofa, wardrobe, fridge, TV, cat throne, stations |
+| Feature pieces | 110 to 180 | rower, treadmill, sled track, cat tower, range cooker, canopy bed, stained-glass lamp |
+
+- **Sum of one of each:** 5,300 Hearts (MVP items: 3,019). Start-unlocked but not yet owned: 22 items for 788 Hearts. Mean price 43.
+- Feature pieces sit at about 3 to 4 times a mid item, so one big buy feels like a small goal (about one day of wishes), not a grind.
+- The 8 Hyrox stations total 625 Hearts (sled track included), so a full home gym is a 2 to 3 hour goal alongside decorating.
+- **For play.md's Hearts band:** owning 25 to 40% of the catalog after 2 hours means buying roughly 13 to 32 items past the 18 starters. Choosing the cheapest unlocked items, that costs about 300 to 1,000 Hearts. Owning 85 to 100% after 8 hours costs about 4,300 to 5,300 Hearts, minus the 8 free secret and Poe items. play.md must set earnings to land inside those numbers.
+
+### 4.4 Catalog table
+
+Columns: `orient.` uses the codes in §1; `placement` uses §1.1; `light r` is the light radius in tiles (lights only); `slots` is the number of surface slots the item offers. The name key is always `item.<id>.name`, and the description key is `item.<id>.desc`.
+
+| # | id | name key | category | footprint | orient. | placement | style tags | price ♥ | unlock | art key | interactions | light r | slots | MVP |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | `sofa_basic` | `item.sofa_basic.name` | seating | 3×1 | 4 | in | - | 60 | start | `sofa#plum` | sit, nap, cat_nap | - | - | Y |
+| 2 | `chair_basic` | `item.chair_basic.name` | seating | 1×1 | 4 | floor | Cottage | 15 | start | `chair_wood#oak` | sit | - | - | Y |
+| 3 | `armchair_velvet` | `item.armchair_velvet.name` | seating | 1×1 | 4 | in | Goth | 45 | start | `armchair#wine` | sit, read_book, cat_nap | - | - | Y |
+| 4 | `beanbag_neon` | `item.beanbag_neon.name` | seating | 1×1 | 1 | in | Neon | 30 | start | `beanbag#neon` | sit, play_handheld, cat_nap | - | - | Y |
+| 5 | `floor_cushions` | `item.floor_cushions.name` | seating | 2×1 | 2 | floor | Cottage, Cat | 30 | asp:royalty:2 | `floor_cushions` | sit, cat_nap | - | - | N |
+| 6 | `sofa_coffin` | `item.sofa_coffin.name` | seating | 3×1 | 4 | in | Goth | 120 | asp:homemaker:3 | `sofa_coffin` | sit, nap, cat_nap, cat_hide | - | - | N |
+| 7 | `bed_double_basic` | `item.bed_double_basic.name` | beds | 2×3 | 4 | in | - | 80 | start | `bed_double#plain` | sleep, nap, read_book, play_handheld, cat_nap, cat_hide | - | - | Y |
+| 8 | `bed_quilt_cottage` | `item.bed_quilt_cottage.name` | beds | 2×3 | 4 | in | Cottage | 140 | asp:homemaker:2 | `bed_double#quilt` | sleep, nap, read_book, play_handheld, cat_nap, cat_hide | - | - | N |
+| 9 | `bed_canopy_goth` | `item.bed_canopy_goth.name` | beds | 2×3 | 4 | in | Goth | 180 | asp:homemaker:4 | `bed_canopy` | sleep, nap, read_book, play_handheld, cat_nap, cat_hide | - | - | Y |
+| 10 | `hammock_garden` | `item.hammock_garden.name` | beds | 1×3 | 2 | out | Cottage | 75 | bond:peaches:4 | `hammock` | nap, cat_nap, cat_sunbathe | - | - | N |
+| 11 | `table_small_round` | `item.table_small_round.name` | tables | 2×2 | 1 | floor | Cottage | 40 | start | `table_round#oak` | eat, cat_hide | - | 2 | Y |
+| 12 | `table_coffee_low` | `item.table_coffee_low.name` | tables | 2×1 | 2 | in | - | 30 | asp:homemaker:1 | `table_coffee` | - | - | 2 | Y |
+| 13 | `desk_simple` | `item.desk_simple.name` | tables | 2×1 | 4 | in | - | 45 | asp:homemaker:3 | `desk` | - | - | 2 | N |
+| 14 | `nightstand_coffin` | `item.nightstand_coffin.name` | tables | 1×1 | 4 | in | Goth | 35 | start | `nightstand_coffin` | cat_hide | - | 1 | Y |
+| 15 | `sideboard_retro` | `item.sideboard_retro.name` | tables | 2×1 | 4 | in | Retro | 50 | asp:homemaker:2 | `sideboard` | - | - | 3 | Y |
+| 16 | `table_dining_long` | `item.table_dining_long.name` | tables | 3×2 | 2 | in | Cottage | 90 | asp:homemaker:3 | `table_dining` | eat, cat_hide | - | 4 | N |
+| 17 | `table_side_neon` | `item.table_side_neon.name` | tables | 1×1 | 1 | in | Neon | 25 | asp:collector:2 | `table_side#neon` | - | - | 1 | N |
+| 18 | `wardrobe_basic` | `item.wardrobe_basic.name` | storage | 2×1 | 4 | in | - | 60 | start | `wardrobe#plain` | dress_up, cat_perch_high, cat_hide | - | - | Y |
+| 19 | `wardrobe_gothic` | `item.wardrobe_gothic.name` | storage | 2×1 | 4 | in | Goth | 130 | asp:homemaker:3 | `wardrobe_gothic` | dress_up, cat_perch_high, cat_hide | - | - | N |
+| 20 | `bookshelf_tall` | `item.bookshelf_tall.name` | storage | 1×1 | 4 | in | - | 40 | start | `bookshelf` | read_book, cat_perch_high | - | 2 | Y |
+| 21 | `record_shelf` | `item.record_shelf.name` | storage | 2×1 | 4 | in | Retro | 45 | start | `record_shelf` | browse_records | - | 1 | Y |
+| 22 | `shelf_wall_float` | `item.shelf_wall_float.name` | storage | 1×1 | 1 | wall | - | 15 | asp:homemaker:1 | `shelf_wall#oak` | - | - | 2 | Y |
+| 23 | `shelf_wall_bat` | `item.shelf_wall_bat.name` | storage | 1×1 | 1 | wall | Goth | 20 | asp:homemaker:2 | `shelf_wall_bat` | - | - | 2 | N |
+| 24 | `cabinet_curio` | `item.cabinet_curio.name` | storage | 2×1 | 4 | in | Goth | 80 | poe:5 | `cabinet_curio` | admire, cat_perch_high | - | 3 | N |
+| 25 | `counter_basic` | `item.counter_basic.name` | kitchen | 1×1 | 4 | in | - | 20 | start | `counter#plain` | make_sushi, grab_rusk, wash_dishes | - | 1 | Y |
+| 26 | `fridge_basic` | `item.fridge_basic.name` | kitchen | 1×1 | 4 | in | - | 70 | start | `fridge#white` | fridge_snack, cat_perch_high | - | - | Y |
+| 27 | `kettle_basic` | `item.kettle_basic.name` | kitchen | slot | 1 | surface | - | 10 | start | `kettle` | make_coffee, make_tea | - | - | Y |
+| 28 | `rusk_tin` | `item.rusk_tin.name` | kitchen | slot | 1 | surface | Cottage | 8 | start | `rusk_tin#blue` | grab_rusk | - | - | Y |
+| 29 | `coffee_machine` | `item.coffee_machine.name` | kitchen | slot | 1 | surface | Retro | 50 | start | `coffee_machine` | make_coffee | - | - | Y |
+| 30 | `stove_basic` | `item.stove_basic.name` | kitchen | 1×1 | 4 | in | - | 60 | start | `stove#white` | cook_simple, make_toast | - | 1 | Y |
+| 31 | `stove_range_cottage` | `item.stove_range_cottage.name` | kitchen | 2×1 | 4 | in | Cottage | 110 | asp:homemaker:2 | `stove_range` | cook_simple, make_toast | - | 2 | Y |
+| 32 | `fridge_retro` | `item.fridge_retro.name` | kitchen | 1×1 | 4 | in | Retro | 95 | bond:salem:4 | `fridge#mint` | fridge_snack, cat_perch_high | - | - | N |
+| 33 | `bath_basic` | `item.bath_basic.name` | bath | 3×1 | 4 | in | - | 70 | start | `bath#white` | take_bath | - | - | Y |
+| 34 | `sink_bath_basic` | `item.sink_bath_basic.name` | bath | 1×1 | 4 | in | - | 25 | start | `sink_bath` | freshen_up | - | - | Y |
+| 35 | `cabinet_mirror_bath` | `item.cabinet_mirror_bath.name` | bath | 1×1 | 1 | wall | - | 20 | asp:homemaker:2 | `cabinet_mirror` | admire_self | - | 1 | N |
+| 36 | `bath_clawfoot` | `item.bath_clawfoot.name` | bath | 3×1 | 4 | in | Cottage | 140 | asp:homemaker:4 | `bath_clawfoot#cream` | take_bath | - | - | N |
+| 37 | `gym_skierg` | `item.gym_skierg.name` | gym | 1×1 | 4 | floor | Gym | 90 | start | `gym_skierg` | train_skierg | - | - | Y |
+| 38 | `gym_rower` | `item.gym_rower.name` | gym | 1×3 | 4 | floor | Gym | 110 | start | `gym_rower` | train_row | - | - | Y |
+| 39 | `gym_wallball_target` | `item.gym_wallball_target.name` | gym | 1×1 | 1 | wall | Gym | 40 | start | `gym_wallball` | train_wallball | - | - | Y |
+| 40 | `gym_kettlebell` | `item.gym_kettlebell.name` | gym | 1×1 | 1 | floor | Gym | 25 | asp:hyrox:1 | `gym_kettlebell` | train_kettlebell | - | - | Y |
+| 41 | `gym_sandbag` | `item.gym_sandbag.name` | gym | 1×1 | 1 | floor | Gym | 35 | asp:hyrox:1 | `gym_sandbag` | train_sandbag | - | - | Y |
+| 42 | `gym_farmers_handles` | `item.gym_farmers_handles.name` | gym | 1×1 | 2 | floor | Gym | 45 | asp:hyrox:1 | `gym_farmers` | train_farmers | - | - | Y |
+| 43 | `gym_mat` | `item.gym_mat.name` | gym | 2×1 | 2 | rug | Gym | 15 | asp:hyrox:1 | `gym_mat#plum` | stretch, cat_nap | - | - | Y |
+| 44 | `gym_sled_track` | `item.gym_sled_track.name` | gym | 1×8 | 2 | out | Gym | 120 | asp:hyrox:2 | `gym_sled_track` | train_sled_push, train_sled_pull | - | - | Y |
+| 45 | `gym_treadmill` | `item.gym_treadmill.name` | gym | 1×3 | 4 | in | Gym | 130 | asp:hyrox:2 | `gym_treadmill` | run_treadmill, cat_nap | - | - | Y |
+| 46 | `gym_medal_rack` | `item.gym_medal_rack.name` | gym | 1×1 | 1 | wall | Gym | 30 | asp:hyrox:3 | `gym_medal_rack` | admire | - | - | Y |
+| 47 | `gym_trophy_podium` | `item.gym_trophy_podium.name` | gym | 1×1 | 1 | floor | Gym | 60 | asp:hyrox:4 | `gym_trophy` | admire | - | - | N |
+| 48 | `lamp_small_floor` | `item.lamp_small_floor.name` | lighting | 1×1 | 1 | in | - | 15 | start | `lamp_small#plum` | toggle_light | 3 | - | Y |
+| 49 | `lamp_candelabra` | `item.lamp_candelabra.name` | lighting | 1×1 | 1 | in | Goth | 45 | start | `lamp_candelabra` | toggle_light | 3 | - | Y |
+| 50 | `fairy_lights` | `item.fairy_lights.name` | lighting | 2×1 | 1 | wall | Cottage | 20 | start | `fairy_lights#warm` | toggle_light | 3 | - | Y |
+| 51 | `garden_lantern` | `item.garden_lantern.name` | lighting | 1×1 | 1 | out | Cottage | 15 | start | `lantern#warm` | light_lantern | 3 | - | Y |
+| 52 | `lamp_floor_arc` | `item.lamp_floor_arc.name` | lighting | 1×1 | 4 | in | Retro | 40 | asp:homemaker:3 | `lamp_arc` | toggle_light | 4 | - | N |
+| 53 | `sconce_iron` | `item.sconce_iron.name` | lighting | 1×1 | 1 | wall | Goth | 30 | asp:homemaker:2 | `sconce_iron` | toggle_light | 3 | - | N |
+| 54 | `candles_cluster` | `item.candles_cluster.name` | lighting | slot | 1 | surface | Goth | 10 | asp:homemaker:1 | `candles` | toggle_light | 1 | - | Y |
+| 55 | `garden_lantern_string` | `item.garden_lantern_string.name` | lighting | 3×1 | 1 | wall | Cottage | 30 | asp:homemaker:2 | `lantern_string#warm` | light_lantern | 4 | - | Y |
+| 56 | `sign_neon_bat` | `item.sign_neon_bat.name` | lighting | 2×1 | 1 | wall | Neon, Goth | 50 | asp:homemaker:3 | `neon_sign#bat` | toggle_light | 3 | - | N |
+| 57 | `lamp_stained_glass` | `item.lamp_stained_glass.name` | lighting | 1×1 | 1 | in | Goth, Retro | 160 | asp:homemaker:4 | `lamp_stained` | toggle_light | 4 | - | N |
+| 58 | `sign_neon_cat` | `item.sign_neon_cat.name` | lighting | 2×1 | 1 | wall | Neon, Cat | 50 | bond:salem:2 | `neon_sign#cat` | toggle_light | 3 | - | N |
+| 59 | `lamp_lava` | `item.lamp_lava.name` | lighting | slot | 1 | surface | Retro, Neon | 25 | asp:collector:2 | `lamp_lava` | toggle_light | 2 | - | N |
+| 60 | `garden_lantern_paper` | `item.garden_lantern_paper.name` | lighting | 1×1 | 1 | out | Retro | 25 | poe:2 | `lantern#paper` | light_lantern | 3 | - | N |
+| 61 | `lamp_moon_orb` | `item.lamp_moon_orb.name` | lighting | 1×1 | 1 | in | Goth | 35 | bond:shadow:2 | `lamp_moon` | toggle_light | 2 | - | N |
+| 62 | `plant_monstera` | `item.plant_monstera.name` | plants | 1×1 | 1 | floor | Plant | 25 | start | `plant_monstera` | water_plant | - | - | Y |
+| 63 | `plant_snake` | `item.plant_snake.name` | plants | 1×1 | 1 | floor | Plant, Goth | 20 | start | `plant_snake` | water_plant | - | - | Y |
+| 64 | `plant_succulent` | `item.plant_succulent.name` | plants | slot | 1 | surface | Plant | 8 | start | `plant_succulent` | water_plant | - | - | Y |
+| 65 | `plant_pothos_hanging` | `item.plant_pothos_hanging.name` | plants | 1×1 | 1 | wall | Plant, Cottage | 18 | asp:homemaker:1 | `plant_pothos` | water_plant | - | - | Y |
+| 66 | `plant_herb_box` | `item.plant_herb_box.name` | plants | 1×1 | 1 | wall | Plant, Cottage | 15 | asp:homemaker:1 | `plant_herbs` | water_plant | - | - | Y |
+| 67 | `plant_fern_stand` | `item.plant_fern_stand.name` | plants | 1×1 | 1 | floor | Plant, Cottage | 30 | asp:homemaker:2 | `plant_fern` | water_plant | - | - | Y |
+| 68 | `garden_flowerbed` | `item.garden_flowerbed.name` | plants | 2×1 | 2 | out | Plant, Cottage | 25 | asp:homemaker:2 | `flowerbed` | water_plant | - | - | Y |
+| 69 | `plant_catnip` | `item.plant_catnip.name` | plants | slot | 1 | surface | Plant, Cat | 15 | bond:salem:1 | `plant_catnip` | water_plant, cat_play | - | - | Y |
+| 70 | `plant_black_rose` | `item.plant_black_rose.name` | plants | 1×1 | 1 | floor | Plant, Goth | 40 | poe:2 | `plant_black_rose` | water_plant | - | - | N |
+| 71 | `cat_bowls_basic` | `item.cat_bowls_basic.name` | cat | 2×1 | 2 | floor | Cat | 15 | start | `cat_bowls#plain` | fill_bowls, cat_eat | - | - | Y |
+| 72 | `cat_scratch_post` | `item.cat_scratch_post.name` | cat | 1×1 | 1 | floor | Cat | 15 | start | `cat_scratch_post` | cat_scratch | - | - | Y |
+| 73 | `cat_toy_basket` | `item.cat_toy_basket.name` | cat | 1×1 | 1 | floor | Cat | 12 | start | `cat_toy_basket` | play_laser, play_feather, cat_play | - | - | Y |
+| 74 | `cat_tree_small` | `item.cat_tree_small.name` | cat | 1×1 | 1 | floor | Cat | 45 | asp:royalty:1 | `cat_tree_small` | cat_perch_high, cat_scratch, cat_nap | - | - | Y |
+| 75 | `cat_bed_round` | `item.cat_bed_round.name` | cat | 1×1 | 1 | floor | Cat | 20 | asp:royalty:1 | `cat_bed_round#plum` | cat_nap | - | - | Y |
+| 76 | `cat_tunnel` | `item.cat_tunnel.name` | cat | 2×1 | 2 | floor | Cat | 25 | asp:royalty:1 | `cat_tunnel` | cat_play, cat_hide | - | - | N |
+| 77 | `cat_wall_steps` | `item.cat_wall_steps.name` | cat | 3×1 | 1 | wall | Cat | 30 | asp:royalty:2 | `cat_wall_steps` | cat_perch_high | - | - | N |
+| 78 | `cat_bed_coffin` | `item.cat_bed_coffin.name` | cat | 1×1 | 4 | in | Cat, Goth | 35 | asp:royalty:2 | `cat_bed_coffin` | cat_nap, cat_hide | - | - | Y |
+| 79 | `cat_tree_tower` | `item.cat_tree_tower.name` | cat | 2×2 | 1 | in | Cat | 110 | asp:royalty:3 | `cat_tree_tower` | cat_perch_high, cat_scratch, cat_nap, cat_hide | - | - | Y |
+| 80 | `cat_crown_cushion` | `item.cat_crown_cushion.name` | cat | 1×1 | 1 | floor | Cat | 40 | bond:george:1 | `cat_crown_cushion` | cat_nap, bow_to_george | - | - | Y |
+| 81 | `cat_throne` | `item.cat_throne.name` | cat | 1×1 | 4 | in | Cat, Goth | 90 | bond:george:2 | `cat_throne` | cat_throne, cat_perch_high, bow_to_george | - | - | Y |
+| 82 | `cat_window_perch` | `item.cat_window_perch.name` | cat | 1×1 | 1 | window | Cat | 40 | bond:peaches:1 | `cat_window_perch` | cat_sunbathe, cat_perch_high | - | - | Y |
+| 83 | `cat_cave_felt` | `item.cat_cave_felt.name` | cat | 1×1 | 1 | floor | Cat, Cottage | 35 | bond:shadow:1 | `cat_cave_felt` | cat_hide, cat_nap | - | - | Y |
+| 84 | `cat_box_castle` | `item.cat_box_castle.name` | cat | 2×2 | 1 | floor | Cat | 50 | bond:salem:3 | `cat_box_castle` | cat_box, cat_hide, cat_play | - | - | N |
+| 85 | `cat_heated_pad` | `item.cat_heated_pad.name` | cat | 1×1 | 1 | in | Cat | 30 | bond:peaches:3 | `cat_heated_pad` | cat_warm, cat_nap | - | - | N |
+| 86 | `box_throne_salem` | `item.box_throne_salem.name` | cat | 1×1 | 1 | floor | Cat | 25 | secret:salem_boxes50 | `box_throne` | cat_box, cat_nap | - | - | N |
+| 87 | `bruce_wall_cushion` | `item.bruce_wall_cushion.name` | cat | 1×1 | 1 | wall | Cat | 0 | secret:bruce_all5 | `bruce_cushion` | - | - | - | N |
+| 88 | `poster_moth` | `item.poster_moth.name` | walldecor | 1×1 | 1 | wall | Goth | 15 | start | `poster_moth` | admire | - | - | Y |
+| 89 | `poster_cat_loaf` | `item.poster_cat_loaf.name` | walldecor | 1×1 | 1 | wall | Cat | 15 | asp:royalty:1 | `poster_cat_loaf` | admire | - | - | Y |
+| 90 | `frame_polaroids` | `item.frame_polaroids.name` | walldecor | 2×1 | 1 | wall | Retro | 15 | asp:collector:1 | `frame_polaroids` | view_photos | - | - | N |
+| 91 | `painting_meadow` | `item.painting_meadow.name` | walldecor | 1×1 | 1 | wall | Cottage | 30 | asp:homemaker:3 | `painting_meadow` | admire | - | - | N |
+| 92 | `mirror_ornate` | `item.mirror_ornate.name` | walldecor | 1×1 | 1 | wall | Goth | 45 | asp:homemaker:2 | `mirror_ornate` | admire_self, dress_up | - | - | N |
+| 93 | `tapestry_moon` | `item.tapestry_moon.name` | walldecor | 2×1 | 1 | wall | Goth | 35 | asp:homemaker:3 | `tapestry_moon` | admire | - | - | N |
+| 94 | `portrait_four_cats` | `item.portrait_four_cats.name` | walldecor | 2×1 | 1 | wall | Cat | 60 | asp:royalty:4 | `portrait_four_cats` | admire | - | - | Y |
+| 95 | `frame_grazie` | `item.frame_grazie.name` | walldecor | 1×1 | 1 | wall | - | 0 | secret:housewarming | `frame_grazie` | admire | - | - | Y |
+| 96 | `portrait_george` | `item.portrait_george.name` | walldecor | 1×1 | 1 | wall | Cat, Goth | 40 | bond:george:3 | `portrait_george` | admire, bow_to_george | - | - | N |
+| 97 | `poster_critterbound` | `item.poster_critterbound.name` | walldecor | 1×1 | 1 | wall | Neon, Retro | 20 | asp:collector:1 | `poster_critterbound` | admire | - | - | N |
+| 98 | `raven_silhouette` | `item.raven_silhouette.name` | walldecor | 1×1 | 1 | wall | Goth | 20 | poe:1 | `raven_silhouette` | admire | - | - | N |
+| 99 | `plaque_sir_ellie` | `item.plaque_sir_ellie.name` | walldecor | 1×1 | 1 | wall | Cat | 0 | secret:knighted | `plaque_sir_ellie` | admire | - | - | N |
+| 100 | `frame_zoomies` | `item.frame_zoomies.name` | walldecor | 1×1 | 1 | wall | Cat | 0 | secret:zoomies_photo | `frame_zoomies` | admire | - | - | N |
+| 101 | `poster_peaches_rock` | `item.poster_peaches_rock.name` | walldecor | 1×1 | 1 | wall | Cat, Retro | 0 | secret:headbang_peaches | `poster_peaches` | admire | - | - | N |
+| 102 | `rug_round_plum` | `item.rug_round_plum.name` | rugs | 2×2 | 1 | rug | - | 20 | start | `rug_round#plum` | - | - | - | Y |
+| 103 | `rug_bat` | `item.rug_bat.name` | rugs | 3×2 | 2 | rug | Goth | 35 | asp:homemaker:2 | `rug_bat` | - | - | - | Y |
+| 104 | `rug_braided` | `item.rug_braided.name` | rugs | 3×2 | 2 | rug | Cottage | 30 | asp:homemaker:1 | `rug_braided` | - | - | - | Y |
+| 105 | `rug_cat_face` | `item.rug_cat_face.name` | rugs | 2×2 | 1 | rug | Cat | 30 | asp:royalty:3 | `rug_cat_face` | cat_nap | - | - | N |
+| 106 | `doormat_basic` | `item.doormat_basic.name` | rugs | 1×1 | 1 | rug | - | 5 | start | `doormat#coir` | - | - | - | Y |
+| 107 | `rug_neon_grid` | `item.rug_neon_grid.name` | rugs | 3×2 | 2 | rug | Neon | 35 | asp:collector:3 | `rug_neon_grid` | - | - | - | N |
+| 108 | `tv_small_unit` | `item.tv_small_unit.name` | electronics | 2×1 | 4 | in | - | 70 | start | `tv_small` | watch_tv, cat_hide | - | 2 | Y |
+| 109 | `console_home` | `item.console_home.name` | electronics | slot | 1 | surface | Neon | 60 | start | `console_home` | play_console, cat_warm | - | - | Y |
+| 110 | `record_player` | `item.record_player.name` | electronics | 1×1 | 4 | in | Retro | 60 | start | `record_player` | listen_records, dance, headbang, cat_perch_lid | - | 1 | Y |
+| 111 | `laptop` | `item.laptop.name` | electronics | slot | 1 | surface | - | 40 | start | `laptop#silver` | use_laptop, order_catalog, cat_warm | - | - | Y |
+| 112 | `handheld_console` | `item.handheld_console.name` | electronics | slot | 1 | surface | Retro | 30 | asp:homemaker:1 | `handheld` | play_handheld | - | - | Y |
+| 113 | `radio_retro` | `item.radio_retro.name` | electronics | slot | 1 | surface | Retro, Cottage | 25 | bond:peaches:2 | `radio` | listen_radio | - | - | N |
+| 114 | `arcade_cabinet` | `item.arcade_cabinet.name` | electronics | 1×1 | 4 | in | Neon, Retro | 140 | asp:collector:4 | `arcade` | play_arcade | - | - | N |
+| 115 | `bench_garden` | `item.bench_garden.name` | garden | 2×1 | 4 | floor | Cottage | 35 | asp:homemaker:1 | `bench_garden` | sit | - | - | Y |
+| 116 | `garden_picnic_blanket` | `item.garden_picnic_blanket.name` | garden | 2×2 | 1 | rug | Cottage | 15 | asp:homemaker:1 | `picnic_blanket` | sit, cat_nap, cat_sunbathe | - | - | Y |
+| 117 | `garden_gargoyle` | `item.garden_gargoyle.name` | garden | 1×1 | 4 | out | Goth | 30 | poe:3 | `gargoyle` | admire, cat_perch_high | - | - | N |
+| 118 | `garden_telescope` | `item.garden_telescope.name` | garden | 1×1 | 1 | out | Retro | 60 | asp:collector:3 | `telescope` | stargaze | - | - | N |
+| 119 | `mirror_standing` | `item.mirror_standing.name` | decor | 1×1 | 4 | in | - | 35 | start | `mirror_standing` | dress_up, admire_self | - | - | Y |
+| 120 | `vase_bud` | `item.vase_bud.name` | decor | slot | 1 | surface | Cottage | 8 | start | `vase_bud#cream` | admire | - | - | Y |
+| 121 | `books_stack` | `item.books_stack.name` | decor | slot | 1 | surface | - | 6 | asp:homemaker:1 | `books_stack` | read_book | - | - | N |
+| 122 | `vase_black_crackle` | `item.vase_black_crackle.name` | decor | slot | 1 | surface | Goth | 15 | poe:1 | `vase_bud#ink` | admire | - | - | N |
+| 123 | `figurine_pickle` | `item.figurine_pickle.name` | decor | slot | 1 | surface | Cottage | 0 | secret:pickle20 | `figurine_pickle` | admire | - | - | N |
+| 124 | `rusk_tin_gold` | `item.rusk_tin_gold.name` | decor | slot | 1 | surface | Retro | 0 | secret:dunks10 | `rusk_tin#gold` | grab_rusk | - | - | N |
+
+### 4.5 Fixtures (not in the catalog)
+
+`value price` is used only for the Cosy item value (§6.2). Fixtures can't be bought or sold.
+
+| id | name key | category | footprint | orient. | placement | style tags | value price | unlock | art key | interactions | light r | slots | MVP |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `race_board` | `item.race_board.name` | gym | 1×1 | 1 | wall | Gym | (30) | fixture | `race_board` | open_race_board | - | - | Y |
+| `garden_tree_old` | `item.garden_tree_old.name` | plants | 2×2 | 1 | out | Plant | (80) | fixture | `tree_old` | sit, cat_perch_high | - | - | Y |
+| `garden_bird_bath` | `item.garden_bird_bath.name` | garden | 1×1 | 1 | out | Cottage | (40) | fixture | `bird_bath` | bird_watch | - | - | Y |
+| `garden_washing_line` | `item.garden_washing_line.name` | garden | 4×1 | 2 | out | - | (30) | fixture | `washing_line` | hang_washing | - | - | Y |
+| `front_mailbox` | `item.front_mailbox.name` | front | 1×1 | 1 | front | - | (20) | fixture | `mailbox#red` | check_mail | - | - | Y |
