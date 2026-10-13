@@ -619,7 +619,7 @@ Reachability (why these thresholds):
 - **Cottage Kitchen**: the starting kitchen already has 3 distinct Cottage items (`chair_basic`, `table_small_round`, `rusk_tin`). `fairy_lights` and `vase_bud` (28 Hearts) finish it. That's the first "oh!" moment, and it's in the room where the coffee ritual starts.
 - **Home Gym** needs Hyrox Hero tier 1 (the 4th station), plus the race board already on the wall. Training unlocks the gym, which feels right.
 - **Cat Palace** needs Cat Royalty tier 1 (`cat_tree_small`, `cat_bed_round`).
-- **Plant Corner** is reachable from start items because copies count (for example 3 monsteras, a snake plant and a succulent on a nightstand, about 115 Hearts). Home Maker tier 1 adds the wall plants that make it look good.
+- **Plant Corner** is reachable from start items because copies count (for example 3 monsteras, a snake plant and a succulent on a nightstand, about 140 Hearts including the nightstand). Home Maker tier 1 adds the wall plants that make it look good.
 - **Night Garden** is reachable from start items too: 4 lanterns (60 Hearts) and 2 potted plants by the tree (about 45). The tree fixture counts as a Plant item and offers `sit`. The bench and picnic blanket (Home Maker tier 1) make it nicer.
 - **Neon Den** is full scope only, because most Neon items come from Collector.
 
