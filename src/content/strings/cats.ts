@@ -36,6 +36,15 @@ export const cats = {
   'cat.george.race.02': 'Not bad. We have seen faster. On the telly.',
   'cat.george.lowMood.01': 'You look glum. We will sit on you. It helps.',
   'cat.george.vase.01': 'The vase was ugly. We said nothing. Salem said something.',
+  'cat.george.food.01': 'Our bowl is empty. The kingdom is in crisis.',
+  'cat.george.food.02': 'Serve us first. Salem is used to waiting.',
+  'cat.george.newItem.01': 'A new thing. We shall sniff it for treason.',
+  'cat.george.newItem.02': 'Who approved this? Not us. Yet.',
+  'cat.george.morning.01': 'You slept past six. We have been staring since five.',
+  'cat.george.grass.01': 'You sit on the ground like a commoner. We will join you.',
+  'cat.george.caption.01': 'His Majesty, and some staff.',
+  'cat.george.caption.02': 'Our good side. All sides are our good side.',
+  'cat.george.bed.01': 'The royal bed. You may have the bit by the wall.',
 
   // Salem: caps when excited, short bursts, ham, can't read.
   'cat.salem.pet.01': 'BEST. DAY. EVER.',
@@ -65,6 +74,13 @@ export const cats = {
   'cat.salem.laser.02': "I caught it! I didn't. Next time I will.",
   'cat.salem.follow.01': 'Bathroom? Me too!',
   'cat.salem.follow.02': 'You went to the kitchen without me! Rude! Hi!',
+  'cat.salem.food.01': "FOOD! Is it ham? It's not ham. STILL GOOD!",
+  'cat.salem.newItem.01': 'NEW THING! Can I knock it off? Later? Now?',
+  'cat.salem.nap.01': "I'm not sleepy. I'm just lying down very hard.",
+  'cat.salem.bed.01': 'Bedtime! I get the middle! I always get the middle!',
+  'cat.salem.race.01': 'GO {name} GO! Which way is go?',
+  'cat.salem.caption.01': 'Me. And a blur. The blur is also me.',
+  'cat.salem.caption.02': "That's my ear! Hi, ear!",
 
   // Shadow: minimal, deadpan, denies feelings.
   'cat.shadow.pet.01': "I'm not purring. That's the floor.",
@@ -88,6 +104,14 @@ export const cats = {
   'cat.shadow.salem.01': 'Salem woke me at three. I said nothing. I thought a lot.',
   'cat.shadow.build.01': "You moved my wardrobe. I'll allow it. Once.",
   'cat.shadow.grass.01': "I'm over here. It's a polite distance. Don't close it.",
+  'cat.shadow.food.01': 'Bowl. Now. Please is implied.',
+  'cat.shadow.nap.01': 'Wake me and I move into the closet. For good.',
+  'cat.shadow.closet.01': 'The closet is full. Of me.',
+  'cat.shadow.newItem.01': "New thing. I'll look at it when nobody's watching.",
+  'cat.shadow.read.01': "Same book again. I'm not listening. Do the voices.",
+  'cat.shadow.morning.01': 'You were up at seven. So was I. Coincidence.',
+  'cat.shadow.race.01': "You ran. I watched. That's all that happened.",
+  'cat.shadow.caption.01': 'I did not agree to this photo.',
 
   // Peaches: relaxed, musical, says less than she means.
   'cat.peaches.pet.01': "Oh, that's the spot.",
@@ -111,6 +135,14 @@ export const cats = {
   'cat.peaches.heavy.01': 'Shadow left. More floor for us.',
   'cat.peaches.grass.01': "Coffee in the grass? I'll take the sunny side.",
   'cat.peaches.lowMood.01': 'Put something slow on. I will lie on your feet.',
+  'cat.peaches.food.01': "Dinner? Mm. I'll wander over in a bit.",
+  'cat.peaches.nap.01': 'Just resting my eyes. For the whole album.',
+  'cat.peaches.newItem.01': 'New lamp? Is it warm? Oh, very warm. Good lamp.',
+  'cat.peaches.lofi.01': 'Lo-fi. Now everyone can slow down.',
+  'cat.peaches.cosy.01': 'Lamp on. Bit cosier. Yeah, that.',
+  'cat.peaches.race.01': 'Nice pace. Sounded like a drum fill.',
+  'cat.peaches.caption.01': 'Golden hour. The light did most of the work.',
+  'cat.peaches.bed.01': 'Your feet are warm. I live here now.',
 } as const satisfies Readonly<Record<string, string>>;
 
 /**
@@ -130,6 +162,8 @@ export const visitors = {
   'visitor.bruce.wall.02': 'Bruce? Never heard of him. Lovely cat, apparently.',
   'visitor.bruce.pet.01': 'Who told you I like this? Fine. I do.',
   'visitor.bruce.salem.01': "The small one keeps waving. I don't wave back. Much.",
+  'visitor.bruce.photo.01': "Delete that. I'm not in it.",
+  'visitor.bruce.leave.01': "I'm off. I was never on.",
 
   // Poe: clipped, ends lines with "Caw.", obsessed with shiny things.
   'visitor.poe.arrive.01': 'Office hours. Caw.',
@@ -141,6 +175,8 @@ export const visitors = {
   'visitor.poe.leave.01': 'Back tomorrow. Polish something. Caw.',
   'visitor.poe.noseRing.01': 'Nose ring. Very shiny. Not for sale? Pity. Caw.',
   'visitor.poe.salem.01': 'The small black cat drops good things. Caw.',
+  'visitor.poe.refuse.01': 'Matte. Not interested. Caw.',
+  'visitor.poe.george.01': 'The ginger one has a crown. Is it for sale? Caw.',
 
   // Pickle: upbeat shopkeeper, too many ribbits.
   'visitor.pickle.knock.01': 'Ribbit! Delivery for {name}!',
@@ -153,6 +189,7 @@ export const visitors = {
   'visitor.pickle.shop.01': "Pickle's Deliveries! We deliver. That's the whole name.",
   'visitor.pickle.shop.02': "Everything's in stock except flies. Ribbit.",
   'visitor.pickle.pet.01': "You petted the frog. I'm telling everyone. Ribbit.",
+  'visitor.pickle.leave.01': 'Ribbit! Same time next order!',
 } as const satisfies Readonly<Record<string, string>>;
 
 /**
@@ -175,4 +212,9 @@ export const ellie = {
   'ellie.mopey.01': 'Bit of a flat day.',
   'ellie.dark.01': 'Needs a lamp in here.',
   'ellie.grass.01': 'This is the good grass.',
+  'ellie.sushi.01': 'No fish, George. Never fish.',
+  'ellie.race.01': 'Last station. Legs, please.',
+  'ellie.night.01': 'Lanterns on. Better.',
+  'ellie.gaming.01': 'One more battle. Then bed. Probably.',
+  'ellie.box.02': "That's box number {n}. She's got a problem.",
 } as const satisfies Readonly<Record<string, string>>;
