@@ -912,7 +912,7 @@ Title keys are `wish.<id>.title`. Every wish also has `wish.<id>.done` for a one
 | 59 | `wish.spot_bruce` | visitors | "Spot Bruce" | `done(bruce.spot)` | day >= 3 | 25 | +8 | Y |
 | 60 | `wish.poe_trade` | visitors | "Trade a trinket with Poe" | `done(poe.trade)` | holding at least 1 Shiny Trinket | 25 | +8 | Y |
 
-Counts: 60 rows, 30 MVP (rows 1, 3, 6, 7, 8, 11, 15, 16, 19, 20, 24, 27, 28, 33, 35, 36, 37, 40, 41, 43, 44, 47, 50, 51, 54, 55, 56, 58, 59, 60). MVP covers every category except `games` full rows and gives her favourites (sushi, coffee and rusk, heavy music, Hyrox, the cats, gaming) at least one MVP wish each.
+Counts: 60 rows, 30 MVP (rows 1, 3, 6, 7, 8, 11, 15, 16, 19, 20, 24, 27, 28, 33, 35, 36, 37, 40, 41, 43, 44, 47, 50, 51, 54, 55, 56, 58, 59, 60). Every category has at least one MVP wish, and each of her favourite things (sushi, coffee and a rusk, heavy music, Hyrox, the cats, gaming) has at least one.
 
 ### 7.4 Aspirations
 
@@ -977,4 +977,173 @@ Reference pace: tier 1 day 2, tier 2 day 5, tier 3 day 11, tier 4 day 22.
 Reference pace: tier 1 day 4, tier 2 day 12, tier 3 day 19, tier 4 day 29.
 
 **Item count check.** Full: 16 gift items and 15 unlock items (Collector tier 4 has none). MVP: 12 gift items, and unlock items are full scope only. Section 8.3 gives the catalog unlock budget these fit into.
+
+---
+
+## 8. The Hearts economy
+
+### 8.1 Principles
+
+- Hearts only go up from play. The only thing that spends Hearts is buying catalog items, and selling a bought item refunds what she paid, in full (BRIEF section 8). So spending is never a loss.
+- Items she got free (aspiration gifts, sticker gifts, Poe trades, bond gifts) can be put away into storage and placed again, but are never sold for Hearts. Their sell button reads `build.put_away` "Put away".
+- No consumables cost Hearts. Food, coffee, rusks, ham and Snack Tins are free.
+- No timers, no decay of Hearts, no absence penalty, no daily login bonus.
+- **Starting Hearts: 150.** Enough for a lamp, a plant and a rug on day 1.
+
+### 8.2 Every source of Hearts
+
+`xM` means multiplied by `moodMult` (1.3), then rounded.
+
+| Source | Amount | xM | Typical per game day (reference player) |
+| --- | --- | --- | --- |
+| Daily wishes | 15 / 25 / 40 by size | yes | about 70 (2.4 wishes done) |
+| Full set of 3 wishes | 15 | yes | about 9 |
+| Good mood trickle | Each awake game hour: +1 if mood >= 50, +2 if mood >= 75 | yes | about 25 |
+| Minigames | `2 + 4 x score`; full pay for 6 a day, then 1 each | yes | about 25 (5 minigames) |
+| Flat activities | Runs, kettlebell, stretch, first 3 photos a day, star wishes | yes | about 4 |
+| Bond level-up | 25 per cat per level (16 level-ups in all) | no | 0 to 50 |
+| Aspiration tiers | 50 / 100 / 175 / 275 | no | lumpy |
+| Race finish | 40, once per game day | yes | Saturdays |
+| Race overall PB | 30 | no | most Saturdays |
+| Race station split PB | 5 each | no | small |
+| First medals | bronze 50, silver 100, gold 150, royal 200 | no | four times ever |
+| Critterbound | 10 per new critter, 25 per wanderer first win, 5 per other won spar (max 3 a day) | yes | early only |
+| Stickers | 15 each | no | about 7 |
+| Star wish `luck` | 10 | no | rare |
+| Mail attachments | see section 11 | no | rare |
+| Housewarming | 200 | no | once |
+
+The Wave 2 data must keep these as named constants in one table (`ECONOMY`), so balance-analyst can tune them in one place.
+
+### 8.3 Catalog unlock budget (home.md must match)
+
+The band below is only reachable if the catalog is shaped like this. `home.md` owns the items and exact prices. play.md owns how many unlock from each source and the price budget per group.
+
+**Full catalog: 120 items.**
+
+| Group | Count | How it unlocks | How she gets it | Price budget (sum) | Reason |
+| --- | --- | --- | --- | --- | --- |
+| Start | 40 | Day 1 | Buy | **2,460** (spread: 6 at about 15, 8 at about 30, 10 at about 50, 8 at about 75, 5 at about 110, 3 at about 160). Includes all 8 gym station items, `garden_lanterns`, `coffee_machine`, `handheld`, `feather_wand`. | A cheap first evening, but the start set alone takes about a week. |
+| Pickle's new stock | 14 | One per day on days 2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25 (`mail.pickle.new_stock`) | Buy | **2,310** (rising from 100 to 230) | Pillar 5: something new most sessions. Unlocks by day, never by skill. |
+| Aspiration gifts | 15 | Tier done (section 7.4) | Free gift | any (list price for re-buying) | |
+| Aspiration unlocks | 15 | Tier done | Buy | **2,630** (tier 1 about 120, tier 2 about 150, tier 3 about 200, tier 4 about 250) | |
+| Bond unlocks | 16 | Each cat's bond levels 1 to 4 (table below) | Buy | **1,640** (level 1 about 80, 2 about 95, 3 about 110, 4 about 125) | |
+| Poe trades | 12 | Poe's trade table (`home.md`) | Traded for Shiny Trinkets | any | |
+| Sticker gifts | 8 | Stickers (section 10) | Free gift | any | |
+| **Total** | **120** | | | **Hearts-gated sum about 9,040** | |
+
+**MVP catalog: 60 items.** MVP has fewer gates, so its prices sit higher to keep the same pace.
+
+| Group | Count | Unlock | Price budget (sum) |
+| --- | --- | --- | --- |
+| Start | 30 | Day 1 | **4,650** (3 at about 50, 6 at about 90, 7 at about 130, 7 at about 170, 5 at about 240, 2 at about 330) |
+| Pickle's new stock | 3 | Days 3, 8, 15 | **960** (260, 320, 380) |
+| Aspiration gifts | 12 | Tiers of the 3 MVP aspirations | free |
+| Bond unlocks | 8 | Each cat's bond levels 2 and 4 | **2,160** (level 2 about 220, level 4 about 320) |
+| Poe trades | 4 | Poe's trade table | traded |
+| Sticker gifts | 3 | `stk.bruce_all`, `stk.salem_50_boxes`, `stk.rusk_10` | free |
+| **Total** | **60** | | **Hearts-gated sum about 7,770** |
+
+The gym station items are cheap in both catalogs (about 30 to 60 each in full, 50 to 90 in MVP) so training is never price-gated for long.
+
+**Bond unlock items (proposed ids; MVP rows are levels 2 and 4).**
+
+| Cat | Level 1 | Level 2 | Level 3 | Level 4 |
+| --- | --- | --- | --- | --- |
+| George | `royal_food_bowl` | `george_portrait` | `high_shelf_perch` | `throne_cat_bed` |
+| Salem | `deluxe_box` | `ham_cushion` | `crinkle_tunnel` | `box_fort` |
+| Shadow | `dark_cat_cave` | `wardrobe_top_bed` | `blackout_curtains` | `moon_lamp` |
+| Peaches | `sunny_window_cushion` | `heated_cat_pad` | `record_lid_cushion` | `speaker_cat_bed` |
+
+### 8.4 The measure: catalog reach R(d)
+
+One number per game day that the soak checks. It answers: "of the whole catalog, how much could she have by now?"
+
+```
+N        = number of catalog items (120 full, 60 MVP)
+W        = 150 + heartsEarnedTotal          // all Hearts ever earned; refunds make spending irrelevant
+Free     = catalog items she owns that came free (gifts, trades)
+Buyable  = unlocked catalog items not in Free
+G        = take Buyable sorted by price ascending (ties by id); keep adding while the running sum <= W
+R(d)     = (|Free| + |G|) / N, measured at 23:59 of game day d
+```
+
+Reasons: it is deterministic and computable from state alone. "Unlocked and affordable" is exactly what she can reach, because every purchase refunds in full. Cheapest first is the most generous reading, which is fine because the band is about pace, not about her choices.
+
+State the soak needs: `heartsEarnedTotal`, the set of unlocked items, and which owned items came free (section 13).
+
+### 8.5 Real hours and game days
+
+At x1 one game day is 24 real minutes, sleep fast-forwards about 8 game hours in under a minute, and players use x2 and x3 now and then. We use **1 real hour of play = 3.5 game days** for planning. So:
+
+- **2 hours of play = end of game day 7.**
+- **8 hours of play = end of game day 28.**
+- The 30-day soak covers about 8.5 hours.
+
+### 8.6 The acceptable band (soak checks this every game day)
+
+The band anchors are 25 to 40 % at day 7 (2 hours) and 85 to 100 % at day 28 (8 hours). The rows between are linear between the anchor points listed under the table. The soak fails a run if the reference profile's R(d) is outside `[low, high]` on any day, and prints the day, R and the band.
+
+| Day | Low % | High % | | Day | Low % | High % | | Day | Low % | High % |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 4 | 20 | | 11 | 36 | 56 | | 21 | 65 | 88 |
+| 2 | 8 | 25 | | 12 | 39 | 60 | | 22 | 68 | 90 |
+| 3 | 11 | 30 | | 13 | 42 | 64 | | 23 | 71 | 91 |
+| 4 | 14 | 34 | | 14 | 45 | 68 | | 24 | 74 | 93 |
+| 5 | 18 | 37 | | 15 | 48 | 71 | | 25 | 76 | 95 |
+| 6 | 22 | 38 | | 16 | 51 | 74 | | 26 | 79 | 97 |
+| 7 | **25** | **40** | | 17 | 54 | 77 | | 27 | 82 | 98 |
+| 8 | 28 | 44 | | 18 | 56 | 79 | | 28 | **85** | **100** |
+| 9 | 31 | 48 | | 19 | 59 | 82 | | 29 | 86 | 100 |
+| 10 | 34 | 52 | | 20 | 62 | 85 | | 30 | 88 | 100 |
+
+Anchors (day, %): low (1, 4), (7, 25), (14, 45), (21, 65), (28, 85), (30, 88). High (1, 20), (3, 30), (5, 37), (7, 40), (14, 68), (21, 88), (28, 100), (30, 100). Values are rounded half up. Days after 30 are not checked.
+
+**Secondary check (warning, not failure):** `heartsEarnedTotal` at the end of days 7, 14, 21 and 28 should be within 0.7x to 1.35x of the reference curve below. Outside that, the soak prints a warning for balance-analyst.
+
+### 8.7 Reference curve (what the numbers above produce)
+
+Modelled from 8.2 and 8.3 with the reference profile in 8.8 (mood multiplier about 1.15). This is the target the band was built around.
+
+| End of day | Hearts earned (full) | Unlocked items (full, of 120) | R full | R MVP |
+| --- | --- | --- | --- | --- |
+| 1 | about 160 | 41 | 11 % | 7 % |
+| 7 | about 1,620 | 69 | 39 % | 38 % |
+| 14 | about 3,580 | 89 | 62 % | 63 % |
+| 21 | about 5,180 | 107 | 78 % | 78 % |
+| 28 | about 7,240 | 120 | 93 % | 97 % |
+| 30 | about 7,800 | 120 | 96 % | 97 % |
+
+Early days are limited by Hearts (lots unlocked, not all affordable). Late days are limited by unlocks (bond 4, aspiration tier 4, the last Poe trades). This is on purpose: the last 10 % comes from the cats and the aspirations, not from grinding.
+
+### 8.8 Soak profiles
+
+**Reference profile** (the band applies to this one). Free will is on, and each game day the soak driver also:
+
+1. Queues actions that complete 2 of the day's wishes on odd days and all 3 on even days, where the context allows.
+2. Plays 5 minigames a day, resolved at score 0.6 (the autonomous rule), spread over training, sushi, the rusk dunk and records.
+3. Races every Saturday (score 0.6 per station).
+4. Every evening, places every gift item and buys the cheapest affordable unlocked items until Hearts drop under 50, and places them in the room with the lowest Cosy.
+5. Trades with Poe whenever she holds a Shiny Trinket and Poe is there.
+6. Stargazes every second clear night and takes 2 photos a day with at least one cat in frame.
+7. Bonds, aspirations and stickers progress only through the normal rules.
+
+**Idle profile** (free will only, no driver). Not held to the band. Must pass:
+
+- R(d) never decreases.
+- R(30) >= 20 %.
+- Hearts never negative, never NaN.
+
+**Both profiles:** `hearts >= 0` always, `heartsEarnedTotal` never decreases, and no single game day earns more than 1,200 Hearts (a guard against loops).
+
+### 8.9 If the soak is out of band
+
+Tune in this order, one step at a time, and re-run:
+
+1. Start group prices (8.3) up or down by 10 %. This moves days 1 to 10.
+2. Wish Hearts (15 / 25 / 40) by 5 each. This moves the whole curve evenly.
+3. Aspiration tier Hearts. This moves days 10 to 25.
+4. Unlock days of Pickle's new stock. This moves the late plateau.
+
+Never fix the band by adding a cost, a timer or a loss.
 
