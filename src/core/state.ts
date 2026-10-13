@@ -5,12 +5,15 @@
  */
 import { createRng } from './rng';
 import {
+  CAT_NAMES,
   HYROX_ORDER,
   SAVE_VERSION,
   VISITOR_NAMES,
   asEntityId,
+  type CatName,
   type ComponentKey,
   type ComponentStore,
+  type DailyState,
   type Components,
   type DayPhase,
   type EntityId,
@@ -38,6 +41,7 @@ const COMPONENT_KEYS: readonly ComponentKey[] = [
   'carryable',
   'light',
   'box',
+  'mess',
 ];
 
 export function componentKeys(): readonly ComponentKey[] {
@@ -62,6 +66,7 @@ export function emptyComponentStore(): ComponentStore {
     carryable: {},
     light: {},
     box: {},
+    mess: {},
   };
 }
 
@@ -119,6 +124,31 @@ function perStation<T>(v: T): Record<HyroxStation, T> {
   return out;
 }
 
+function perCat<T>(v: T): Record<CatName, T> {
+  const out = {} as Record<CatName, T>;
+  for (const c of CAT_NAMES) out[c] = v;
+  return out;
+}
+
+/** Fresh per-day counters for a day (reset at 00:00). */
+export function emptyDaily(day: number): DailyState {
+  return {
+    day,
+    coffees: 0,
+    knocks: 0,
+    knockTrinkets: 0,
+    bondGained: perCat(0),
+    bondLost: perCat(0),
+    shadowTrust: 0,
+    uses: {},
+    minigamesPaid: 0,
+    photosPaid: 0,
+    racePaid: false,
+    sparWinsPaid: 0,
+    extra: {},
+  };
+}
+
 function perVisitor<T>(v: T): Record<VisitorName, T> {
   const out = {} as Record<VisitorName, T>;
   for (const s of VISITOR_NAMES) out[s] = v;
@@ -141,9 +171,9 @@ export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}):
     time: {
       tick: 0,
       day: 1,
-      minuteOfDay: opts.startMinute ?? 8 * 60,
-      weekday: opts.startWeekday ?? 'mon',
-      phase: opts.phase ?? 'morning',
+      minuteOfDay: opts.startMinute ?? 9 * 60,
+      weekday: opts.startWeekday ?? 'thu',
+      phase: opts.phase ?? 'day',
       speed: 1,
       fastForward: 1,
       realTime: false,
@@ -154,13 +184,15 @@ export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}):
     nextActionId: 1,
     components: emptyComponentStore(),
     lot: opts.lot ?? emptyLot(0, 0),
-    environment: { weather: 'clear', music: null, starsTonight: 0 },
-    hearts: { balance: opts.hearts ?? 0, earned: 0, spent: 0 },
-    inventory: { stored: {}, trinkets: 0, orders: [], nextOrderId: 1 },
-    unlocks: { items: {}, interactions: {}, outfits: {}, paints: {}, titles: {}, activities: {} },
+    environment: { weather: 'clear', rain: null, lastRainDay: null, music: null, lanternsUntilTick: null, starsTonight: 0 },
+    hearts: { balance: opts.hearts ?? 0, earnedTotal: 0, spent: 0, earnedToday: 0 },
+    inventory: { stored: {}, storedFree: {}, freeOrigin: {}, trinkets: 0, orders: [], nextOrderId: 1 },
+    unlocks: { items: {}, interactions: {}, outfits: {}, paints: {}, titles: {}, activities: {}, codes: {} },
     wishes: { active: [], rolledDay: 0, completedTotal: 0, history: {} },
     aspirations: { tiers: {}, title: null },
     mail: { inbox: [], sent: {}, personalSent: [], waiting: 0, scheduled: [] },
+    daily: emptyDaily(1),
+    quirks: { active: {}, zoomiesAt: null },
     stickers: { earned: {} },
     records: {
       hyrox: { skill: perStation(0), stationPbMs: perStation<number | null>(null), racePbMs: null, races: [], medals: [] },
@@ -168,7 +200,13 @@ export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}):
     },
     wardrobe: { worn: { ellie: {}, george: {}, salem: {}, shadow: {}, peaches: {} }, streakColor: '#3fae6a' },
     album: { photos: [], nextPhotoNo: 1 },
-    visitors: { nextCheckTick: perVisitor(0), visits: perVisitor(0), bruceSpotted: {}, poeOffers: [] },
+    visitors: {
+      nextCheckTick: perVisitor(0),
+      visits: perVisitor(0),
+      bruce: { spotted: 0, found: {}, movedIn: false, visitsToday: 0, lastVisitTick: null, visit: null },
+      poe: { visit: null, lastVisitDay: null, offers: [], trades: 0 },
+      pickle: { visit: null, deliveries: 0 },
+    },
     onboarding: { step: null, stepIndex: 0, done: false, skipped: false },
     housewarming: { status: 'locked', day: null },
     activity: null,

@@ -10,5 +10,6 @@ export * from './strings';
 export * from './hash';
 export * from './geometry';
 export * from './math';
+export * from './rules';
 export * from './content';
 export * from './state';

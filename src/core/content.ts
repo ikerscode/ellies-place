@@ -1,7 +1,8 @@
 /**
  * Builds lookup maps over the authored content tables and checks them.
  */
-import type { ContentDb, ContentIndex } from './types';
+import { parseUnlockCode } from './rules';
+import { ROOM_KINDS, asAspirationId, type ContentDb, type ContentIndex, type RoomKind } from './types';
 
 function indexBy<K, V>(rows: readonly V[], key: (v: V) => K, table: string, problems: string[]): Map<K, V> {
   const m = new Map<K, V>();
@@ -55,7 +56,35 @@ function buildIndexInto(db: ContentDb, problems: string[]): ContentIndex {
     }
     if (item.footprint.w < 1 || item.footprint.h < 1) problems.push(`items: ${item.id} has an empty footprint`);
     if (item.price < 0) problems.push(`items: ${item.id} has a negative price`);
+    if (item.maxCopies !== undefined && item.maxCopies < 1) problems.push(`items: ${item.id} has maxCopies below 1`);
+    const unlock = parseUnlockCode(item.unlock);
+    if (unlock === null) problems.push(`items: ${item.id} has a malformed unlock code ${item.unlock}`);
+    else if (unlock.kind === 'aspiration' && db.aspirations.length > 0) {
+      const asp = index.aspirations.get(asAspirationId(`asp.${unlock.aspiration}`));
+      if (!asp) problems.push(`items: ${item.id} unlocks from unknown aspiration asp.${unlock.aspiration}`);
+      else if (asp.tiers.length < unlock.tier) problems.push(`items: ${item.id} unlocks from missing tier ${item.unlock}`);
+    }
+    for (const t of item.tags) {
+      if (t.startsWith('room.') && !ROOM_KINDS.includes(t.slice(5) as RoomKind)) problems.push(`items: ${item.id} has unknown room tag ${t}`);
+    }
   }
+  for (const it of db.interactions) {
+    for (const f of it.autoFetch ?? []) {
+      if (!index.interactions.has(f)) problems.push(`interactions: ${it.id} auto-fetches unknown interaction ${f}`);
+    }
+    if (it.window && (it.window.from < 0 || it.window.from >= 1440 || it.window.to < 0 || it.window.to > 1440)) {
+      problems.push(`interactions: ${it.id} has a window outside 0..1440`);
+    }
+    if (it.tags.length === 0) problems.push(`interactions: ${it.id} has no tags`);
+  }
+  for (const a of db.aspirations) {
+    a.tiers.forEach((t, i) => {
+      if (t.gift && !index.items.has(t.gift)) problems.push(`aspirations: ${a.id} tier ${i + 1} gift ${t.gift} unknown`);
+    });
+  }
+  const e = db.economy;
+  if (!(e.priceScale > 0) || !(e.priceStep > 0)) problems.push('economy: priceScale and priceStep must be positive');
+  if (e.trickle.some((r) => r.hearts < 0)) problems.push('economy: negative trickle');
   for (const s of db.hyrox) {
     if (!index.items.has(s.item)) problems.push(`hyrox: ${s.station} references unknown item ${s.item}`);
   }

@@ -4,7 +4,9 @@ import {
   bondLevelOf,
   clamp100,
   clockText,
+  darknessAt,
   effectiveSteps,
+  MOOD_BAND_FLOORS,
   hourOf,
   lerpRange,
   minuteInRange,
@@ -66,11 +68,33 @@ describe('math helpers', () => {
     const s = createEmptySimState(1);
     expect(effectiveSteps(s.time, 'live')).toBe(1);
     s.time.speed = 3;
-    s.time.fastForward = 4;
-    expect(effectiveSteps(s.time, 'live')).toBe(12);
+    expect(effectiveSteps(s.time, 'live')).toBe(3);
+    // Sleep fast-forward replaces speed (200 ticks/s at 10), it does not multiply it.
+    s.time.fastForward = 10;
+    expect(effectiveSteps(s.time, 'live')).toBe(10);
+    expect(effectiveSteps(s.time, 'cutscene')).toBe(1);
     expect(effectiveSteps(s.time, 'build')).toBe(0);
     expect(effectiveSteps(s.time, 'activity')).toBe(0);
+    s.time.realTime = true;
+    expect(effectiveSteps(s.time, 'live')).toBe(3);
+    s.time.realTime = false;
     s.time.speed = 0;
     expect(effectiveSteps(s.time, 'live')).toBe(0);
+  });
+
+  it('darkness follows the light phases', () => {
+    const phases = { morning: 300, day: 420, evening: 1110, night: 1260 };
+    expect(darknessAt(0, phases, 0.65)).toBeCloseTo(0.65);
+    expect(darknessAt(360, phases, 0.65)).toBeCloseTo(0.325);
+    expect(darknessAt(720, phases, 0.65)).toBe(0);
+    expect(darknessAt(1185, phases, 0.65)).toBeCloseTo(0.325);
+    expect(darknessAt(1300, phases, 0.65)).toBeCloseTo(0.65);
+  });
+
+  it('mood bands default to the frozen steps', () => {
+    expect(MOOD_BAND_FLOORS).toEqual({ mopey: 0, low: 25, okay: 45, good: 65, great: 80 });
+    expect(moodBandOf(24)).toBe('mopey');
+    expect(moodBandOf(45)).toBe('okay');
+    expect(moodBandOf(95)).toBe('great');
   });
 });
