@@ -8,8 +8,10 @@ import { mergeStringTables } from '../../core/strings';
 import type { StringTable } from '../../core/types';
 import { cats, ellie, visitors } from './cats';
 import { interactions } from './interactions';
+import { mail } from './mail';
 import { onboarding } from './onboarding';
 import { ui } from './ui';
+import { aspirations, wishes } from './wishes';
 
 export type { StringTable, StringKey, StringVars, StringLookup } from '../../core/types';
 
@@ -21,6 +23,9 @@ export const STRING_DOMAINS: Readonly<Record<string, StringTable>> = {
   ui,
   onboarding,
   interactions,
+  wishes,
+  aspirations,
+  mail,
 };
 
 /** Every domain table merged. Throws at import on a duplicate key. */

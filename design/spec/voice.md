@@ -34,6 +34,8 @@ The unit test in `tests/unit/strings/` enforces most of these.
 | --- | --- | --- |
 | Interaction labels | `int.` | 22 characters |
 | Wish titles | `wish.` | 40 characters |
+| Aspiration names and tier titles | `asp.*.name`, `asp.*.tier.n` | 40 characters |
+| Aspiration blurbs | `asp.*.desc` | 80 characters |
 | Speech bubbles | `cat.`, `visitor.`, `ellie.`, `onboard.` | 70 characters |
 | Toasts and hints | `ui.toast.`, `ui.hint.` | 80 characters |
 | Confirm prompts and taglines | `*Confirm`, `*.tagline` | 80 characters |
