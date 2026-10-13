@@ -1,24 +1,33 @@
 /**
- * Local AudioCue union. The architect owns the shared `AudioCue` in
- * src/core/types.ts; this is audio-dev's proposed full list (see
- * CONTRACT_REQUEST.md). It is a superset of the Wave 0 draft, so a core
- * `AudioCue` is always a valid `Cue` here.
+ * Local cue union. The shared `AudioCue` lives in src/core/types.ts; this file
+ * keeps audio-dev's local `Cue`, which must stay a superset of it. The
+ * compile-time checks at the bottom fail the typecheck if core ever gains a
+ * cue this file does not know.
  */
-import type { CatName } from '../core/types';
+import type {
+  AudioCue,
+  BlipVoice,
+  FloorSound,
+  HitGrade,
+  HyroxStation,
+  Meower,
+  SimpleCueName as CoreSimpleCueName,
+} from '../core/types';
+import { HYROX_ORDER } from '../core/types';
 
-/** Anything that meows with a game 1 signature: the four cats plus Bruce. */
-export type Meower = CatName | 'bruce';
+export type { Meower, HitGrade };
 /** Dialogue blip voices (game 1's VOICE table plus Pickle). */
-export type Voice = 'ellie' | Meower | 'poe' | 'pickle';
+export type Voice = BlipVoice;
 
-export type FloorKind = 'wood' | 'tile' | 'carpet' | 'rug' | 'grass' | 'stone' | 'gymMat' | 'gravel';
+export type FloorKind = FloorSound;
 export const FLOOR_KINDS: readonly FloorKind[] = ['wood', 'tile', 'carpet', 'rug', 'grass', 'stone', 'gymMat', 'gravel'];
 
-export type GymStation = 'ski' | 'sledPush' | 'sledPull' | 'burpee' | 'row' | 'carry' | 'lunge' | 'wallBall' | 'treadmill' | 'kettlebell';
-export const GYM_STATIONS: readonly GymStation[] = ['ski', 'sledPush', 'sledPull', 'burpee', 'row', 'carry', 'lunge', 'wallBall', 'treadmill', 'kettlebell'];
+/** The eight Hyrox stations plus two home-gym extras. */
+export type GymStation = HyroxStation | 'treadmill' | 'kettlebell';
+export const GYM_STATIONS: readonly GymStation[] = [...HYROX_ORDER, 'treadmill', 'kettlebell'];
 
-/** Hit quality in timing minigames. A miss is soft, never a buzzer. */
-export type HitGrade = 'perfect' | 'good' | 'miss';
+export const MEOWERS: readonly Meower[] = ['george', 'salem', 'shadow', 'peaches', 'bruce'];
+export const VOICES: readonly Voice[] = ['ellie', ...MEOWERS, 'poe', 'pickle'];
 
 /** Cues without a payload. */
 export const SIMPLE_CUES = [
@@ -112,6 +121,10 @@ export const SIMPLE_CUES = [
   // Visitors
   'poe.caw',
   'pickle.ribbit',
+  // Local extras (see CONTRACT_REQUEST.md)
+  'build.wall',
+  'build.floor',
+  'race.horn',
 ] as const;
 
 export type SimpleCueName = (typeof SIMPLE_CUES)[number];
@@ -151,3 +164,10 @@ export function isCue(x: unknown): x is Cue {
   const c = (x as { cue?: unknown }).cue;
   return typeof c === 'string' && (ALL_CUE_NAMES as readonly string[]).includes(c);
 }
+
+/** Core cues are always local cues: this assignment is the superset check. */
+export const fromCore = (c: AudioCue): Cue => c;
+
+/** Fails the typecheck if a core simple cue is missing from SIMPLE_CUES. */
+type MissingSimple = Exclude<CoreSimpleCueName, SimpleCueName>;
+export const SIMPLE_CUES_COVER_CORE: [MissingSimple] extends [never] ? true : MissingSimple = true;

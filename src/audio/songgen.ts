@@ -7,6 +7,7 @@
  * from, or shaped after, any real song.
  */
 import { createRng, nextFloat, nextInt, pick, type RngState } from '../core/rng';
+import type { RadioStation } from '../core/types';
 import {
   BEATS_PER_BAR,
   MAJOR_SCALE,
@@ -17,7 +18,7 @@ import {
   type Song,
 } from './notes';
 
-export type StationId = 'heavy' | 'lofi' | 'cosy';
+export type StationId = RadioStation;
 export const STATIONS: readonly StationId[] = ['heavy', 'lofi', 'cosy'];
 
 interface StationRules {
