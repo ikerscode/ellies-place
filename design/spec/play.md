@@ -985,7 +985,7 @@ Reference pace: tier 1 day 4, tier 2 day 12, tier 3 day 19, tier 4 day 29.
 ### 8.1 Principles
 
 - Hearts only go up from play. The only thing that spends Hearts is buying catalog items, and selling a bought item refunds what she paid, in full (BRIEF section 8). So spending is never a loss.
-- Items she got free (aspiration gifts, sticker gifts, Poe trades, bond gifts) can be put away into storage and placed again, but are never sold for Hearts. Their sell button reads `build.put_away` "Put away".
+- Items she got free (aspiration gifts, sticker gifts, Poe trades, mail gifts) can be put away into storage and placed again, but are never sold for Hearts. Their sell button reads `build.put_away` "Put away".
 - No consumables cost Hearts. Food, coffee, rusks, ham and Snack Tins are free.
 - No timers, no decay of Hearts, no absence penalty, no daily login bonus.
 - **Starting Hearts: 150.** Enough for a lamp, a plant and a rug on day 1.
@@ -1134,7 +1134,7 @@ Early days are limited by Hearts (lots unlocked, not all affordable). Late days 
 - R(30) >= 20 %.
 - Hearts never negative, never NaN.
 
-**Both profiles:** `hearts >= 0` always, `heartsEarnedTotal` never decreases, and no single game day earns more than 1,200 Hearts (a guard against loops).
+**Both profiles:** `hearts >= 0` always, `heartsEarnedTotal` never decreases, and no single game day earns more than 2,000 Hearts (a guard against loops; the biggest legitimate day is about 1,300).
 
 ### 8.9 If the soak is out of band
 
@@ -1146,4 +1146,198 @@ Tune in this order, one step at a time, and re-run:
 4. Unlock days of Pickle's new stock. This moves the late plateau.
 
 Never fix the band by adding a cost, a timer or a loss.
+
+---
+
+## 9. Onboarding: the first day
+
+### 9.1 Rules
+
+- Day 1 starts at **09:00 on a Monday**. Ellie stands just inside the front door. The cats are already in (they came with the furniture).
+- Starting needs (`sim.md` may adjust): Energy 80, Hunger 60, Fun 60, Fitness 30, Calm 60. Fitness 30 is what the race model's first-race example assumes.
+- **The game clock is frozen during the tour** and free will is off. Both start when the tour ends. Reason: no pressure while learning.
+- **Skippable:** the title card offers `onb.start` "Start the tour" and `onb.skip` "Skip the tour". Every beat also shows a small `onb.skip_rest` button. Skipping jumps to beat 7. Every skipped lesson becomes a tip card in the journal (`journal.tips`) and a one-time hint the first time she opens that system.
+- **Nothing can go wrong:** each beat waits for its action. After 20 real seconds without it, the teaching cat repeats a hint (`onb.<beat>.hint`) and a soft arrow points at the target. After 60 s a `onb.next` "Next" button appears, so no beat can block.
+- Each beat is taught by one character, in their own voice, and teaches exactly one thing (BRIEF section 14).
+
+### 9.2 Script beats
+
+| # | Who | Where | Teaches | She does (completes the beat) | Lines (keys, placeholders) |
+| --- | --- | --- | --- | --- | --- |
+| 0 | none | Front door | Title | Picks start or skip | `onb.title` "Ellie's Place", a 3 s pan across the flat |
+| 1 | George | Bedroom | Moving and interacting: click the floor to walk, click an object for its petal menu | Walks to the bedroom, clicks the bed and picks any petal | `onb.george.1` "A royal tour. Follow me. Slowly, I am old and important." `onb.george.bed` "This is your bed. It was mine. You may borrow it." (BRIEF line) `onb.george.hint` |
+| 2 | Salem | Kitchen | Needs and the action queue | Opens the needs panel (it auto-opens with a highlight), then queues 2 actions (fill the cat bowls, then a fridge snack) and watches them run from the queue top-left. Cancelling one is shown, not required. | `onb.salem.1` (Salem is hungry and also excited about everything), `onb.salem.queue`, `onb.salem.hint` |
+| 3 | Peaches | Living room | The record player and mood | Peaches is sitting on the lid. Ellie plays the Cosy station. The HUD mood face lights up and the Hearts multiplier tooltip shows once. | `onb.peaches.1` "Oh, that's the spot." (game 1 voice sample) `onb.peaches.mood`, `onb.peaches.hint` |
+| 4 | Shadow | On top of the wardrobe | Build mode | Presses B (or the Build button), moves the small lamp anywhere, presses B again. The cats inspect the lamp. | `onb.shadow.1` "Move things. Quietly." (BRIEF line) `onb.shadow.done`, `onb.shadow.hint` |
+| 5 | Pickle | Front door (knock) | The catalog | Answers the door. Pickle hands over a welcome box (with `rusk_jar` refills and a free `welcome_plant`, a start-group item gifted) and opens the catalog. She browses and closes it. Ordering is optional. The empty box stays; Salem gets in. | `onb.pickle.1`, `onb.pickle.catalog`, `onb.pickle.bye` (each with at least one "Ribbit") |
+| 6 | George | Living room | Wishes | George announces her first decrees. The three fixed day-1 wishes appear (`wish.bow_george`, `wish.coffee_rusk_grass`, `wish.play_heavy`) and the journal button pulses once. | `onb.george.wishes` |
+| 7 | none | | End | Clock starts at 09:00, free will on, `mail.pickle.welcome` waits in the mailbox, `onboardingDone = true` | `onb.done` toast |
+
+Real time for the whole tour: about 3 to 4 minutes. Hearts: none during the tour (the starting 150 is already hers).
+
+---
+
+## 10. Secrets and stickers
+
+### 10.1 Rules
+
+- The sticker book is a journal page (`journal.stickers`). Every sticker shows as a silhouette with `stk.<id>.hint` until earned. Secret stickers (marked S) show only "?" until earned.
+- Each sticker pays **15 Hearts** (not mood-multiplied), plays `stk.earned` with a peel sound, and some give a gift item or an outfit.
+- Stickers are never lost or reset.
+
+### 10.2 Bruce's hiding places
+
+Bruce appears at random, seeded, in one of 5 places, at most once per game day, from day 2. Each appearance lasts 2 game hours or until she clicks him. Clicking him (`bruce.spot`) makes him deny it (`bruce.deny.<place>.<n>`, his voice: "Nobody invited me. I came anyway.") and walk off. The place he picks is weighted toward places not yet spotted (x3).
+
+| Place id | Where |
+| --- | --- |
+| `bruce.fence` | The garden fence |
+| `bruce.table` | Under the kitchen table |
+| `bruce.tv` | Behind the TV |
+| `bruce.fridge` | On top of the fridge |
+| `bruce.box` | In a delivery box (only when an empty box is in the house) |
+
+After all 5 are spotted, Bruce **lives on the garden wall** for good (`bruceOnWall = true`). He is there every day from 08:00 to 20:00, can be petted (`bruce.pet`), and still denies being there.
+
+### 10.3 Sticker list (36: 18 MVP)
+
+| # | Id | Name key | Condition | Reward beyond 15 Hearts | S | MVP |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `stk.bruce_fence` | `stk.bruce_fence.name` | Spot Bruce at the fence | | S | Y |
+| 2 | `stk.bruce_table` | `stk.bruce_table.name` | Spot Bruce under the kitchen table | | S | Y |
+| 3 | `stk.bruce_tv` | `stk.bruce_tv.name` | Spot Bruce behind the TV | | S | Y |
+| 4 | `stk.bruce_fridge` | `stk.bruce_fridge.name` | Spot Bruce on top of the fridge | | S | Y |
+| 5 | `stk.bruce_box` | `stk.bruce_box.name` | Spot Bruce in a delivery box | | S | Y |
+| 6 | `stk.bruce_all` | `stk.bruce_all.name` | All 5 Bruce spots | Gift `bruce_wall_cushion`; Bruce moves onto the wall | | Y |
+| 7 | `stk.salem_50_boxes` | `stk.salem_50_boxes.name` | Salem has sat in boxes 50 times (`salemBoxSits`, each new sit after leaving counts) | Gift `cardboard_castle` | | Y |
+| 8 | `stk.rusk_10` | `stk.rusk_10.name` | 10 perfect dunks | Gift `vintage_rusk_tin` | | Y |
+| 9 | `stk.peaches_headbang` | `stk.peaches_headbang.name` | Peaches headbangs with her | | | Y |
+| 10 | `stk.shadow_lap` | `stk.shadow_lap.name` | Shadow sits on her lap | | | Y |
+| 11 | `stk.george_knight` | `stk.george_knight.name` | George knights her (he calls her "Sir Ellie" from then on) | | | Y |
+| 12 | `stk.zoomies_photo` | `stk.zoomies_photo.name` | A photo tagged `zoomies_3am` | | S | Y |
+| 13 | `stk.first_race` | `stk.first_race.name` | Finish a race | | | Y |
+| 14 | `stk.medal_gold` | `stk.medal_gold.name` | Gold medal | | | F |
+| 15 | `stk.royal_medal` | `stk.royal_medal.name` | The King's Medal (under 1:00:00) | | S | F |
+| 16 | `stk.all_stations_5` | `stk.all_stations_5.name` | Every station skill at 5 or more | | | F |
+| 17 | `stk.sushi_perfect` | `stk.sushi_perfect.name` | A sushi plate scoring 0.9 or more | | | Y |
+| 18 | `stk.fish_denied_10` | `stk.fish_denied_10.name` | George denied fish 10 times | | | Y |
+| 19 | `stk.cat_constellation` | `stk.cat_constellation.name` | See the cat constellation | | S | Y |
+| 20 | `stk.heart_constellation` | `stk.heart_constellation.name` | See the heart constellation | Gift `star_map_print`, streak `streak.frost` | S | F |
+| 21 | `stk.wish_star_10` | `stk.wish_star_10.name` | 10 star wishes | Gift `wish_jar` | | F |
+| 22 | `stk.critter_starter` | `stk.critter_starter.name` | Choose a Critterbound starter | | | Y |
+| 23 | `stk.critter_all6` | `stk.critter_all6.name` | Befriend all 6 critters | Gift `critter_plush_set`, streak `streak.teal` | | F |
+| 24 | `stk.critter_champion` | `stk.critter_champion.name` | Beat all 3 wanderers | Gift `critterbound_poster` | | F |
+| 25 | `stk.poe_10` | `stk.poe_10.name` | 10 Poe trades | Gift `shiny_display_case` | | F |
+| 26 | `stk.photo_all_four` | `stk.photo_all_four.name` | A photo tagged `all_four` | | | Y |
+| 27 | `stk.bruce_photo` | `stk.bruce_photo.name` | A photo with Bruce in it | | S | F |
+| 28 | `stk.housewarming` | `stk.housewarming.name` | Throw the housewarming | | | Y |
+| 29 | `stk.salem_ham_10` | `stk.salem_ham_10.name` | Give Salem ham 10 times | | | F |
+| 30 | `stk.peaches_sunbeams` | `stk.peaches_sunbeams.name` | See Peaches nap in sunbeams in 3 different rooms | | | F |
+| 31 | `stk.game1_wardrobe` | `stk.game1_wardrobe.name` | Wear every game 1 outfit at least once (all 11) | | | F |
+| 32 | `stk.wishes_50` | `stk.wishes_50.name` | Complete 50 wishes | | | F |
+| 33 | `stk.cosy_100` | `stk.cosy_100.name` | Any room at Cosy 100 | | | F |
+| 34 | `stk.all_on_bed` | `stk.all_on_bed.name` | All four cats on the bed at the 03:00 check | | | F |
+| 35 | `stk.salem_reads` | `stk.salem_reads.name` | Salem "reads" a letter (sits on an open letter on the mail table; he can't read) | | S | F |
+| 36 | `stk.grazie_print` | `stk.grazie_print.name` | Hang the framed print (only if the flag in `personal.ts` is on; otherwise this row is hidden and not counted) | | S | F |
+
+MVP: 18. Gift items from stickers: full 8 (`bruce_wall_cushion`, `cardboard_castle`, `vintage_rusk_tin`, `star_map_print`, `wish_jar`, `critter_plush_set`, `critterbound_poster`, `shiny_display_case`); MVP 3 (the first three). This matches 8.3.
+
+**Secrets** in the journal (`journal.secrets`) are the S rows above plus the two constellations, Bruce on the wall, and George's "Sir Ellie". They appear in the journal only once found.
+
+---
+
+## 11. Mail
+
+### 11.1 Schedule rules
+
+| Rule | Value |
+| --- | --- |
+| Delivery | Every morning at 08:00, into the mailbox on the front step. A little flag goes up. Pickle's delivery notes come inside the order box instead, and also file into the mail list. |
+| Per morning | At most 2 letters from the queue, plus any personal letters (no cap for those). |
+| Priority | Personal, then race, then housewarming, then event letters, then cat notes, then Pickle's other letters. Ties: oldest trigger first. |
+| Timing | A letter whose trigger fires after 08:00 waits for the next morning. |
+| Overflow | Letters not delivered stay queued in order. The queue never drops a letter. |
+| Caps | Unread letters in the mailbox: 30 (beyond that, new ones wait in the queue). Archive in the journal (`journal.mail`): 400 letters. 30 days produce about 70, so it never fills in practice. |
+| Reading | Click the mailbox, then a letter. Mail uses IM Fell English. Reading sets `read = true`. Attachments are given when the letter is opened. |
+| Cats | When she reads mail, Salem tries to sit on the letter (`ev.mail_read`). |
+
+**Personal slot.** `src/content/personal.ts` can list letters with either a game `day` or a real date (`MM-DD`, checked against the injected clock each morning; it delivers on the first morning on or after that date). They always deliver, are never counted in the rows below, and are empty by default. Agents never write their content.
+
+### 11.2 Mail list (31 rows: 11 MVP)
+
+Keys: `mail.<id>.from`, `mail.<id>.subject`, `mail.<id>.body`.
+
+| # | Id | From | Trigger and schedule | Attachment | MVP |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `mail.pickle.welcome` | Pickle | End of onboarding (in the mailbox at once, day 1) | none | Y |
+| 2 | `mail.pickle.delivery.a` | Pickle | In each order box; variant = order count mod 6 (a to f) | none | Y |
+| 3 | `mail.pickle.delivery.b` | Pickle | as above | none | F |
+| 4 | `mail.pickle.delivery.c` | Pickle | as above | none | F |
+| 5 | `mail.pickle.delivery.d` | Pickle | as above | none | F |
+| 6 | `mail.pickle.delivery.e` | Pickle | as above | none | F |
+| 7 | `mail.pickle.delivery.f` | Pickle | as above | none | F |
+| 8 | `mail.pickle.new_stock` | Pickle | Morning of each new-stock day (8.3); names the new item | Unlocks that day's item; the first one (day 2, full) also includes `out.bow` | Y |
+| 9 | `mail.pickle.salem_box` | Pickle | Morning after `salemBoxSits` reaches 10 | none | F |
+| 10 | `mail.pickle.housewarming_rsvp` | Pickle | Morning after the housewarming becomes available (section 12) | Free `garden_lanterns` if she has none | Y |
+| 11 | `mail.pickle.month` | Pickle | Morning of day 30 | 30 Hearts | F |
+| 12 | `mail.poe.receipt.a` | Poe | Morning after each Poe trade; variant = trade count mod 3 | none | Y |
+| 13 | `mail.poe.receipt.b` | Poe | as above | none | F |
+| 14 | `mail.poe.receipt.c` | Poe | as above | none | F |
+| 15 | `mail.poe.wanted` | Poe | Morning after her 5th trade: a list of shiny things he wants | none | F |
+| 16 | `mail.george.decree` | George | Morning of day 2 | 10 Hearts ("a royal stipend") | Y |
+| 17 | `mail.george.knighthood` | George | Morning after the knighting | `out.knight_sash` | F |
+| 18 | `mail.george.fish_petition` | George | Morning after `fishDenied` reaches 5 | none | F |
+| 19 | `mail.salem.paw_note` | Salem | Morning after the first ham. A paw print and a smudge, with a translation note from George. | none | Y |
+| 20 | `mail.salem.box_review` | Salem | Morning after `salemBoxSits` reaches 25 | none | F |
+| 21 | `mail.shadow.note` | Shadow | Morning after Shadow reaches bond level 2 | none | F |
+| 22 | `mail.shadow.lap` | Shadow | Morning after the first lap sit | none | F |
+| 23 | `mail.peaches.playlist` | Peaches | Morning after 3 game hours of records | none | F |
+| 24 | `mail.peaches.sunbeams` | Peaches | Morning after she has seen Peaches in 10 sunbeams | none | F |
+| 25 | `mail.race.confirm` | Race office | Every Friday morning (days 5, 12, 19, ...) | none | Y |
+| 26 | `mail.race.results` | Race office | Morning after each race: time, medal, PBs | none | Y |
+| 27 | `mail.race.medal` | Race office | Morning after the first bronze, silver, gold or King's Medal (one letter per medal type) | none | F |
+| 28 | `mail.bruce.not_here` | Bruce | Morning after the first Bruce spot: he was not there | none | Y |
+| 29 | `mail.bruce.wall` | Bruce | Morning after all 5 spots | none | F |
+| 30 | `mail.critter.flyer` | Pickle | Morning of day 4: a flyer for Critterbound | none | F |
+| 31 | `mail.housewarming.thanks` | All the guests | Morning after the housewarming | `keepsake_polaroid` (see 12) | Y |
+
+The race office is a plain sender with no logo or brand (`mail.race.from`). Race letters never use any real event branding.
+
+---
+
+## 12. Housewarming
+
+### 12.1 Trigger
+
+The housewarming becomes **available** when all of these are true at the end of a game day:
+
+1. Home Maker tier 3 is done (all 6 rooms at Cosy 45 or more, average 60 or more).
+2. It is day 5 or later.
+3. It has not happened yet.
+
+Then `mail.pickle.housewarming_rsvp` arrives next morning. Its two buttons: `hw.rsvp.tonight` "Tonight" and `hw.rsvp.later` "Not tonight". "Not tonight" keeps a button in the journal (`hw.journal.throw`) that sets it for the same evening on any later day. Nothing about the home has to stay cosy after it is available. Reference pace: available on day 11 or 12.
+
+### 12.2 Evening beats
+
+The party runs on the in-game clock that evening. Speed is locked to x1 from 19:00 until the credits end. Needs still change normally, but nothing can stop the party: if she is asleep at 19:00, she wakes up for it.
+
+| Time | Beat | What happens | Keys |
+| --- | --- | --- | --- |
+| 18:30 | Ready | Toast `hw.ready`. The cats start gathering in the living room. | `hw.ready` |
+| 19:00 | Pickle | A knock. Pickle arrives with a cake box (veggie, he insists). Salem gets in the cake box once it is empty. | `hw.pickle.<n>` |
+| 19:20 | Poe | Poe lands on the bird bath with something shiny as a gift (a free Shiny Trinket). | `hw.poe.<n>` |
+| 19:40 | Bruce | Bruce is on the garden wall. He was not invited. He came anyway. | `hw.bruce.<n>` |
+| 20:00 | Lanterns | Ellie lights the garden lanterns (automatic walk). Everyone moves out to the garden. The Cosy station plays. | `hw.lanterns` |
+| 20:20 | Photo | A group photo moment: the camera opens framed on everyone, she takes it (or it takes itself after 10 s). It is saved to the album with the polaroid filter and a George caption. | `hw.photo.caption` |
+| 20:40 | Dance | A short free dance (the dance minigame, optional; Skip at once is fine). Peaches bops, George does not. | |
+| 21:00 | Stars | Everyone lies in the grass. One guaranteed shooting star, with a star wish. | |
+| 21:15 | Credits | A short credits roll over the garden, about 60 real seconds (a callback to game 1's credits; text from the writer, no letters, no hearts text). | `hw.credits.*` |
+| After | Home | The guests leave one by one (`hw.bye.<guest>`). The game carries on. Free will resumes. | |
+
+### 12.3 Rewards
+
+- 200 Hearts, `stk.housewarming`, `streak.peach`.
+- The group photo in the album, and `keepsake_polaroid` (a decor item of that photo in a frame) through `mail.housewarming.thanks` next morning.
+- If `personal.ts` has the framed print flag on (default on), Pickle also brings `framed_print_grazie` ("Grazie per essere te stessa") as a separate gift item at 19:00, in its own small box. It is optional decor. She can place it or keep it in storage.
+- Calm +30, Fun +30 at the end of the night. `housewarmingDone = true`. The heart constellation becomes eligible on her next stargaze (5.3).
 
