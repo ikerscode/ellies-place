@@ -1,8 +1,8 @@
 # PROGRESS
 
 - **Start:** Mon 12 Oct 2026 22:34 SAST
-- **Last update:** Wed 14 Oct ~15:45 SAST
-- **Current wave:** 2 (foundations), batch A dispatched ~15:40 on Sonnet 5.5: sim-dev, world-dev, data (core), data-progress, save-dev, engine-dev (worktrees ~/Projects/ellies-place-wt/<id>, branches w2/<id>). Batch B next: ui-dev, pixel-artist A+D, pixel-artist B+C, qa-engineer (audio-dev skipped: engine already ported in Wave 1, integrator wires it).
+- **Last update:** Wed 14 Oct ~16:00 SAST
+- **Current wave:** 2 (foundations). Dispatched on Sonnet 5.5: sim-dev, world-dev, data (core), data-progress, engine-dev (~15:40); save-dev DONE (w2/save-dev bfbebdb); ui-dev, pixel-ad (A+D), pixel-bc (B+C) dispatched ~15:55. Left: qa-engineer (after sim/world land, needs headless boot), then integrator merge + Gate 2.
 - **Merged branches:** all Wave 1 (tag wave1-frozen, 2091686). Wave 2 none yet.
 - **Gate status:** Gate 1 GREEN (recheck READY, reports/wave1-recheck.md). Wave 1 gate done. WebKit still NOT run.
 
