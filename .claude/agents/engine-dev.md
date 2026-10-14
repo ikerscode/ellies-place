@@ -1,6 +1,6 @@
 ---
 name: engine-dev
-description: Builds the game engine (fixed-timestep loop, layered canvas renderer, sprite atlas, lighting and sunbeams, camera and scaling, input and picking, particles) and the Wave 5 juice pass.
+description: Builds the game engine (fixed-timestep loop, layered canvas renderer, sprite atlas, lighting and drawing sunbeams, camera and scaling, input and picking, particles) and the Wave 5 juice pass.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: inherit
 effort: high
@@ -22,7 +22,7 @@ Read `design/TECH.md`, `design/spec/contracts.md`, `design/spec/art.md` and `des
 - **Lighting:**
   - day and night tint driven by the sim clock
   - additive radial light sprites for lamps, lanterns and TV glow
-  - moving sunbeam patches cast from windows, with positions exposed to the sim so Peaches can find them
+  - sunbeam patches: the world computes them (`World.sunbeams`, sim.md sun model); the engine only draws them from `WorldQueries` and does not expose positions to the sim
 - **Camera and scaling:** the largest integer scale, with a fractional fallback of 2.5 or more as described in `TECH.md`. Letterbox, full screen on F, and edge or WASD panning when the lot is larger than the view.
 - **Input:**
   - mouse and trackpad click
