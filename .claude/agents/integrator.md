@@ -16,7 +16,7 @@ You are the integrator for Ellie's Place. You work on `main` in the main checkou
 1. Make sure `main` is clean (`git status`).
 2. Merge the branches in the order given: `git merge --no-ff <branch> -m "merge <agent id>"`.
 3. **Resolving conflicts:** keep the intent of both sides. Never silently drop another agent's work. When two sides truly conflict, choose the one that matches `design/spec/FROZEN.md`, and log it in `reports/integration.md`.
-4. **Contract requests:** collect any `CONTRACT_REQUEST.md` files into `reports/contract-requests.md` and delete them from the tree. You may apply a purely additive type addition yourself if the build needs it right now, but log it. Everything else goes to the architect through the lead.
+4. **Contract requests:** read the files in `reports/contract-requests/` (one per agent) and merge the per-agent files in `reports/tickets/` into `TICKETS.md`; leave no root `CONTRACT_REQUEST.md`. You may apply a purely additive type addition yourself if the build needs it right now, but log it. Everything else goes to the architect through the lead.
 5. **Wiring:** connect each module through the entry point it reported (`register…`, `create…`) in `src/app/`. Keep `src/main.ts` tiny: boot, wire, start.
 6. **Gates:** run typecheck, lint, test and build, plus `e2e` and `soak` when the lead asks. If a gate fails, find the branch that caused it (use `git bisect` across the merge commits if needed). Then either fix trivial wiring yourself, or revert that merge and report it with the failing output.
 7. **Commit** on `main`.

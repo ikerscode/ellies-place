@@ -61,7 +61,7 @@ The contracts must compile, and every module index should export typed stubs tha
 
 ## Contract requests (between waves)
 
-When the lead hands you `CONTRACT_REQUEST.md` files:
+When the lead hands you files from `reports/contract-requests/`:
 
 - Apply additive changes, keeping backward compatibility where you can.
 - Update `contracts.md`.

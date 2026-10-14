@@ -36,7 +36,7 @@ Ellie's Place is a cosy life sim in the spirit of The Sims, made as a gift for o
 
 1. Your task brief gives you a list of **owned paths**. Write only inside them.
 2. If you are in a fresh worktree, run `npm ci` first.
-3. **Contract changes:** don't edit `src/core/types.ts` unless you are the architect. Write the exact diff you need in `CONTRACT_REQUEST.md` at the root of your branch.
+3. **Contract changes:** don't edit `src/core/types.ts` unless you are the architect. Write the exact diff you need in `reports/contract-requests/<your-agent-id>.md`. File tickets in `reports/tickets/<your-agent-id>.md`.
 4. **Shared wiring:** don't edit `src/main.ts` or `src/app/` unless you are the integrator. Expose a clear `register…()` or `create…()` entry point, and describe it in your report.
 5. **Tests:** write unit tests for every piece of logic you add, in `tests/unit/<your-area>/`.
 6. **Before you report:** `npm run typecheck`, `npm run lint` and `npm test` must all pass. Commit everything on your branch with a clear message.
