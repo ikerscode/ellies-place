@@ -1,7 +1,7 @@
 /**
- * Shared contracts between modules (contracts v2: Wave 1, architect#1 and #2). Prose version:
- * design/spec/contracts.md. Only the architect edits this file; everyone else
- * files CONTRACT_REQUEST.md at the root of their branch.
+ * Shared contracts between modules (contracts v3: Wave 1, architect#1 to #3). Prose version:
+ * design/spec/contracts.md. Only the architect edits this file; everyone else writes the exact diff
+ * they need in reports/contract-requests/<agent-id>.md (FROZEN 35).
  *
  * Rules:
  * - Simulation state is plain JSON data: no classes, Maps, Sets, functions,
@@ -524,7 +524,7 @@ export type AnimKey = KnownAnim | (string & {});
 
 /**
  * Counters in SimState.stats / statsToday, e.g. `int.makeCoffee`, `dunk.perfect`,
- * `box.sat.salem`, `photo.allCats`. Convention: dotted lower camelCase.
+ * `boxSat.salem`, `photo.all_four`. Names shared between modules are constants in stats.ts. Convention: dotted lower camelCase.
  */
 export type StatKey = string;
 /**
