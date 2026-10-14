@@ -2,41 +2,10 @@
  * Sunbeams (sim.md 11, FROZEN 27): parallelogram beams from left, back and right windows,
  * clipped to the room, recomputed every `recomputeMinutes` game minutes. Deterministic.
  */
-import type { DeepReadonly, Facing, RoomId, SimState, SunBeamSpec, SunbeamPatch, TilePos } from '../core';
-import { INWARD, FLOORISH, roomAtTile, type WorldEnv } from './shared';
+import type { DeepReadonly, RoomId, SimState, SunBeamSpec, SunbeamPatch, TileKind, TilePos } from '../core';
+import { INWARD, FLOORISH, roomAtTile, type WindowSpan, type WorldEnv } from './shared';
 
 type St = DeepReadonly<SimState>;
-
-interface WindowSpan {
-  readonly facing: 'left' | 'up' | 'right';
-  /** Window tiles, in order along the wall. */
-  readonly tiles: readonly TilePos[];
-}
-
-/** Adjacent window tiles with the same facing are one window. Static per content. */
-export function windowSpans(env: WorldEnv): WindowSpan[] {
-  const lot = env.content.db.lot;
-  const used = new Set<number>();
-  const key = (t: TilePos) => t.ty * lot.w + t.tx;
-  const facingAt = new Map<number, Facing>();
-  for (const w of lot.windows) facingAt.set(key(w.tile), w.facing);
-  const out: WindowSpan[] = [];
-  for (const w of [...lot.windows].sort((a, b) => key(a.tile) - key(b.tile))) {
-    if (used.has(key(w.tile)) || w.facing === 'down') continue;
-    const horizontal = w.facing === 'up';
-    const tiles: TilePos[] = [w.tile];
-    used.add(key(w.tile));
-    for (;;) {
-      const last = tiles[tiles.length - 1] as TilePos;
-      const next = horizontal ? { tx: last.tx + 1, ty: last.ty } : { tx: last.tx, ty: last.ty + 1 };
-      if (facingAt.get(key(next)) !== w.facing || used.has(key(next))) break;
-      tiles.push(next);
-      used.add(key(next));
-    }
-    out.push({ facing: w.facing, tiles });
-  }
-  return out;
-}
 
 export function depthAt(spec: SunBeamSpec, p: number): number {
   const d = spec.depth;
@@ -67,7 +36,8 @@ export function computeSunbeams(env: WorldEnv, state: St): SunbeamPatch[] {
   const minute = Math.floor(state.time.minuteOfDay / sun.recomputeMinutes) * sun.recomputeMinutes;
   const { w, h } = state.lot;
   const out: SunbeamPatch[] = [];
-  for (const span of windowSpans(env)) {
+  for (const span of env.spans) {
+    if (span.facing === 'down') continue;
     const spec = sun.beams[span.facing];
     if (minute < spec.from || minute > spec.to) continue;
     const first = span.tiles[0] as TilePos;
@@ -87,7 +57,7 @@ export function computeSunbeams(env: WorldEnv, state: St): SunbeamPatch[] {
     for (let ty = y0; ty <= y1; ty++) {
       for (let tx = x0; tx <= x1; tx++) {
         const i = ty * w + tx;
-        if (state.lot.roomAt[i] !== room || !FLOORISH.has(state.lot.tiles[i] as never)) continue;
+        if (state.lot.roomAt[i] !== room || !FLOORISH.has(state.lot.tiles[i] as TileKind)) continue;
         let hit = 0;
         for (let sy = 0; sy < SAMPLES; sy++) {
           for (let sx = 0; sx < SAMPLES; sx++) {
@@ -106,7 +76,8 @@ export function computeSunbeams(env: WorldEnv, state: St): SunbeamPatch[] {
 /** Rooms that get a window sunbeam at some time of day (a left, back or right window). */
 export function sunRooms(env: WorldEnv, state: St): Set<RoomId> {
   const out = new Set<RoomId>();
-  for (const span of windowSpans(env)) {
+  for (const span of env.spans) {
+    if (span.facing === 'down') continue;
     const first = span.tiles[0] as TilePos;
     const d = INWARD[span.facing];
     const r = roomAtTile(state, first.tx + d.dx, first.ty + d.dy);

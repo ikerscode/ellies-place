@@ -10,7 +10,7 @@ export function buildNavGrid(content: ContentIndex, state: DeepReadonly<SimState
   const c2 = new Array<number>(n).fill(0);
   for (let i = 0; i < n; i++) c0[i] = WALKABLE.has(state.lot.tiles[i] as TileKind) ? 1 : 0;
 
-  const top = new Array<Layer | 0>(n).fill(0);
+  const top = new Array<number>(n).fill(0);
   for (const p of placedItems(state, content)) {
     if (p.pl.mount.kind !== 'floor') continue;
     const blocks = blocksWalking(p.def, 'floor');
@@ -19,7 +19,7 @@ export function buildNavGrid(content: ContentIndex, state: DeepReadonly<SimState
       const i = t.ty * w + t.tx;
       if (blocks) c0[i] = 0;
       const tl = p.def.topLayer;
-      if (tl === 1 && top[i] < 1) top[i] = 1;
+      if (tl === 1 && (top[i] as number) < 1) top[i] = 1;
       if (tl === 2) top[i] = 2;
     }
   }
@@ -33,7 +33,7 @@ export function buildNavGrid(content: ContentIndex, state: DeepReadonly<SimState
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      const layer = top[i] as Layer | 0;
+      const layer = top[i] as 0 | Layer;
       if (layer === 0) continue;
       for (const [dx, dy] of [[0, -1], [-1, 0], [1, 0], [0, 1]] as const) {
         const nx = x + dx;

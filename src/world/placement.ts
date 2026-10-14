@@ -65,7 +65,8 @@ export function blockedTiles(state: St, placed: readonly Placed[], exclude?: Ent
 
 export interface Reach {
   readonly rooms: ReadonlySet<RoomId>;
-  readonly startBlocked: boolean;
+  /** True when there was no walkable, unblocked tile to start from. */
+  readonly noRoot: boolean;
   readonly reached: ReadonlySet<number>;
 }
 
@@ -75,37 +76,71 @@ export function startTile(env: WorldEnv): TilePos | null {
   return lot.spots.ellieSpawn ?? lot.rooms[0]?.seed ?? null;
 }
 
-/** Four-neighbour flood from Ellie's start over walkable tiles that are not blocked. */
+const NEIGHBOURS: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+/**
+ * The tile a reach flood starts from: the spawn tile when it is free, otherwise the nearest free walkable
+ * tile (a breadth-first ring search over walkable tiles, in a fixed neighbour order). Furniture on the spawn
+ * tile therefore never makes a placement look path-breaking by itself.
+ */
+export function rootTile(env: WorldEnv, state: St, blocked: ReadonlySet<number>): number | null {
+  const { w, h } = state.lot;
+  const st = startTile(env);
+  if (!st || !inBounds(st, w, h)) return null;
+  const walk = (i: number): boolean => WALKABLE.has(state.lot.tiles[i] as TileKind);
+  const s0 = st.ty * w + st.tx;
+  if (walk(s0) && !blocked.has(s0)) return s0;
+  const seen = new Set<number>([s0]);
+  let ring = [s0];
+  while (ring.length > 0) {
+    const next: number[] = [];
+    for (const i of ring) {
+      const x = i % w;
+      const y = (i - x) / w;
+      for (const [dx, dy] of NEIGHBOURS) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const j = ny * w + nx;
+        if (seen.has(j) || !walk(j)) continue;
+        seen.add(j);
+        if (!blocked.has(j)) return j;
+        next.push(j);
+      }
+    }
+    ring = next;
+  }
+  return null;
+}
+
+/** Four-neighbour flood from Ellie's root tile over walkable tiles that are not blocked. */
 export function reachFrom(env: WorldEnv, state: St, blocked: ReadonlySet<number>): Reach {
   const { w, h } = state.lot;
   const reached = new Set<number>();
   const rooms = new Set<RoomId>();
-  const st = startTile(env);
-  if (!st || !inBounds(st, w, h)) return { rooms, startBlocked: true, reached };
-  const s0 = st.ty * w + st.tx;
+  const root = rootTile(env, state, blocked);
+  if (root === null) return { rooms, noRoot: true, reached };
   const ok = (i: number): boolean => WALKABLE.has(state.lot.tiles[i] as TileKind) && !blocked.has(i);
-  if (!ok(s0)) return { rooms, startBlocked: true, reached };
-  const stack = [s0];
-  reached.add(s0);
+  const stack = [root];
+  reached.add(root);
   while (stack.length > 0) {
     const i = stack.pop() as number;
     const r = state.lot.roomAt[i];
     if (r) rooms.add(r as RoomId);
     const x = i % w;
     const y = (i - x) / w;
-    const nb: number[] = [];
-    if (x > 0) nb.push(i - 1);
-    if (x < w - 1) nb.push(i + 1);
-    if (y > 0) nb.push(i - w);
-    if (y < h - 1) nb.push(i + w);
-    for (const n of nb) {
-      if (!reached.has(n) && ok(n)) {
-        reached.add(n);
-        stack.push(n);
+    for (const [dx, dy] of NEIGHBOURS) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const j = ny * w + nx;
+      if (!reached.has(j) && ok(j)) {
+        reached.add(j);
+        stack.push(j);
       }
     }
   }
-  return { rooms, startBlocked: false, reached };
+  return { rooms, noRoot: false, reached };
 }
 
 interface Bed {
@@ -135,7 +170,7 @@ function breaksPath(env: WorldEnv, state: St, placed: readonly Placed[], def: It
   const after = new Set(blockedTiles(state, placed, moving));
   for (const t of tiles) after.add(t.ty * state.lot.w + t.tx);
   const reachAfter = reachFrom(env, state, after);
-  if (reachAfter.startBlocked && !before.startBlocked) return true;
+  if (reachAfter.noRoot && !before.noRoot) return true;
   for (const r of before.rooms) if (!reachAfter.rooms.has(r)) return true;
   const beds: { b: Bed; wasReached: boolean | null }[] = [];
   for (const p of placed) {
@@ -152,6 +187,11 @@ function breaksPath(env: WorldEnv, state: St, placed: readonly Placed[], def: It
     if (!now && (mv === undefined || was)) return true;
   }
   return false;
+}
+
+/** Buyable now: unlocked at the start, or its unlock has fired. */
+export function isUnlocked(state: St, def: ItemDef): boolean {
+  return def.unlock === 'start' || state.unlocks.items[def.id] === true;
 }
 
 /** How many copies of an item exist anywhere: placed, stored or on order. */
@@ -276,7 +316,7 @@ export function checkPlacement(env: WorldEnv, state: St, req: PlacementRequest):
   if (req.source === 'stored') {
     if ((state.inventory.stored[def.id] ?? 0) + (state.inventory.storedFree[def.id] ?? 0) <= 0) return fail('notOwned', tiles);
   } else if (req.source === 'buy') {
-    if (def.fixture) return fail('notOwned', tiles);
+    if (def.fixture || !isUnlocked(state, def)) return fail('notOwned', tiles);
     if (def.maxCopies !== undefined && copiesOwned(state, placed, def) >= def.maxCopies) return fail('maxCopies', tiles);
     if (state.hearts.balance < priceOf(def.price, content.db.economy)) return fail('cannotAfford', tiles);
   }

@@ -27,7 +27,7 @@ import {
   type StringKey,
   type TilePos,
 } from '../core';
-import { FLOORISH, isRug, placedItems, roomAtTile, roomOfPlaced, slotTile, tilesOf, windowInside, type Placed, type WorldEnv } from './shared';
+import { FLOORISH, isRug, placedItems, roomOfPlaced, tilesOf, windowInside, type Placed, type WorldEnv } from './shared';
 import { sunRooms } from './sun';
 
 type St = DeepReadonly<SimState>;
@@ -273,7 +273,9 @@ function evalSet(c: Ctx, def: SetBonusDef): SetEval {
       ids.add(it.def.id);
       copies++;
     }
-    let n = req.tag !== undefined && req.style === undefined ? copies : req.item !== undefined ? copies : ids.size;
+    // Plants and tags count copies (home.md 6.3); every other style counts distinct ids.
+    const byCopies = req.item !== undefined || (req.tag !== undefined && req.style === undefined) || req.style === 'plant';
+    let n = byCopies ? copies : ids.size;
     if (req.style !== undefined && req.tag === undefined && req.item === undefined) {
       if (c.nonDefaultWall && wallPaintStyle(c.env, c.state, c.room, 'wall').includes(req.style)) n++;
       if (c.nonDefaultFloor && wallPaintStyle(c.env, c.state, c.room, 'floor').includes(req.style)) n++;
@@ -388,7 +390,7 @@ function makeCtx(env: WorldEnv, state: St, room: RoomId, reading: CosyReading): 
 
 const ZERO_PARTS: Readonly<Record<CosyFactor, number>> = { value: 0, variety: 0, lighting: 0, plants: 0, sets: 0, cats: 0, paint: 0, clutter: 0 };
 
-export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: CosyReading = 'rated'): CosyReport {
+export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: CosyReading = 'rated', withHints = true): CosyReport {
   const c = makeCtx(env, state, room, reading);
   if (!c || !c.state.lot.rooms[room]?.scored) return { room, reading, score: 0, parts: ZERO_PARTS, sets: [], hints: [] };
 
@@ -408,17 +410,17 @@ export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: Cos
   const raw = val.value + variety + lt.light + plants + sets + catsTerm + clutter;
   const score = clamp(Math.round(raw), 0, 100);
   const parts: Record<CosyFactor, number> = {
-    value: val.value,
+    value: val.value - val.paintPart,
     variety,
     lighting: lt.light,
     plants,
     sets,
     cats: catsTerm,
-    // Informational: the share of `value` that comes from non-default paint. Not added again.
+    // The share of the Value term that non-default paint earns; `value` is the rest, so the parts sum to the raw score.
     paint: val.paintPart,
     clutter,
   };
-  const hints = makeHints(c, { parts, score, evals, metSets, comfort, cats, crowd });
+  const hints = withHints ? makeHints(c, { parts, score, evals, metSets, comfort, cats, crowd }) : [];
   return { room, reading, score, parts, sets: metSets.map((e) => e.def.id as SetBonusId), hints };
 }
 
@@ -481,7 +483,7 @@ function makeHints(c: Ctx, h: HintInput): readonly CosyHint[] {
   if (h.parts.variety < COSY.varietyMax) {
     const list = VARIETY[c.kind] ?? [];
     const missing = list.find((cat) => !h.cats.has(cat));
-    if (missing) cands.push({ order: 4, hint: { key: k(`cosy.hint.variety.${missing}`), vars: { name: missing }, gain: COSY.varietyMax / COSY.varietyCategories } });
+    if (missing) cands.push({ order: 4, hint: { key: k(`cosy.hint.variety.${missing}`), vars: { n: missing }, gain: COSY.varietyMax / COSY.varietyCategories } });
   }
   if (h.parts.value < COSY.valueMax) cands.push({ order: 5, hint: { key: k('cosy.hint.value'), gain: Math.min(COSY.valueMax - h.parts.value, 3) } });
 
@@ -503,4 +505,3 @@ function makeHints(c: Ctx, h: HintInput): readonly CosyHint[] {
   return cands.slice(0, 2).map((x) => x.hint);
 }
 
-export { roomAtTile, slotTile };

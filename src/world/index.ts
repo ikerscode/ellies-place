@@ -1,11 +1,15 @@
 /**
  * World: lot, rooms, placement rules, paint, cosy score, nav grid, sunbeams.
- * Owner: build-mode-dev. Wave 1 typed stub; the owner replaces the body, keeping the signature.
- * Contract: design/spec/contracts.md section "world".
+ * Owner: build-mode-dev. Contract: design/spec/contracts.md section 9 ("World").
+ *
+ * Wiring: `const world = createWorld(content)`; pass `world` as `CreateSimOptions.world` and
+ * `world.plugin()` first in `plugins`. Nothing outside src/world and src/build imports the other files.
  */
-import { notImplemented, type CreateWorld } from '../core';
+export { createWorld } from './world';
+export { explainCosy, explainHint, type CosyExplanation } from './hints';
+export { homeCosy } from './edit';
+export { COSY, itemValue } from './cosy';
+export { COSY_LIVE_EVERY_TICKS, OUTDOOR_FLOOR_PAINT_PREFIX } from './plugin';
+export { isUnlocked } from './placement';
 
-export type { World, PlacementRequest, PlacementCheck, CosyReport, NavGrid, SunbeamPatch } from '../core';
-
-/** Pure queries over SimState plus a SimPlugin that handles build.* actions. */
-export const createWorld: CreateWorld = () => notImplemented('createWorld');
+export type { World, WorldQueries, PlacementRequest, PlacementCheck, CosyReport, NavGrid, SunbeamPatch } from '../core';

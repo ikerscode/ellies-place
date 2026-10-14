@@ -4,6 +4,7 @@
  */
 import {
   entitiesWith,
+  type LotDef,
   footprintTiles as coreFootprint,
   getC,
   inBounds,
@@ -39,6 +40,8 @@ export const INWARD: Readonly<Record<Facing, { readonly dx: number; readonly dy:
 
 export interface WorldEnv {
   readonly content: ContentIndex;
+  /** Windows that can cast a beam, grouped into spans. Static per content. */
+  readonly spans: readonly WindowSpan[];
   /** Everything an item "offers": tags, styles, category, interaction tags and ids, slot kinds, `wall`, `lighting`. */
   readonly traits: ReadonlyMap<ItemId, ReadonlySet<string>>;
   /** Window tile index (ty * w + tx) to its outward facing. */
@@ -65,7 +68,7 @@ export function makeEnv(content: ContentIndex): WorldEnv {
   const windowFacing = new Map<number, Facing>();
   const lot = content.db.lot;
   for (const w of lot.windows) windowFacing.set(w.tile.ty * lot.w + w.tile.tx, w.facing);
-  return { content, traits, windowFacing };
+  return { content, traits, windowFacing, spans: windowSpans(content.db.lot) };
 }
 
 export interface Placed {
@@ -80,6 +83,9 @@ export function placedItems(state: St, content: ContentIndex): Placed[] {
   for (const id of entitiesWith(state, 'placeable')) {
     const pl = getC(state, 'placeable', id);
     if (!pl) continue;
+    // Delivery boxes and mess are the sim's: they never count for Cosy, blocking or placement.
+    const kind = getC(state, 'meta', id)?.kind;
+    if (kind === 'box' || kind === 'mess' || kind === 'trinket') continue;
     const def = content.items.get(pl.item);
     if (def) out.push({ id, pl, def });
   }
@@ -133,4 +139,35 @@ export const blocksWalking = (def: ItemDef, mountKind: string): boolean => mount
 
 export function isRug(def: ItemDef): boolean {
   return def.placement === 'rug';
+}
+
+/** Adjacent window tiles with the same facing are one window span. */
+export interface WindowSpan {
+  readonly facing: Facing;
+  /** Window tiles, in order along the wall. */
+  readonly tiles: readonly TilePos[];
+}
+
+/** Groups `lot.windows` into spans (vertical runs for side walls, horizontal for back walls). Deterministic. */
+export function windowSpans(lot: LotDef): WindowSpan[] {
+  const key = (t: TilePos): number => t.ty * lot.w + t.tx;
+  const facingAt = new Map<number, Facing>();
+  for (const w of lot.windows) facingAt.set(key(w.tile), w.facing);
+  const used = new Set<number>();
+  const out: WindowSpan[] = [];
+  for (const w of [...lot.windows].sort((a, b) => key(a.tile) - key(b.tile))) {
+    if (used.has(key(w.tile))) continue;
+    const horizontal = w.facing === 'up' || w.facing === 'down';
+    const tiles: TilePos[] = [w.tile];
+    used.add(key(w.tile));
+    for (;;) {
+      const last = tiles[tiles.length - 1] as TilePos;
+      const next = horizontal ? { tx: last.tx + 1, ty: last.ty } : { tx: last.tx, ty: last.ty + 1 };
+      if (facingAt.get(key(next)) !== w.facing || used.has(key(next))) break;
+      tiles.push(next);
+      used.add(key(next));
+    }
+    out.push({ facing: w.facing, tiles });
+  }
+  return out;
 }
