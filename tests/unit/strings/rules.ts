@@ -96,6 +96,7 @@ export function limitFor(key: string): LimitRule {
   }
   if (domain === 'asp') {
     if (last === 'desc') return { kind: 'chars', max: 80, what: 'aspiration blurb' };
+    if (last === 'goal' || last === 'reward') return { kind: 'chars', max: 70, what: 'aspiration goal or reward' };
     return { kind: 'chars', max: 40, what: 'aspiration title' };
   }
   if (domain === 'mail') {
