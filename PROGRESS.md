@@ -22,3 +22,12 @@
 ## Next step
 
 architect#3 (contracts v3) + pixel-artist#lead2 (art checklist) running. Next: writer#keys (rename Wave 1 string keys per FROZEN 22), code-reviewer re-check of blockers only, commit "wave 1: spec frozen", then Wave 2 worktrees.
+
+## Usage-saving plan (user asked 14 Oct ~15:30)
+
+- Wave 2+ builders run on Sonnet 5.5 at medium effort; Opus only for architect and integrator.
+- Each brief names only the spec sections the agent needs (no whole-spec reads; types.ts is ~3,300 lines, so grep and line ranges).
+- Pixel artists: 4 -> 2 (A+D characters/garden/icons, B+C furniture). Wave 2 writer folded into Wave 3 writer.
+- No extra review rounds beyond gates; reviewers at medium effort and narrow scope.
+- Waves dispatched in batches of 4 or 5. MVP scope first (FROZEN §6); full scope only if budget allows.
+- User told to keep other Claude sessions closed (shared usage).
