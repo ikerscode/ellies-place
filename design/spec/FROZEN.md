@@ -46,6 +46,29 @@ Frozen by the lead on Tue 13 Oct 2026. This file beats every `design/spec/*.md` 
 | 18 | Interaction ids | `sim.md` §4.3 / §8.6 ids win (e.g. `sofa.sit`). `home.md` item rows that use other ids (`sit`, `cat_nap`) are mapped to the `sim.md` id by the data owner (game-designer#data). |
 | 19 | Placement error strings | The 6 new placement errors get strings from the Wave 2 writer. |
 
+## 3b. Contract review rulings (reports/wave1-contracts-review.md, Wed 14 Oct)
+
+| # | Topic | Decision |
+| --- | --- | --- |
+| 20 | World access (B1) | New `WorldQueries` (read-only subset of `World`: roomAt, navGrid, slotPose, footprintTiles, sunbeams). It is a required field of `CreateSimOptions`, `SystemContext`, `AiContext` and `EngineOptions`, and `Sim.world` is exposed for cats. The **world computes sunbeams**; the engine only draws them. `makeFixtureWorld` goes in the fixtures. |
+| 21 | Sprite ids (B2) | `home.md` item ids win; `art.md`'s item list is void. An item's sprite key is `item.<ItemId>`, plus `.r1`/`.r2` for rotations and `.on`, `.open`, `.full`, `.overhead` for states (pure `itemSpriteKey` in core). `base#palette` means one grid recoloured. Art checklist generated at `design/spec/art-checklist.md`. `validateContent(db, {sprites, strings})` checks every key. |
+| 22 | String key spelling (B3) | `voice.md` forms: `int.<interactionId>`, `wish.<wishId>` (ids don't repeat the prefix), `mail.<mailId>.subject/.body`, `item.<ItemId>.name`, `build.err.<PlacementError>`, `ui.need.<k>.name` and `.help`, `asp.<id>.tier.<n>` + `.goal` + `.reward`. One builder per family in `src/core/keys.ts`; coverage test walks the enums. The writer renames the Wave 1 keys. |
+| 23 | Time (B4, F5, F34) | `effectiveSteps(activity) = 1`. Fast-forward replaces speed (never multiplies). Soft-pausing panels use `time.setSpeed 0`; `GameTime` stores `lastSpeed`; `Sim.load` normalises: mode to live, drop any activity session and cancel its action, restore speed from `lastSpeed`. `getFile()` never returns an in-activity snapshot. The onboarding tour does **not** freeze the clock (no `clockTick`); `cutscene` mode suspends need decay only. |
+| 24 | Soak and headless boot (B5) | qa-engineer owns `tests/soak/*` and `src/testing/headless.ts` (`createHeadlessGame({seed, debug})`). sim-dev owns `tests/unit/sim/*` only and writes no runner. The integrator reuses `createHeadlessGame` for the non-DOM half of boot. |
+| 25 | Activity outcomes (B6, F24) | Need effects, Hearts and XP come only from `InteractionDef.effects`, `ECONOMY.minigame` and `ECONOMY.skillXp`, scaled by `needFactor` and the score. `ActivityResult.effects` may hold only `skillXp`, `record`, `stat`, `feeling`, `flag`. `skill?: SkillId` on `InteractionDef` and `ActivityResult`. `SkillId = HyroxStation \| 'kitchen'`. Training PBs are points 0..100 (`stationPb`); race PBs in ms. `ActivityResult.details?: JsonObject` carries race `stationScores` and `splitsMs`. Race coefficients live in `ContentDb`. |
+| 26 | Wishes and housewarming (F18, F19) | Cut the wish swap. Keep roll rules: add `WishDef.category` and `size`, `ActiveWish.baseline`, `WishesState.lastDone`, `offered`. Hearts come from ECONOMY only. Add action `housewarming.rsvp { tonight: boolean }`. Mood-boost numbers: `sim.md` wins (+8 for 90 min); `play.md`'s values void. |
+| 27 | Sun model (F15) | `sim.md` model wins (left, back and right windows, 06:30 to 19:00; south windows cast nothing); `home.md` §2.4 hours and geometry void. `WindowDef.facing` is documented as **outward**. Add `SimTuning.sun`. |
+| 28 | Save (F33 to F37) | Photos travel inside export and import (`photos: Record<PhotoId, string>`), one cap (100). Personal mail gets stable `PersonalMail.id`; delivered mail stores a text snapshot; `personalSent: string[]`; `localDate(wallMs)` helper. `LoadResult` adds `{kind:'tooNew', version}` and a newer save is never overwritten. `validateSimState` and `reconcileState`; chain test for `MIGRATIONS`. `Settings` get their own storage key (`saveSettings`/`loadSettings`). **Relaxed timing is cut.** |
+| 29 | Type tightening (F3) | `exactOptionalPropertyTypes`, `IdMap = Record`, `DeepReadonly` (primitives first so brands survive) in place of `Readonly<SimState>`, `DispatchResult.reason: StringKey`. |
+| 30 | Fixtures (F10) | `fixture` items can be moved and rotated, not sold, stored, duplicated or bought. `ItemDef.fixture?: true`; the `fixed` placement error means "cannot be sold or stored". |
+| 31 | Cosy value (F11) | `ItemDef.valueOverride?: number` replaces `cosy`; the world derives v(i) from base `price` per `home.md` §6. |
+| 32 | Outfit slots (F23) | `OutfitSlot` = head, clip, neck, top, feet. `ui.md` wardrobe rows follow. Grade names `good`/`okay` are contract suffixes; `play.md` keys follow. |
+| 33 | Day numbers (N12) | Data uses weekday conditions. `play.md`'s absolute day numbers are pacing hints only. |
+| 34 | Day phases (N1) | `DayPhase` = `dawn`, `day`, `dusk`, `night`. |
+| 35 | Request files (F41) | Contract requests go to `reports/contract-requests/<agent-id>.md`, tickets to `reports/tickets/<agent-id>.md`. No root `CONTRACT_REQUEST.md`. The integrator merges tickets into `TICKETS.md`. |
+| 36 | DOM tests (F39) | `happy-dom` as a devDependency; per-file `// @vitest-environment happy-dom`. |
+| 37 | Scope | All other review items (F1, F2, F4, F6 to F9, F12 to F14, F16, F17, F20 to F22, F25 to F32, F38, F40, nits) are accepted as the reviewer wrote them; the architect applies the types and helpers, owners apply the rest during Wave 2. |
+
 ## 4. Contracts v2 (architect applies before Wave 2)
 
 All additive. Requests are archived in `reports/contract-requests/`.
