@@ -18,7 +18,8 @@ You are the build mode developer for Ellie's Place. Decorating is pillar 3: it m
 - **Placement:** footprints and the four orientations. Validation covers blocking, doors and paths, wall attachment and surface slots. Path connectivity must hold: Ellie can always reach every room and her bed.
 - **Paint:** walls and floors per room.
 - **Cosy score:** per room, exactly as in `home.md`, with an explanation API that returns the top 2 hints ("Add a lamp for the evenings").
-- **Events:** emit `world.changed`.
+- **Queries for others (`WorldQueries`, FROZEN row 20):** the world implements `roomAt`, `navGrid`, `slotPose`, `footprintTiles` and `sunbeams` (sun model from `sim.md`; south windows cast nothing). The sim, cats and engine read these through `WorldQueries`; they never import `src/world`. `WorldQueries` fixtures live in `tests/unit/core/fixtures.ts` (`makeFixtureWorld`).
+- **Events:** emit `world.changed`; write `SimState.lastBuild` when Build mode closes.
 - **Tests:** placement rules, room detection, Cosy maths and connectivity.
 
 ## Wave 3: Build mode UX
