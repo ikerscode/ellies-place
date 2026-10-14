@@ -1,8 +1,8 @@
 # PROGRESS
 
 - **Start:** Mon 12 Oct 2026 22:34 SAST
-- **Last update:** Wed 14 Oct ~10:20 SAST. Resumed 14 Oct ~10:25 after the user said "continue".
-- **Current wave:** 1 (design freeze), RESUMED: architect#3 running again (steps 4-5 left). No agents running. architect#3 (contracts v3) was stopped mid-task; any uncommitted edits it made are in the main working tree (see git status) and its commits so far are on main. To resume: re-dispatch architect#3 (brief = FROZEN rows 17-40 + reports/wave1-contracts-review.md), then writer#keys, then code-reviewer re-check of blockers B1-B6, then commit "wave 1: spec frozen", then Wave 2.
+- **Last update:** Wed 14 Oct ~10:55 SAST
+- **Current wave:** 1 (design freeze), final step: code-reviewer#2 re-checking blockers B1-B6 (reports/wave1-recheck.md). Done since pause: contracts v3 (b558fba), string keys (5 commits), art checklist, docs paths. Next: commit "wave 1: spec frozen", then Wave 2.
 - **Merged branches:** all Wave 1 (game-designer-systems, -home, -play, writer, pixel-artist-lead, audio-dev, ui-dev) on main.
 - **Gate status:** Gate 1 mechanical checks GREEN (Chromium). Contracts review verdict NOT READY (6 blockers, 41 fixes): rulings in FROZEN rows 20-37 (2cc97eb). architect#3 applying contracts v3; pixel-artist#lead2 writing art-checklist. Then writer renames keys, then a short re-review, then Gate 1 commit "wave 1: spec frozen". WebKit still NOT run.
 
