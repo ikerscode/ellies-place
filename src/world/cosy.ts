@@ -103,8 +103,12 @@ interface RItem extends Placed {
 interface SetEval {
   readonly def: SetBonusDef;
   readonly met: boolean;
-  /** Requirement entries not met (count of entries). */
+  /** Requirement entries not met (indexes into `requires`). */
   readonly missing: readonly number[];
+  /** Units still needed across the entries (each entry short by `count - n`). */
+  readonly shortfall: number;
+  /** For a set whose counts are all met but a special rule fails: the need key to name, else null. */
+  readonly extraNeed: string | null;
   /** 0..1 share of required units present. */
   readonly progress: number;
   readonly allowed: boolean;
@@ -263,6 +267,7 @@ function evalSet(c: Ctx, def: SetBonusDef): SetEval {
   const missing: number[] = [];
   let have = 0;
   let want = 0;
+  let shortfall = 0;
   def.requires.forEach((req, idx) => {
     const ids = new Set<string>();
     let copies = 0;
@@ -282,16 +287,25 @@ function evalSet(c: Ctx, def: SetBonusDef): SetEval {
     }
     have += Math.min(n, req.count);
     want += req.count;
+    shortfall += Math.max(0, req.count - n);
     if (n < req.count) missing.push(idx);
   });
   let met = missing.length === 0 && def.requires.length > 0;
+  let extraNeed: string | null = null;
   if (met && def.id === 'cat_palace') {
     const feats = new Set<number>();
     for (const it of c.items) CAT_FEATURES.forEach((g, i) => g.some((t) => it.traits.has(t)) && feats.add(i));
-    if (feats.size < 3) met = false;
+    if (feats.size < 3) {
+      met = false;
+      const lacking = CAT_FEATURES.findIndex((_, i) => !feats.has(i));
+      extraNeed = `cosy.need.cat_feature.${(CAT_FEATURES[lacking]?.[0] ?? 'cat_hide').slice(4)}`;
+    }
   }
-  if (met && def.id === 'plant_corner' && !plantBoxOk(c, Math.max(...def.requires.map((r) => r.count), 1))) met = false;
-  return { def, met: met && allowed, missing, progress: want === 0 ? 0 : have / want, allowed };
+  if (met && def.id === 'plant_corner' && !plantBoxOk(c, Math.max(...def.requires.map((r) => r.count), 1))) {
+    met = false;
+    extraNeed = 'cosy.need.plant_close';
+  }
+  return { def, met: met && allowed, missing, shortfall, extraNeed, progress: want === 0 ? 0 : have / want, allowed };
 }
 
 function setsTerm(bonuses: readonly number[]): number {
@@ -390,7 +404,7 @@ function makeCtx(env: WorldEnv, state: St, room: RoomId, reading: CosyReading): 
 
 const ZERO_PARTS: Readonly<Record<CosyFactor, number>> = { value: 0, variety: 0, lighting: 0, plants: 0, sets: 0, cats: 0, paint: 0, clutter: 0 };
 
-export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: CosyReading = 'rated', withHints = true): CosyReport {
+export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: CosyReading = 'rated', withHints = true, maxHints = 2): CosyReport {
   const c = makeCtx(env, state, room, reading);
   if (!c || !c.state.lot.rooms[room]?.scored) return { room, reading, score: 0, parts: ZERO_PARTS, sets: [], hints: [] };
 
@@ -420,7 +434,7 @@ export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: Cos
     paint: val.paintPart,
     clutter,
   };
-  const hints = withHints ? makeHints(c, { parts, score, evals, metSets, comfort, cats, crowd }) : [];
+  const hints = withHints ? makeHints(c, { parts, score, evals, metSets, comfort, cats, crowd }, maxHints) : [];
   return { room, reading, score, parts, sets: metSets.map((e) => e.def.id as SetBonusId), hints };
 }
 
@@ -449,7 +463,7 @@ function needKey(def: SetBonusDef, idx: number): string {
   return 'cosy.need.item';
 }
 
-function makeHints(c: Ctx, h: HintInput): readonly CosyHint[] {
+function makeHints(c: Ctx, h: HintInput, maxHints: number): readonly CosyHint[] {
   if (c.reading === 'rated' && h.score >= 95) {
     const cat = CAT_ORDER[(c.roomIndex < 0 ? 0 : c.roomIndex) % 4] as CatName;
     return [{ key: k(`cosy.hint.done.${cat}`), gain: 0 }];
@@ -459,15 +473,15 @@ function makeHints(c: Ctx, h: HintInput): readonly CosyHint[] {
   const bonuses = h.metSets.map((e) => e.def.cosy);
   const currentSets = setsTerm(bonuses);
 
-  // set_near: a set missing exactly one requirement entry.
+  // set_near: a set one piece short (or with only a special rule failing).
   let bestNear: CosyHint | null = null;
   for (const e of h.evals) {
-    if (e.met || !e.allowed || e.missing.length !== 1) continue;
+    if (e.met || !e.allowed) continue;
+    const need = e.shortfall === 1 && e.missing.length === 1 ? needKey(e.def, e.missing[0] as number) : e.shortfall === 0 ? e.extraNeed : null;
+    if (need === null) continue;
     const gain = setsTerm([...bonuses, e.def.cosy]) - currentSets;
     if (gain <= 0) continue;
-    if (!bestNear || gain > bestNear.gain) {
-      bestNear = { key: k('cosy.hint.set_near'), vars: { name: e.def.id, n: needKey(e.def, e.missing[0] as number) }, gain };
-    }
+    if (!bestNear || gain > bestNear.gain) bestNear = { key: k('cosy.hint.set_near'), vars: { name: e.def.id, n: need }, gain };
   }
   if (bestNear) cands.push({ order: 0, hint: bestNear });
 
@@ -502,6 +516,6 @@ function makeHints(c: Ctx, h: HintInput): readonly CosyHint[] {
     if (aw !== bw) return aw - bw;
     return b.hint.gain - a.hint.gain || a.order - b.order;
   });
-  return cands.slice(0, 2).map((x) => x.hint);
+  return cands.slice(0, maxHints).map((x) => x.hint);
 }
 
