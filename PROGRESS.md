@@ -31,3 +31,8 @@ architect#3 (contracts v3) + pixel-artist#lead2 (art checklist) running. Next: w
 - No extra review rounds beyond gates; reviewers at medium effort and narrow scope.
 - Waves dispatched in batches of 4 or 5. MVP scope first (FROZEN §6); full scope only if budget allows.
 - User told to keep other Claude sessions closed (shared usage).
+
+## Cloud move (Wed 14 Oct night)
+- Repo pushed (private): github.com/ikerscode/ellies-place, all branches + tag wave1-frozen.
+- All 8 local Wave 2 agents stopped; WIP committed on their `w2/*` branches (data-core has 2 commits, save-dev DONE). None are finished: sim-dev, world-dev, engine-dev, ui-dev, pixel-ad, pixel-bc, data, data-progress need resuming/finishing in the cloud.
+- Next: run remaining Wave 2 work, qa-engineer, integrator merge + Gate 2, then Waves 3-5, as cloud sessions.
