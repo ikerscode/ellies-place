@@ -67,6 +67,9 @@ Frozen by the lead on Tue 13 Oct 2026. This file beats every `design/spec/*.md` 
 | 34 | Day phases (N1) | `DayPhase` = `dawn`, `day`, `dusk`, `night`. |
 | 35 | Request files (F41) | Contract requests go to `reports/contract-requests/<agent-id>.md`, tickets to `reports/tickets/<agent-id>.md`. No root `CONTRACT_REQUEST.md`. The integrator merges tickets into `TICKETS.md`. |
 | 36 | DOM tests (F39) | `happy-dom` as a devDependency; per-file `// @vitest-environment happy-dom`. |
+| 38 | Art batch split | Rebalance per `design/spec/art-checklist.md` suggestion: lighting and electronics move B to C; wall decor and rugs move B to D; the 10 later outfits and the visitors (Bruce, Poe, Pickle) move A to D. Target drawn kpx: A 86, B 74, C 76, D 78. The generator `scripts/art-checklist.mjs` is updated by the pixel-artist who owns the move. |
+| 39 | Icon keys | `icon.int.<glyph>` (shared glyphs) as in `contracts.md` and `ui.md`; the checklist's 21 new glyphs plus 41 reused keys stand. Wallpaper motifs: 7 (not 8). |
+| 40 | Structure sprites | Key families `struct.wall.<style>`, `struct.door.<kind>`, `struct.window.<kind>` (batch D), and `paint.<paintId>` for floor/wall patterns with a `template` sprite and variant (hex, flags, brick, herringbone, carpet, rubber, band) on `PaintDef` (F13). |
 | 37 | Scope | All other review items (F1, F2, F4, F6 to F9, F12 to F14, F16, F17, F20 to F22, F25 to F32, F38, F40, nits) are accepted as the reviewer wrote them; the architect applies the types and helpers, owners apply the rest during Wave 2. |
 
 ## 4. Contracts v2 (architect applies before Wave 2)
