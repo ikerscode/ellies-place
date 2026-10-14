@@ -1,0 +1,75 @@
+/*
+ * Theme tokens (ui.md section 3). Dark theme only.
+ * Colours live on :root. Everything that depends on the canvas scale (--u) is declared on the UI roots,
+ * because a custom property that mentions var(--u) resolves where it is declared.
+ */
+:root {
+  color-scheme: dark;
+  --page: #15121c;
+  --box: #221c2d;
+  --box-edge: #0f0b14;
+  --box-inner: #3d3452;
+  --plum: #2d2640;
+  --ink: #efe6f5;
+  --muted: #9d90b3;
+  --lav: #c9a2ff;
+  --wine: #7a2c4a;
+  --wine-hi: #9a3a60;
+  --paper: #efe4d0;
+  --paper-ink: #2a2030;
+  --paper-muted: #6b5a74;
+  --bubble: #fbf6ee;
+  --hearts: #ff8fb1;
+  --need-ok: #c9a2ff;
+  --need-mid: #e8b25c;
+  --need-low: #e07a8a;
+  --locked: #6f6488;
+  --scrim: rgba(12, 9, 18, 0.84);
+  --night-tint: rgba(40, 30, 80, 0.25);
+  --font-ui: 'Pixelify Sans', ui-rounded, 'Trebuchet MS', system-ui, sans-serif;
+  --font-paper: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  --ease-pop: cubic-bezier(0.3, 1.4, 0.5, 1);
+  --steps: steps(2);
+}
+
+.ep-ui,
+#ep-modal {
+  --u: 2.75px;
+  --b1: 2px;
+  --b2: 3px;
+  --ts: 1;
+  --t-fast: 120ms;
+  --t-med: 220ms;
+  --t-slow: 420ms;
+
+  --fs-xs: max(calc(var(--u) * 4.5 * var(--ts)), 11px);
+  --fs-s: max(calc(var(--u) * 5 * var(--ts)), calc(12px * var(--ts)), 12px);
+  --fs-m: max(calc(var(--u) * 5.6 * var(--ts)), calc(13px * var(--ts)), 12px);
+  --fs-l: max(calc(var(--u) * 7 * var(--ts)), calc(16px * var(--ts)));
+  --fs-xl: max(calc(var(--u) * 10 * var(--ts)), calc(22px * var(--ts)));
+  --fs-title: max(calc(var(--u) * 17), 30px);
+
+  --sp-1: calc(var(--u) * 1);
+  --sp-2: calc(var(--u) * 2);
+  --sp-3: calc(var(--u) * 3);
+  --sp-4: calc(var(--u) * 4);
+  --sp-6: calc(var(--u) * 6);
+  --r-s: calc(var(--u) * 2);
+  --r-m: calc(var(--u) * 3);
+  --r-l: calc(var(--u) * 5);
+
+  --edge: var(--b2) solid var(--box-edge);
+  --bevel: inset 0 0 0 var(--b1) var(--box-inner);
+  --lift: 0 calc(var(--u) * 1.5) 0 var(--box-edge);
+  --float: 0 calc(var(--u) * 4) calc(var(--u) * 10) rgba(10, 6, 16, 0.45);
+  --glow: 0 0 calc(var(--u) * 6) rgba(201, 162, 255, 0.55);
+}
+
+/* Reduced motion: transitions shrink to short fades, animations are switched off in ui.css. */
+.ep-ui[data-motion='reduce'],
+#ep-modal[data-motion='reduce'] {
+  --t-fast: 0ms;
+  --t-med: 120ms;
+  --t-slow: 120ms;
+  --ease-pop: linear;
+}
