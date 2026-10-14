@@ -36,3 +36,8 @@ architect#3 (contracts v3) + pixel-artist#lead2 (art checklist) running. Next: w
 - Repo pushed (private): github.com/ikerscode/ellies-place, all branches + tag wave1-frozen.
 - All 8 local Wave 2 agents stopped; WIP committed on their `w2/*` branches (data-core has 2 commits, save-dev DONE). None are finished: sim-dev, world-dev, engine-dev, ui-dev, pixel-ad, pixel-bc, data, data-progress need resuming/finishing in the cloud.
 - Next: run remaining Wave 2 work, qa-engineer, integrator merge + Gate 2, then Waves 3-5, as cloud sessions.
+
+## Cloud session (Wed 14 Oct, resumed)
+- Lead resumed in a cloud container (branch claude/amazing-clarke-fbu5wq). Worktrees at /home/user/ellies-place-wt/<id> on local branches w2/<id>; agents push to origin/w2/<id>.
+- Agent types are registered here, so they are dispatched by type (sim-dev, build-mode-dev for world-dev, engine-dev, ui-dev, pixel-artist x2, game-designer x2, audio-dev). Baseline on main: typecheck, lint, test green.
+- Dispatched all 9 Wave 2 agents in parallel (incl. audio-dev on w2/audio-dev). Still to do: qa-engineer (after sim/world land), integrator merge, Gate 2.
