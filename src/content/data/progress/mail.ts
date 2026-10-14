@@ -90,6 +90,8 @@ export const mail: readonly MailDef[] = ROWS.map(
   }),
 );
 
+export type MailClass = 'personal' | 'race' | 'housewarming' | 'event' | 'cat' | 'pickle';
+
 /** Delivery schedule (play.md 11.1). The sim reads these; no number lives in code. */
 export const MAIL_RULES = {
   /** Letters arrive at 08:00. A trigger that fires later waits for the next morning. */
@@ -99,9 +101,9 @@ export const MAIL_RULES = {
   unreadCap: 30,
   archiveCap: 400,
   /** Priority order, first to last; ties go to the oldest trigger. */
-  priority: ['personal', 'race', 'housewarming', 'event', 'cat', 'pickle'] as const,
+  priority: ['personal', 'race', 'housewarming', 'event', 'cat', 'pickle'] as readonly MailClass[],
   /** Which priority class a MailDef falls in. */
-  classOf(id: string, from: MailSender): (typeof MAIL_RULES.priority)[number] {
+  classOf(id: string, from: MailSender): MailClass {
     if (from === 'personal') return 'personal';
     if (from === 'race') return 'race';
     if (id.startsWith('housewarming.') || id === 'pickle.housewarming_rsvp') return 'housewarming';
