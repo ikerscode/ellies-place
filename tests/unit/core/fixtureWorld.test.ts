@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { buildContentIndex } from '../../../src/core/content';
 import { allocEntity, createEmptySimState, setC } from '../../../src/core/state';
 import { asItemId, asRoomId, type PlaceableC, type SimState } from '../../../src/core/types';
-import { makeFixtureContent, makeFixtureWorld } from './fixtures';
+import { FIXTURE_START, makeFixtureContent, makeFixtureWorld } from './fixtures';
 
 function lotState(): SimState {
   const content = buildContentIndex(makeFixtureContent());
-  const s = createEmptySimState(1, { lot: { w: 6, h: 4, tiles: [], roomAt: [], rooms: {}, revision: 1 } });
+  const s = createEmptySimState(1, FIXTURE_START, { lot: { w: 6, h: 4, tiles: [], roomAt: [], rooms: {}, revision: 1 } });
   const { rows, legend } = content.db.lot;
   s.lot.tiles = rows.flatMap((r) => [...r].map((c) => legend[c] ?? 'void'));
   s.lot.roomAt = s.lot.tiles.map((t) => (t === 'floor' ? asRoomId('living') : null));

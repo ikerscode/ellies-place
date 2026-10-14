@@ -17,9 +17,11 @@ import {
 } from '../../../src/core/state';
 import { SKILL_IDS, asSpriteKey } from '../../../src/core/types';
 
+import { FIXTURE_START } from './fixtures';
+
 describe('state skeleton', () => {
   it('is JSON-clean and survives a round-trip with the same hash', () => {
-    const s = createEmptySimState(42, { lot: emptyLot(30, 17) });
+    const s = createEmptySimState(42, FIXTURE_START, { lot: emptyLot(30, 17) });
     expect(findNonJson(s)).toEqual([]);
     const copy = cloneState(s);
     expect(copy).toEqual(s);
@@ -29,20 +31,20 @@ describe('state skeleton', () => {
   });
 
   it('same seed gives the same state; rng advances change the hash', () => {
-    const a = createEmptySimState(7);
-    const b = createEmptySimState(7);
+    const a = createEmptySimState(7, FIXTURE_START);
+    const b = createEmptySimState(7, FIXTURE_START);
     expect(hashState(a)).toBe(hashState(b));
     nextU32(b.rng);
     expect(hashState(a)).not.toBe(hashState(b));
   });
 
   it('has a table for every component key', () => {
-    const s = createEmptySimState(1);
+    const s = createEmptySimState(1, FIXTURE_START);
     expect(Object.keys(s.components).sort()).toEqual([...componentKeys()].sort());
   });
 
   it('entity store add, read, iterate and remove', () => {
-    const s = createEmptySimState(1);
+    const s = createEmptySimState(1, FIXTURE_START);
     const a = allocEntity(s);
     const b = allocEntity(s);
     expect([a, b]).toEqual([1, 2]);

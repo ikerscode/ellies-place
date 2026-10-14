@@ -4,6 +4,7 @@
 import {
   MINUTES_PER_DAY,
   MOOD_BANDS,
+  TICKS_PER_GAME_MINUTE,
   MOOD_STEPS,
   WEEKDAYS,
   type BondLevel,
@@ -58,9 +59,15 @@ export function bandAtLeast(a: MoodBand, b: MoodBand): boolean {
   return MOOD_BANDS.indexOf(a) >= MOOD_BANDS.indexOf(b);
 }
 
-/** Phase for a minute of the day, given each phase's start minute (wraps past midnight). */
+const phaseOrder = new WeakMap<object, readonly DayPhase[]>();
+
+/** Phase for a minute of the day, given each phase's start minute (wraps past midnight). The sort is cached per phases object. */
 export function phaseAt(minuteOfDay: number, phases: Readonly<Record<DayPhase, number>>): DayPhase {
-  const order = (Object.keys(phases) as DayPhase[]).sort((a, b) => phases[a] - phases[b]);
+  let order = phaseOrder.get(phases);
+  if (!order) {
+    order = (Object.keys(phases) as DayPhase[]).sort((a, b) => phases[a] - phases[b]);
+    phaseOrder.set(phases, order);
+  }
   let current = order[order.length - 1] as DayPhase;
   for (const p of order) if (minuteOfDay >= phases[p]) current = p;
   return current;
@@ -106,17 +113,47 @@ export function effectiveSteps(time: GameTime, mode: GameMode): number {
 
 /**
  * Night-layer alpha at a minute of the day (sim.md 1.5): `night` from the night
- * phase to the morning phase, ramping to 0 across `morning` (dawn), 0 through
- * `day`, ramping back up across `evening` (dusk).
+ * phase to the dawn phase, ramping to 0 across `dawn`, 0 through `day`, ramping
+ * back up across `dusk`.
  */
 export function darknessAt(minuteOfDay: number, phases: Readonly<Record<DayPhase, number>>, night: number): number {
   const m = ((minuteOfDay % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
   const span = (from: number, to: number): number => (((to - from) % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
   const since = (from: number): number => span(from, m);
-  const dawn = span(phases.morning, phases.day);
-  const dusk = span(phases.evening, phases.night);
-  if (since(phases.morning) < dawn) return night * (1 - since(phases.morning) / dawn);
-  if (since(phases.day) < span(phases.day, phases.evening)) return 0;
-  if (since(phases.evening) < dusk) return night * (since(phases.evening) / dusk);
+  const dawn = span(phases.dawn, phases.day);
+  const dusk = span(phases.dusk, phases.night);
+  if (since(phases.dawn) < dawn) return night * (1 - since(phases.dawn) / dawn);
+  if (since(phases.day) < span(phases.day, phases.dusk)) return 0;
+  if (since(phases.dusk) < dusk) return night * (since(phases.dusk) / dusk);
   return night;
+}
+
+/** Game minutes to whole ticks (deadlines are integer ticks, F4). 90 minutes is 1800 ticks. */
+export function minutesToTicks(minutes: number): number {
+  return Math.round(minutes * TICKS_PER_GAME_MINUTE);
+}
+
+export interface TickTime {
+  readonly day: number;
+  readonly minuteOfDay: number;
+  readonly weekday: Weekday;
+  readonly phase: DayPhase;
+}
+
+/**
+ * Calendar time at a tick, derived from the integer tick only (never accumulated, F4).
+ * `minuteOfDay` is exact at every minute boundary: whole minutes come from integer
+ * division and the fraction from the remainder. Not used in real-time mode, which
+ * follows the wall clock.
+ */
+export function timeAtTick(
+  tick: number,
+  t: { readonly startMinute: number; readonly startWeekday: Weekday; readonly phases: Readonly<Record<DayPhase, number>> },
+): TickTime {
+  const wholeMinutes = Math.floor(tick / TICKS_PER_GAME_MINUTE) + t.startMinute;
+  const fraction = (tick % TICKS_PER_GAME_MINUTE) / TICKS_PER_GAME_MINUTE;
+  const dayIndex = Math.floor(wholeMinutes / MINUTES_PER_DAY);
+  const minuteOfDay = (wholeMinutes - dayIndex * MINUTES_PER_DAY) + fraction;
+  const day = dayIndex + 1;
+  return { day, minuteOfDay, weekday: weekdayOf(day, t.startWeekday), phase: phaseAt(minuteOfDay, t.phases) };
 }

@@ -120,7 +120,7 @@ describe('placement helpers', () => {
     expect(mountOf('out')).toBe('floor');
     expect(mountOf('rug')).toBe('rug');
     expect(mountOf('window')).toBe('window');
-    expect(mountOf('front', true)).toBe('fixed');
+    expect(mountOf('front')).toBe('floor');
     expect(knownFlag('salem', 'like', 'box_sit')).toBe('known.salem.like.box_sit');
   });
 });

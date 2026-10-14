@@ -23,8 +23,8 @@ export const SILENT_AMBIENCE: AmbienceLevels = { birds: 0, crickets: 0, rain: 0,
 /** Through a closed window, outdoor sounds drop to this share. */
 export const WINDOW_SHARE = 0.3;
 
-const BIRDS_BY_PHASE: Readonly<Record<DayPhase, number>> = { morning: 1, day: 0.7, evening: 0.25, night: 0 };
-const CRICKETS_BY_PHASE: Readonly<Record<DayPhase, number>> = { morning: 0, day: 0, evening: 0.5, night: 1 };
+const BIRDS_BY_PHASE: Readonly<Record<DayPhase, number>> = { dawn: 1, day: 0.7, dusk: 0.25, night: 0 };
+const CRICKETS_BY_PHASE: Readonly<Record<DayPhase, number>> = { dawn: 0, day: 0, dusk: 0.5, night: 1 };
 
 export function ambiencePlan(ctx: MusicContext): AmbienceLevels {
   if (ctx.mode === 'title') return SILENT_AMBIENCE;

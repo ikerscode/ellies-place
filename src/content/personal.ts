@@ -9,8 +9,9 @@ import type { PersonalConfig, PersonalMail } from '../core/types';
  * The personal mail slot. Empty by default.
  *
  * How to fill it (for the giver):
- * - Add one object per letter. It turns up in the mailbox on the first
- *   morning on or after `date`, going by the Mac's real calendar.
+ * - Add one object per letter, with an `id` you pick once and never change (it is what the save
+ *   remembers, so editing or reordering other letters never moves this one). It turns up in the mailbox on the first
+ *   morning on or after `date`, going by the Mac's real calendar (local date).
  * - `date` is 'YYYY-MM-DD'. `subject` is one short line (40 characters is
  *   plenty). `body` is the letter itself; keep it to 4 short lines and split
  *   them with '\n'.
@@ -21,7 +22,7 @@ import type { PersonalConfig, PersonalMail } from '../core/types';
  *
  * Example (leave commented out, or copy and change it):
  *
- *   { date: '2026-12-25', subject: 'Happy Christmas', body: 'Line one.\nLine two.' },
+ *   { id: 'christmas', date: '2026-12-25', subject: 'Happy Christmas', body: 'Line one.\nLine two.' },
  */
 const mail: readonly PersonalMail[] = [];
 

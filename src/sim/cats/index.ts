@@ -1,9 +1,10 @@
 /**
  * Cat agents and visitors: personality multipliers, quirks, bonds, bubbles, Bruce, Poe, Pickle.
  * Owner: cat-ai-dev. Wave 1 typed stub; the owner replaces the body, keeping the signature.
- * Contract: design/spec/contracts.md section "cats". Plug in through sim.use(plugin) only.
+ * Contract: design/spec/contracts.md section "cats". Pass the plugin to createSim({ plugins }) so the game
+ * starts (or loads) only after it is registered.
  */
-import { notImplemented, type RegisterCats } from '../../core';
+import { notImplemented, type CreateCatsPlugin } from '../../core';
 
-/** Registers the cat and visitor SimPlugins on the sim. */
-export const registerCats: RegisterCats = () => notImplemented('registerCats');
+/** The cat and visitor SimPlugin; goes after `world.plugin()` in `CreateSimOptions.plugins`. */
+export const createCatsPlugin: CreateCatsPlugin = () => notImplemented('createCatsPlugin');

@@ -51,9 +51,7 @@ function buildIndexInto(db: ContentDb, problems: string[]): ContentIndex {
     for (const i of item.interactions) {
       if (!index.interactions.has(i)) problems.push(`items: ${item.id} references unknown interaction ${i}`);
     }
-    for (const r of item.rotations) if (!(r in item.sprites) && !(item.flipFor && r in item.flipFor) && !(0 in item.sprites)) {
-      problems.push(`items: ${item.id} has no sprite for rotation ${r}`);
-    }
+    if (item.rotations.length === 0) problems.push(`items: ${item.id} allows no rotation`);
     if (item.footprint.w < 1 || item.footprint.h < 1) problems.push(`items: ${item.id} has an empty footprint`);
     if (item.price < 0) problems.push(`items: ${item.id} has a negative price`);
     if (item.maxCopies !== undefined && item.maxCopies < 1) problems.push(`items: ${item.id} has maxCopies below 1`);

@@ -3,7 +3,7 @@
  * handed a Clock. Tests and the soak runner use a manual clock.
  *
  * This is the only module in src/core allowed to touch Date.now / performance.now
- * (scripts/lint.mjs allowlists it).
+ * (scripts/lint.mjs allowlists it): `new Date` is allowed here for localDate.
  */
 
 export interface Clock {
@@ -44,4 +44,15 @@ export function createSystemClock(): Clock {
     now: () => (perf ? perf.now() : Date.now()),
     wallNow: () => Date.now(),
   };
+}
+
+/**
+ * The player's local calendar date, 'YYYY-MM-DD', for a wall-clock time. Personal mail
+ * compares this with `PersonalMail.date` (the Mac's own calendar, not UTC). Lives here
+ * because this is the one core file allowed to build a `Date`.
+ */
+export function localDate(wallMs: number): string {
+  const d = new Date(wallMs);
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }

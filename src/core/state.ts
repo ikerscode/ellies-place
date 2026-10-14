@@ -4,6 +4,7 @@
  * guarantees a valid, serialisable skeleton every module can build on.
  */
 import { createRng } from './rng';
+import { timeAtTick } from './math';
 import {
   CAT_NAMES,
   HYROX_ORDER,
@@ -14,16 +15,16 @@ import {
   type CatName,
   type ComponentKey,
   type ComponentStore,
+  type ContentDb,
   type DailyState,
   type Components,
-  type DayPhase,
+  type DeepReadonly,
   type EntityId,
   type HyroxStation,
   type SkillId,
   type LotState,
   type SimState,
   type VisitorName,
-  type Weekday,
 } from './types';
 
 const COMPONENT_KEYS: readonly ComponentKey[] = [
@@ -79,12 +80,19 @@ export function allocEntity(state: SimState): EntityId {
   return id;
 }
 
-export function getC<K extends ComponentKey>(state: SimState, key: K, id: EntityId): Components[K] | undefined {
-  return state.components[key][String(id)];
+/**
+ * Component lookup. The table is indexed by the number itself: JS turns it into the same
+ * property key as `String(id)` without allocating a string on every call (hot per tick, N10).
+ * A read-only state gives back a read-only component.
+ */
+export function getC<K extends ComponentKey>(state: SimState, key: K, id: EntityId): Components[K] | undefined;
+export function getC<K extends ComponentKey>(state: DeepReadonly<SimState>, key: K, id: EntityId): DeepReadonly<Components[K]> | undefined;
+export function getC<K extends ComponentKey>(state: DeepReadonly<SimState>, key: K, id: EntityId): unknown {
+  return (state.components[key] as unknown as Record<number, unknown>)[id];
 }
 
-export function hasC(state: SimState, key: ComponentKey, id: EntityId): boolean {
-  return Object.prototype.hasOwnProperty.call(state.components[key], String(id));
+export function hasC(state: DeepReadonly<SimState>, key: ComponentKey, id: EntityId): boolean {
+  return Object.prototype.hasOwnProperty.call(state.components[key], id);
 }
 
 export function setC<K extends ComponentKey>(state: SimState, key: K, id: EntityId, value: Components[K]): void {
@@ -105,7 +113,7 @@ export function removeEntity(state: SimState, id: EntityId): void {
  * Ids that have a component, in ascending numeric order (JS orders integer
  * keys ascending, which keeps iteration deterministic).
  */
-export function entitiesWith(state: SimState, key: ComponentKey): EntityId[] {
+export function entitiesWith(state: DeepReadonly<SimState>, key: ComponentKey): EntityId[] {
   return Object.keys(state.components[key]).map((k) => asEntityId(Number(k)));
 }
 
@@ -165,23 +173,25 @@ function perVisitor<T>(v: T): Record<VisitorName, T> {
 
 export interface EmptyStateOptions {
   readonly lot?: LotState;
-  readonly startMinute?: number;
-  readonly startWeekday?: Weekday;
-  readonly phase?: DayPhase;
-  readonly hearts?: number;
 }
 
-/** A valid SimState with no entities. JSON-safe and hashable. */
-export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}): SimState {
+/**
+ * A valid SimState with no entities. JSON-safe and hashable. The start time, weekday, phase
+ * and Hearts come from content (SimTuning.time and EconomyTable.startHearts), so nothing is
+ * hard-coded here and forgetting them is impossible (N6): pass `content.db`.
+ */
+export function createEmptySimState(seed: number, content: Pick<ContentDb, 'tuning' | 'economy'>, opts: EmptyStateOptions = {}): SimState {
+  const tt = content.tuning.time;
+  const start = timeAtTick(0, tt);
   return {
     version: SAVE_VERSION,
     rng: createRng(seed),
     time: {
       tick: 0,
-      day: 1,
-      minuteOfDay: opts.startMinute ?? 9 * 60,
-      weekday: opts.startWeekday ?? 'thu',
-      phase: opts.phase ?? 'day',
+      day: start.day,
+      minuteOfDay: start.minuteOfDay,
+      weekday: start.weekday,
+      phase: start.phase,
       speed: 1,
       lastSpeed: 1,
       fastForward: 1,
@@ -194,10 +204,10 @@ export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}):
     components: emptyComponentStore(),
     lot: opts.lot ?? emptyLot(0, 0),
     environment: { weather: 'clear', rain: null, lastRainDay: null, music: null, lanternsUntilTick: null, starsTonight: 0 },
-    hearts: { balance: opts.hearts ?? 0, earnedTotal: 0, spent: 0, earnedToday: 0 },
+    hearts: { balance: content.economy.startHearts, earnedTotal: 0, spent: 0, earnedToday: 0 },
     inventory: { stored: {}, storedFree: {}, freeOrigin: {}, trinkets: 0, orders: [], nextOrderId: 1 },
     unlocks: { items: {}, interactions: {}, outfits: {}, paints: {}, titles: {}, activities: {}, codes: {} },
-    wishes: { active: [], rolledDay: 0, completedTotal: 0, history: {} },
+    wishes: { active: [], rolledDay: 0, completedTotal: 0, fullSets: 0, history: {}, lastDone: {}, offered: {} },
     aspirations: { tiers: {}, title: null },
     mail: { inbox: [], sent: {}, personalSent: [], waiting: 0, scheduled: [] },
     daily: emptyDaily(1),
@@ -219,6 +229,7 @@ export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}):
     onboarding: { step: null, stepIndex: 0, done: false, skipped: false },
     housewarming: { status: 'locked', day: null },
     activity: null,
+    lastBuild: null,
     stats: {},
     statsToday: {},
     flags: {},
@@ -235,4 +246,23 @@ export function cloneState(state: SimState): SimState {
 /** Throws with a name, for typed stubs that a later wave replaces. */
 export function notImplemented(what: string): never {
   throw new Error(`${what} is not implemented yet (Wave 1 stub)`);
+}
+
+/**
+ * What `Sim.load` does to a loaded state before running (FROZEN 23, F34), as a pure function so the
+ * sim, the app and the tests share it: mode back to `live`; any activity session dropped and the
+ * action waiting on it cancelled (no Activity object survives a reload, so keeping it would soft-lock
+ * Continue); a soft-pause speed 0 restored from `time.lastSpeed`; fast-forward cleared. A `cutscene`
+ * is not resumed here: the onboarding system restarts its step from `onboarding.step`.
+ */
+export function normaliseLoadedState(state: SimState): void {
+  const session = state.activity;
+  if (session) {
+    const agent = getC(state, 'agent', session.actor);
+    if (agent?.current && (session.actionId === null || agent.current.id === session.actionId)) agent.current = null;
+    state.activity = null;
+  }
+  state.mode = 'live';
+  state.time.fastForward = 1;
+  if (state.time.speed === 0) state.time.speed = state.time.lastSpeed;
 }

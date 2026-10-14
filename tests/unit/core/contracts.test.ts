@@ -28,12 +28,12 @@ import {
   type CreateSim,
   type CreateUi,
   type CreateWorld,
-  type RegisterCats,
+  type CreateCatsPlugin,
 } from '../../../src/core';
 import { createEngine } from '../../../src/engine';
 import { createSave, MIGRATIONS } from '../../../src/save';
 import { createSim } from '../../../src/sim';
-import { registerCats } from '../../../src/sim/cats';
+import { createCatsPlugin } from '../../../src/sim/cats';
 import { installTestHooks, isTestMode } from '../../../src/testing';
 import { createUi } from '../../../src/ui';
 import { createWorld } from '../../../src/world';
@@ -43,7 +43,7 @@ describe('module entry points', () => {
     const entries: [string, unknown][] = [
       ['createEngine', createEngine satisfies CreateEngine],
       ['createSim', createSim satisfies CreateSim],
-      ['registerCats', registerCats satisfies RegisterCats],
+      ['createCatsPlugin', createCatsPlugin satisfies CreateCatsPlugin],
       ['createWorld', createWorld satisfies CreateWorld],
       ['createBuild', createBuild satisfies CreateBuild],
       ['createUi', createUi satisfies CreateUi],

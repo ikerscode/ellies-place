@@ -16,8 +16,10 @@ import {
 } from '../../../src/core/math';
 import { createEmptySimState } from '../../../src/core/state';
 
-const PHASES = { morning: 360, day: 660, evening: 1080, night: 1320 } as const;
+const PHASES = { dawn: 360, day: 660, dusk: 1080, night: 1320 } as const;
 const BANDS = { mopey: 0, low: 20, okay: 40, good: 60, great: 80 } as const;
+
+import { FIXTURE_START } from './fixtures';
 
 describe('math helpers', () => {
   it('clamps and lerps', () => {
@@ -44,9 +46,9 @@ describe('math helpers', () => {
   it('phases wrap past midnight', () => {
     expect(phaseAt(0, PHASES)).toBe('night');
     expect(phaseAt(359, PHASES)).toBe('night');
-    expect(phaseAt(360, PHASES)).toBe('morning');
+    expect(phaseAt(360, PHASES)).toBe('dawn');
     expect(phaseAt(700, PHASES)).toBe('day');
-    expect(phaseAt(1100, PHASES)).toBe('evening');
+    expect(phaseAt(1100, PHASES)).toBe('dusk');
     expect(phaseAt(1439, PHASES)).toBe('night');
   });
 
@@ -65,7 +67,7 @@ describe('math helpers', () => {
   });
 
   it('effective steps pause outside live mode', () => {
-    const s = createEmptySimState(1);
+    const s = createEmptySimState(1, FIXTURE_START);
     expect(effectiveSteps(s.time, 'live')).toBe(1);
     s.time.speed = 3;
     expect(effectiveSteps(s.time, 'live')).toBe(3);
@@ -89,7 +91,7 @@ describe('math helpers', () => {
   });
 
   it('darkness follows the light phases', () => {
-    const phases = { morning: 300, day: 420, evening: 1110, night: 1260 };
+    const phases = { dawn: 300, day: 420, dusk: 1110, night: 1260 };
     expect(darknessAt(0, phases, 0.65)).toBeCloseTo(0.65);
     expect(darknessAt(360, phases, 0.65)).toBeCloseTo(0.325);
     expect(darknessAt(720, phases, 0.65)).toBe(0);

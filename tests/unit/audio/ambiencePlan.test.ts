@@ -6,7 +6,7 @@ const base: MusicContext = {
   mode: 'live',
   activity: null,
   room: 'garden',
-  phase: 'morning',
+  phase: 'dawn',
   radio: null,
   weather: 'clear',
   raceDay: false,

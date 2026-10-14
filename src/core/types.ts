@@ -99,6 +99,15 @@ export type JsonObject = { [key: string]: JsonValue };
 
 export const TICKS_PER_SECOND = 20;
 export const TICK_MS = 1000 / TICKS_PER_SECOND;
+/**
+ * A tick is 0.05 game minutes (sim.md 1.1). Never accumulate `minuteOfDay += 0.05`:
+ * float drift makes minute and hour boundaries late from tick 60. Derive time
+ * from the integer tick with timeAtTick() and keep every deadline as an integer
+ * tick (minutesToTicks()). Real-time mode is the one exception: it follows the wall clock.
+ */
+export const TICKS_PER_GAME_MINUTE = 20;
+export const TICKS_PER_GAME_HOUR = 60 * TICKS_PER_GAME_MINUTE;
+export const TICKS_PER_GAME_DAY = 1440 * TICKS_PER_GAME_MINUTE;
 export const TILE_PX = 16;
 export const CANVAS_W = 480;
 export const CANVAS_H = 270;
@@ -114,7 +123,8 @@ export const LIMITS = {
   agentQueue: 2,
   mailInbox: 60,
   historyLog: 120,
-  photos: 60,
+  /** One cap for the album and for what an export carries (FROZEN 28). */
+  photos: 100,
   races: 50,
   particles: 256,
   speechOnScreen: 2,
@@ -191,8 +201,14 @@ export interface Rect {
 export type Speed = 0 | 1 | 2 | 3;
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 export const WEEKDAYS: readonly Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-/** Coarse time of day; boundaries come from SimTuning.time.phases. */
-export type DayPhase = 'morning' | 'day' | 'evening' | 'night';
+/**
+ * Coarse time of day (FROZEN 34); start minutes come from SimTuning.time.phases.
+ * Light (sim.md 1.5): `dawn` ramps darkness down, `day` is full light, `dusk`
+ * ramps it up, `night` is dark. Player words ("Morning", "Evening") are strings
+ * under `ui.phase.<DayPhase>`, not phase ids.
+ */
+export type DayPhase = 'dawn' | 'day' | 'dusk' | 'night';
+export const DAY_PHASES: readonly DayPhase[] = ['dawn', 'day', 'dusk', 'night'];
 
 export interface GameTime {
   /** Total simulation ticks since the save began. Canonical; everything else derives from it. */
@@ -335,7 +351,8 @@ export interface Feeling {
   icon: SpriteKey | null;
   /** Added to the 0..100 mood value while active. */
   mood: number;
-  untilTick: number;
+  /** Tick it ends, or null when its source ends it ("cat on lap" lasts while the cat does). Never Infinity: it is not JSON. */
+  untilTick: number | null;
 }
 
 // ===========================================================================
@@ -564,6 +581,21 @@ export type RadioStation = 'heavy' | 'lofi' | 'cosy';
 export type Who = 'actor' | 'target' | 'ellie' | CatName | 'allCats' | 'catsInRoom';
 
 /**
+ * What a cat can be seen doing (play.md 7.2 `observe` and `near`, F20). The sim derives
+ * these each tick for the `catState` condition, from the cat's current action, tile,
+ * layer and the entities near it:
+ * `nap` asleep or in a nap interaction, `in_box` inside a box, `zoomies` running zoomies,
+ * `sunbeam` on a sunbeam tile, `on_lap` on Ellie's lap, `on_bed` on Ellie's bed,
+ * `perched` on layer 2, `hiding` in a solitude spot, `near` within `radius` of Ellie.
+ */
+export type CatObservedState = 'nap' | 'in_box' | 'zoomies' | 'sunbeam' | 'on_lap' | 'on_bed' | 'perched' | 'hiding' | 'near';
+export const CAT_OBSERVED_STATES: readonly CatObservedState[] = ['nap', 'in_box', 'zoomies', 'sunbeam', 'on_lap', 'on_bed', 'perched', 'hiding', 'near'];
+
+/** A timed status on Ellie (sim.md 2.3 `caffeinated`). Stored in MoodC.buffs as id to end tick. */
+export type KnownBuffId = 'caffeinated';
+export type BuffId = KnownBuffId | (string & {});
+
+/**
  * A pure predicate over SimState. Used for interaction requirements, wish
  * context, wish goals, aspiration tiers, unlocks, mail triggers and decay
  * modifiers. Evaluated relative to an optional actor and target.
@@ -591,6 +623,25 @@ export type Condition =
   | { readonly kind: 'inRoom'; readonly who: Who; readonly room: RoomId | 'outdoor' | 'indoor' }
   | { readonly kind: 'wearing'; readonly who: 'ellie' | CatName; readonly outfit: OutfitId }
   | { readonly kind: 'skill'; readonly skill: SkillId | 'any'; readonly atLeast: number }
+  /**
+   * A cat is seen in a state (`observe`) or stays near Ellie (`near`) while Ellie is awake and
+   * in the same room or within `radius` tiles (default 8; for `near` it is the distance).
+   * `forMinutes` is continuous game minutes (default 0: right now). `layer` and `tag`
+   * narrow it (`nap` on layer 2; `hiding` in a spot tagged `solitude`).
+   */
+  | {
+      readonly kind: 'catState';
+      readonly cat: CatName | 'any';
+      readonly state: CatObservedState;
+      readonly forMinutes?: number;
+      readonly radius?: number;
+      readonly layer?: Layer;
+      readonly tag?: Tag;
+    }
+  /** The actor's current interaction carries this tag (decay modifiers: `exercise`, `exercise_light`). */
+  | { readonly kind: 'doing'; readonly who?: Who; readonly tag: InteractionTag }
+  | { readonly kind: 'posture'; readonly who?: Who; readonly posture: Posture }
+  | { readonly kind: 'buff'; readonly who?: Who; readonly id: BuffId }
   // objects and world
   | { readonly kind: 'objectFlag'; readonly flag: string; readonly equals: JsonPrimitive }
   | { readonly kind: 'targetHasTag'; readonly tag: Tag }
@@ -612,7 +663,23 @@ export type Condition =
   | { readonly kind: 'stat'; readonly stat: StatKey; readonly atLeast: number; readonly scope?: 'ever' | 'today' }
   | { readonly kind: 'hearts'; readonly atLeast: number }
   | { readonly kind: 'heartsEarned'; readonly atLeast: number }
+  /** `records.best[record]` is at most `value` (lower is better: a race under 1:30 is `race.totalMs` at most 5400000). */
+  | { readonly kind: 'recordAtMost'; readonly record: StatKey; readonly value: number }
+  /** `records.best[record]` is at least `value`. A record that was never set fails both. */
+  | { readonly kind: 'recordAtLeast'; readonly record: StatKey; readonly value: number }
   | { readonly kind: 'owns'; readonly item: ItemId; readonly atLeast?: number }
+  /**
+   * Owned copies (placed plus stored) that match every given filter number at least `atLeast`;
+   * `distinct` counts different item ids instead of copies (Collector).
+   */
+  | {
+      readonly kind: 'ownedCount';
+      readonly atLeast: number;
+      readonly tag?: Tag;
+      readonly style?: StyleTag;
+      readonly category?: ItemCategory;
+      readonly distinct?: boolean;
+    }
   | { readonly kind: 'unlocked'; readonly what: UnlockRef }
   | { readonly kind: 'aspirationTier'; readonly id: AspirationId; readonly atLeast: number }
   | { readonly kind: 'sticker'; readonly id: StickerId }
@@ -637,6 +704,8 @@ export type Effect =
   | { readonly kind: 'bond'; readonly cat: CatName | 'target' | 'actor' | 'all' | 'catsInRoom'; readonly delta: number }
   | { readonly kind: 'hearts'; readonly amount: number; readonly reason: HeartsReason; readonly moodScaled?: boolean }
   | { readonly kind: 'feeling'; readonly id: string; readonly label: StringKey; readonly icon?: SpriteKey; readonly mood: number; readonly minutes: number }
+  /** Starts or refreshes a timed buff on Ellie (`caffeinated`, 120 game minutes). */
+  | { readonly kind: 'buff'; readonly id: BuffId; readonly minutes: number }
   | { readonly kind: 'carry'; readonly who?: Who; readonly carry: CarryKind | null }
   | { readonly kind: 'objectFlag'; readonly flag: string; readonly value: JsonPrimitive }
   | { readonly kind: 'flag'; readonly flag: FlagKey; readonly value: boolean }
@@ -741,9 +810,10 @@ export type ItemCategory =
  * - wall: hangs on a back wall tile run of width `footprint.w`
  * - window: sits in a window tile
  * - surface: sits in a surface slot of another placed item (small decor)
- * - fixed: part of the flat (fixtures: race board, mailbox); cannot be moved or sold
+ * Fixtures (race board, mailbox, the flat's sofa) keep their real mount: they can
+ * be moved and rotated but never sold, stored, duplicated or bought (ItemDef.fixture, FROZEN 30).
  */
-export type Mount = 'floor' | 'rug' | 'wall' | 'window' | 'surface' | 'fixed';
+export type Mount = 'floor' | 'rug' | 'wall' | 'window' | 'surface';
 
 /**
  * home.md 1.1 placement codes: where an item may go.
@@ -794,6 +864,15 @@ export type ParsedUnlock =
 export type ItemOrigin = 'bought' | 'free';
 
 export type SlotKind = 'stand' | 'sit' | 'lie' | 'use' | 'perch' | 'inside' | 'beside';
+
+/**
+ * Extra sprites an item can have (FROZEN 21, F14): `on` (lit, playing), `open`
+ * (door or lid open), `full` (bowl full, box occupied), `overhead` (a second sprite
+ * drawn on the overhead layer, like a canopy or a hanging lamp shade).
+ * Keys: itemSpriteKey() in rules.ts.
+ */
+export type ItemSpriteState = 'on' | 'open' | 'full' | 'overhead';
+export const ITEM_SPRITE_STATES: readonly ItemSpriteState[] = ['on', 'open', 'full', 'overhead'];
 
 /** Where an actor goes to use an item. Offsets are in tiles from the footprint origin at rotation 0. */
 export interface SlotDef {
@@ -850,8 +929,18 @@ export interface ItemDef {
    * (FROZEN 13); a bought copy refunds that shop price in full. 0 stays 0.
    */
   readonly price: number;
-  /** Cosy value contribution (home.md). Fixtures use their "value price" here. */
-  readonly cosy: number;
+  /**
+   * Replaces the derived Cosy value v(i) (FROZEN 31). The world derives v(i) from the
+   * base `price` per home.md 6 (`clamp(round(2 x sqrt(price)), 2, 24)`, price 0 gives 12);
+   * set this only where the design says otherwise. Never from the shop price.
+   */
+  readonly valueOverride?: number;
+  /**
+   * Part of the flat (FROZEN 30): can be moved and rotated, never sold, stored,
+   * duplicated or bought. Selling or storing one fails with the `fixed` placement error.
+   * Fixtures also carry `unlock: 'fixture'` and `hidden: true`.
+   */
+  readonly fixture?: true;
   readonly placement: Placement;
   /** Tiles at rotation 0 (w across, h down). Wall items: h is 1. Surface items: 1x1. */
   readonly footprint: Size;
@@ -861,10 +950,13 @@ export interface ItemDef {
    * 1 left (west), 2 up (north), 3 right (east).
    */
   readonly rotations: readonly Rotation[];
-  /** Sprite per rotation. Missing rotations use rotation 0 (and 3 may be 1 flipped, see flipFor). */
-  readonly sprites: Readonly<Partial<Record<Rotation, SpriteKey>>>;
-  /** Rotations drawn by flipping another rotation's sprite horizontally. */
-  readonly flipFor?: Readonly<Partial<Record<Rotation, Rotation>>>;
+  /**
+   * Which extra sprites exist (the base sprite per rotation always does). Sprite
+   * keys are derived, never listed (FROZEN 21): `item.<ItemId>`, `.r1` and `.r2`
+   * for the left and back views (rotation 3 is `.r1` flipped), then `.on`, `.open`,
+   * `.full` or `.overhead`. See itemSpriteKey() and itemSpriteKeys() in rules.ts.
+   */
+  readonly states?: readonly ItemSpriteState[];
   /** Floor items block walking by default. */
   readonly blocksPath?: boolean;
   /** The layer the top of this item provides for cats (1 surface, 2 perch). Absent: cannot be jumped on. */
@@ -898,14 +990,47 @@ export interface CatalogCategoryDef {
   readonly categories: readonly ItemCategory[];
 }
 
-export type PaintPattern = 'plain' | 'stripes' | 'checks' | 'wood' | 'tiles' | 'wallpaper';
+/**
+ * How a paint looks (FROZEN 40, F13). The first six are the base families; the rest are named
+ * looks of one: `carpet` and `rubber` (plain), `herringbone` (wood), `hex`, `flags` and `brick`
+ * (tiles), `band` (stripes). The engine tiles the paint's `template` sprite and recolours it.
+ */
+export type PaintVariant =
+  | 'plain'
+  | 'stripes'
+  | 'checks'
+  | 'wood'
+  | 'tiles'
+  | 'wallpaper'
+  | 'hex'
+  | 'flags'
+  | 'brick'
+  | 'herringbone'
+  | 'carpet'
+  | 'rubber'
+  | 'band';
+export const PAINT_VARIANTS: readonly PaintVariant[] = [
+  'plain',
+  'stripes',
+  'checks',
+  'wood',
+  'tiles',
+  'wallpaper',
+  'hex',
+  'flags',
+  'brick',
+  'herringbone',
+  'carpet',
+  'rubber',
+  'band',
+];
 export type PaintSurface = 'wall' | 'floor';
 
 export interface PaintDef {
   readonly id: PaintId;
   readonly name: StringKey;
   readonly surface: PaintSurface;
-  readonly pattern: PaintPattern;
+  readonly variant: PaintVariant;
   /** Up to 3 CSS colours used by the pattern. */
   readonly colors: readonly string[];
   /** Optional motif sprite for wallpaper. */
@@ -913,7 +1038,15 @@ export interface PaintDef {
   readonly styles: readonly StyleTag[];
   readonly price: number;
   readonly cosy: number;
-  readonly unlock: Condition;
+  /** home.md 5 codes, the same mechanism as items (F13). */
+  readonly unlock: UnlockCode;
+  /**
+   * The 16 x 16 tile sprite the engine tiles and recolours with `colors` (palette chars 1 to 3). Shared patterns
+   * use `patternKey(surface, variant)`; a one-off paint can use `paintKey(id)` (`paint.<paintId>`).
+   */
+  readonly template: SpriteKey;
+  /** Footstep sound on this floor (floor paints; walls use 'wood'). */
+  readonly sound: FloorSound;
 }
 
 export interface SetBonusDef {
@@ -930,8 +1063,7 @@ export type MountRef =
   | { readonly kind: 'rug' }
   | { readonly kind: 'wall' }
   | { readonly kind: 'window' }
-  | { readonly kind: 'surface'; readonly parent: EntityId; readonly slot: number }
-  | { readonly kind: 'fixed' };
+  | { readonly kind: 'surface'; readonly parent: EntityId; readonly slot: number };
 
 export interface PlacementRequest {
   readonly item: ItemId;
@@ -940,6 +1072,11 @@ export interface PlacementRequest {
   readonly mount: MountRef;
   /** When moving an existing item, its id (ignored for overlap checks). */
   readonly moving?: EntityId;
+  /**
+   * Where the copy comes from. `World.check` reports `notOwned` and `cannotAfford`
+   * only when this is set (`build.place` fills it from the action); a move has none.
+   */
+  readonly source?: 'stored' | 'buy';
 }
 
 export type PlacementError =
@@ -955,6 +1092,7 @@ export type PlacementError =
   | 'rotationNotAllowed'
   | 'notOwned'
   | 'cannotAfford'
+  /** A fixture cannot be sold or stored (it can be moved and rotated). */
   | 'fixed'
   // v2 (home.md 1.1)
   | 'needsIndoor'
@@ -1041,7 +1179,12 @@ export interface LotDef {
   readonly rooms: readonly RoomDef[];
   readonly start: readonly StartPlacement[];
   readonly spots: Readonly<Partial<Record<LotSpot, TilePos>>>;
-  /** Windows that cast sunbeams: tile plus the direction light enters. */
+  /**
+   * Windows that cast sunbeams (FROZEN 27, sim.md 11). `facing` is the direction the
+   * window faces OUTWARD: `up` is a back-wall window (midday beam), `left` and
+   * `right` are side-wall windows (morning and evening beams), `down` is a front
+   * window and casts nothing in this view.
+   */
   readonly windows: readonly { readonly tile: TilePos; readonly facing: Facing }[];
 }
 
@@ -1109,7 +1252,11 @@ export interface NavGrid {
   readonly w: number;
   readonly h: number;
   readonly revision: number;
-  /** Per layer, row-major movement cost; 0 means blocked. Layer 0 floor, 1 surface, 2 perch. */
+  /**
+   * Per layer, row-major movement cost: 0 is blocked, 1 is normal floor, above 1
+   * is slower (rugs and clutter never exceed ~2). The sim adds dynamic costs
+   * (other actors) on top of this scale. Layer 0 floor, 1 surface, 2 perch.
+   */
   readonly cost: readonly [readonly number[], readonly number[], readonly number[]];
   /** Cat-only jumps between layers. */
   readonly jumps: readonly NavJump[];
@@ -1203,16 +1350,26 @@ export interface InteractionDef {
    */
   readonly skill?: SkillId;
   readonly adverts: readonly Advertisement[];
-  /** Slot kinds (or slot ids) on the target the actor may use, in preference order. */
-  readonly slots?: readonly (SlotKind | string)[];
+  /**
+   * Slots on the target the actor may use, in preference order: by kind (`sit`) or by
+   * id (`seatL`). Two fields so a slot id can never be mistaken for a kind (N5);
+   * kind names are reserved and no slot id may equal one. Kinds are tried first.
+   */
+  readonly slotKinds?: readonly SlotKind[];
+  readonly slotIds?: readonly string[];
   readonly duration: InteractionDuration;
   /** Need change per game hour while running, for the actor. */
   readonly perHour?: NeedDeltas;
   /** Need change per game hour for the target actor (petting a cat). */
   readonly targetPerHour?: NeedDeltas;
   readonly anims: Readonly<Partial<Record<ActorKind, InteractionAnims>>>;
-  /** Must all hold to show (enabled) in the menu and to start. */
-  readonly requires: readonly Condition[];
+  /**
+   * Must all hold to show (enabled) in the menu and to start. A failing entry greys
+   * the petal and its `reason` key is the text (F26). Generic reasons live under
+   * `ui.reason.<ReasonCode>` (keys.ts reasonKey); interaction-specific ones under
+   * `int.<id>.why.<n>`.
+   */
+  readonly requires: readonly Requirement[];
   /** If set and false, the petal is hidden instead of greyed out. */
   readonly visibleIf?: Condition;
   /** Applied when started. */
@@ -1232,6 +1389,12 @@ export interface InteractionDef {
   readonly cue?: AudioCue;
   readonly unlock?: Condition;
   readonly mvp: boolean;
+}
+
+/** A condition with the player-facing reason shown when it fails. */
+export interface Requirement {
+  readonly when: Condition;
+  readonly reason: StringKey;
 }
 
 /** One choice produced by the scorer or the menu builder. */
@@ -1303,15 +1466,55 @@ export interface VisitorDef {
 // 12. Wishes, aspirations, outfits, mail, stickers, onboarding (content)
 // ===========================================================================
 
+/** play.md 7.1: at most one wish per category a day, and two cat wishes (`george`, `salem`, `shadow`, `peaches`, `cats`). */
+export type WishCategory =
+  | 'george'
+  | 'salem'
+  | 'shadow'
+  | 'peaches'
+  | 'cats'
+  | 'food'
+  | 'hyrox'
+  | 'games'
+  | 'music'
+  | 'home'
+  | 'photo'
+  | 'evening'
+  | 'style'
+  | 'visitors';
+export const WISH_CATEGORIES: readonly WishCategory[] = [
+  'george',
+  'salem',
+  'shadow',
+  'peaches',
+  'cats',
+  'food',
+  'hyrox',
+  'games',
+  'music',
+  'home',
+  'photo',
+  'evening',
+  'style',
+  'visitors',
+];
+/** The cat wishes the "at most 2 a day" rule counts. */
+export const CAT_WISH_CATEGORIES: readonly WishCategory[] = ['george', 'salem', 'shadow', 'peaches', 'cats'];
+
 export interface WishDef {
+  /** Ids do not repeat the key prefix: `bow_george`, so the title key is `wish.bow_george` (keys.ts wishTitleKey). */
   readonly id: WishId;
   /** 40 characters or fewer. */
   readonly title: StringKey;
   readonly icon: SpriteKey;
-  /** May be offered today? (time, weekday, unlocks, which cats are around). */
+  readonly category: WishCategory;
+  /** Pays ECONOMY.wishHearts[size], mood-scaled. Hearts come from there only (FROZEN 26). */
+  readonly size: WishSize;
+  /** May be offered today? (time, weekday, unlocks, which cats are around). Must be completable in the rest of the day. */
   readonly offerIf: Condition;
   /** Done when this holds; stat conditions with scope 'today' count since the morning roll. */
   readonly goal: Condition;
+  /** Non-Hearts rewards only: the mood boost (`feeling`, +8 for 90 minutes, sim.md 3.2), an unlock, mail. */
   readonly rewards: readonly Effect[];
   /** Relative pick weight in the morning draw. */
   readonly weight: number;
@@ -1329,6 +1532,8 @@ export interface AspirationTierDef {
   readonly title: StringKey;
   /** `asp.<key>.tier.<n>.goal`. */
   readonly goalText?: StringKey;
+  /** `asp.<key>.tier.<n>.reward`: what the tier gives, in words (ui.md 25). */
+  readonly rewardText?: StringKey;
   readonly goal: Condition;
   /** Non-Hearts rewards: outfits, titles, moodlets, mail. */
   readonly rewards: readonly Effect[];
@@ -1349,7 +1554,9 @@ export interface AspirationDef {
   readonly mvp: boolean;
 }
 
-export type OutfitSlot = 'head' | 'hair' | 'face' | 'neck' | 'top' | 'feet' | 'accessory';
+/** FROZEN 32. Hair clips, cat ears and headphones are `clip` or `head`; ui.md's wardrobe rows follow. */
+export type OutfitSlot = 'head' | 'clip' | 'neck' | 'top' | 'feet';
+export const OUTFIT_SLOTS: readonly OutfitSlot[] = ['head', 'clip', 'neck', 'top', 'feet'];
 
 export interface OutfitDef {
   readonly id: OutfitId;
@@ -1379,7 +1586,15 @@ export interface MailDef {
 
 /** Personal mail, filled by the giver in src/content/personal.ts. Text is literal, not keyed. */
 export interface PersonalMail {
-  /** Real calendar date 'YYYY-MM-DD' (wall clock) on or after which it arrives. */
+  /**
+   * Stable id the giver picks once and never changes (`christmas`): what is stored in
+   * saves, so editing, reordering or deleting other letters cannot move or break one.
+   */
+  readonly id: string;
+  /**
+   * Real calendar date 'YYYY-MM-DD' (the player's local date, `localDate(clock.wallNow())`)
+   * on or after which it arrives.
+   */
   readonly date: string;
   readonly subject: string;
   readonly body: string;
@@ -1453,6 +1668,11 @@ export interface OnboardingStepDef {
   readonly waitFor?: Condition;
   /** Optional thing to point at. */
   readonly highlight?: { readonly kind: 'ui'; readonly id: string } | { readonly kind: 'item'; readonly item: ItemId } | { readonly kind: 'spot'; readonly spot: LotSpot };
+  /** A nudge shown if `waitFor` has not held after `hintAfterSec` real seconds (default 20, play.md 9.1). */
+  readonly hint?: StringKey;
+  readonly hintAfterSec?: number;
+  /** A "Next" button appears after this many real seconds so nobody is stuck (default 60). */
+  readonly nextAfterSec?: number;
 }
 
 // ===========================================================================
@@ -1468,10 +1688,28 @@ export type ResponseCurve =
   /** sim.md 5.2: `scale * ((100 - v) / 100) ^ exponent + base`. */
   | { readonly kind: 'urgency'; readonly scale: number; readonly exponent: number; readonly base: number };
 
+/**
+ * Something to count for a per-count decay modifier (sim.md 2.3 Calm extras).
+ * `mess`: mess items in Ellie's current room (or on the lot). `lowNeeds`: how many of
+ * these needs are below the threshold. `catsDoing`: cats within `radius` tiles whose
+ * current interaction has the tag (Salem's zoomies within 6 tiles).
+ */
+export type CountSource =
+  | { readonly kind: 'mess'; readonly room: 'current' | 'all' }
+  | { readonly kind: 'lowNeeds'; readonly needs: readonly NeedKey[]; readonly below: number }
+  | { readonly kind: 'catsDoing'; readonly tag: InteractionTag; readonly radius: number };
+
+/**
+ * One row of sim.md 2.3. `when` gates it (`doing exercise`, `posture sit`, `buff caffeinated`,
+ * `weather rain` plus `inRoom indoor`, asleep...). Multipliers stack multiplicatively.
+ * With `perCount`, `addPerHour` is added once per counted thing and the modifier does
+ * nothing when the count is 0; `group` and `groupCap` then cap the sum (mess +0.5 each, cap 3).
+ */
 export interface DecayModifier {
   readonly when: Condition;
   readonly multiplier?: number;
   readonly addPerHour?: number;
+  readonly perCount?: CountSource;
   /** Caps the summed addPerHour of modifiers sharing this group (sim.md 2.3 Calm extras). */
   readonly group?: string;
   readonly groupCap?: number;
@@ -1491,6 +1729,206 @@ export interface NeedSpec {
   readonly gain: number;
 }
 
+/** A multiplier over a time-of-day window in minutes since midnight, [from, to), wrapping midnight. */
+export interface TimeFactor {
+  readonly from: number;
+  readonly to: number;
+  readonly factor: number;
+}
+
+/** Cat numbers (sim.md 7.4, 8.7 to 8.9 and 10). All chances are 0..1; windows are minutes of the day. */
+export interface CatTuning {
+  /** pAccept = clamp(base + perTag x (P_tag - 1) + bond / bondDivisor + (Affection < lowBelow ? lowBonus : 0), min, max); x asleepFactor asleep. */
+  readonly accept: {
+    readonly base: number;
+    readonly perTag: number;
+    readonly bondDivisor: number;
+    readonly lowBelow: number;
+    readonly lowBonus: number;
+    readonly min: number;
+    readonly max: number;
+    readonly asleepFactor: number;
+  };
+  /** A cat with a need below `below` that only Ellie can fix asks; `boost` on matching Ellie candidates for `boostMinutes`. */
+  readonly request: { readonly below: number; readonly cooldownMinutes: number; readonly boost: number; readonly boostMinutes: number };
+  /** Happiness = meanWeight x mean(shared) + personalityWeight x personality (+ likedStyleBonus in a liked-style room). */
+  readonly happiness: { readonly meanWeight: number; readonly personalityWeight: number; readonly likedStyleBonus: number };
+  /** Shadow's hard gates (sim.md 8.7): pick-up needs this bond, a lap needs this bond. */
+  readonly shadowGates: { readonly pickUpBond: number; readonly lapBond: number };
+  /** Reactions when Build mode closes (sim.md 10.6), as chances. */
+  readonly buildReaction: {
+    readonly george: number;
+    readonly salemVase: number;
+    readonly salemBox: number;
+    readonly peachesPerItem: number;
+    readonly peachesMaxItems: number;
+    readonly shadow: number;
+  };
+  readonly zoomies: {
+    /** Rolled at 00:00. */
+    readonly chance: number;
+    /** Start window, minutes of the day (165 to 210). */
+    readonly from: number;
+    readonly to: number;
+    readonly minMinutes: number;
+    readonly maxMinutes: number;
+    /** Tiles per second. */
+    readonly speed: number;
+    /** Daytime `self.zoomies` cooldown. */
+    readonly daytimeCooldownMinutes: number;
+  };
+  readonly george: {
+    readonly pillowChance: number;
+    readonly pillowFromBond: number;
+    /** Pillow window start and end (21:00 to 03:00) and the give-up time if she is not in bed (22:30). */
+    readonly pillowFrom: number;
+    readonly pillowTo: number;
+    readonly pillowGiveUp: number;
+    readonly sitsOnChance: number;
+    readonly sitsOnRadius: number;
+    readonly sitsOnRoyaltyBelow: number;
+    readonly sitsOnEveryMinutes: number;
+    readonly claimChance: number;
+    readonly claimRadius: number;
+    readonly claimRoyaltyBelow: number;
+    readonly verdictApproveChance: number;
+    readonly verdictBondBonus: number;
+    readonly verdictApproveCost: number;
+    readonly verdictMaxItems: number;
+  };
+  readonly salem: {
+    readonly followMinutes: number;
+    readonly followFactor: number;
+    readonly boxFactor: number;
+    readonly boxMinutes: number;
+    readonly boxChaosBelow: number;
+    readonly knocksPerDay: number;
+    readonly knockTrinketChance: number;
+    readonly knockTrinketsPerDay: number;
+  };
+  readonly shadow: {
+    readonly trustMinutes: number;
+    readonly trustRadius: number;
+    readonly trustPerStep: number;
+    readonly trustPerDay: number;
+    readonly lapChance: number;
+    readonly lapEveryMinutes: number;
+    readonly softMoodBelow: number;
+    readonly softFactor: number;
+    readonly softMinutes: number;
+    readonly softCooldownMinutes: number;
+    readonly crowdActors: number;
+    readonly crowdRadius: number;
+    readonly crowdFactor: number;
+  };
+  readonly peaches: {
+    readonly sunbeamRecheckMinutes: number;
+    readonly sunbeamSearchRadius: number;
+    readonly ritualFactor: number;
+    readonly lidFactor: number;
+  };
+}
+
+/** Visitor schedules (sim.md 12). */
+export interface VisitorTuning {
+  readonly bruce: {
+    readonly firstDay: number;
+    readonly firstFrom: number;
+    readonly firstTo: number;
+    readonly hourlyChance: number;
+    readonly fromHour: number;
+    readonly toHour: number;
+    readonly maxPerDay: number;
+    readonly minGapHours: number;
+    /** Weights per hiding spot; a not-yet-found one gets x`newSpotBoost`. */
+    readonly spotWeights: Readonly<Record<BruceSpot, number>>;
+    readonly newSpotBoost: number;
+    readonly windowPeekChance: number;
+    readonly stayMin: number;
+    readonly stayMax: number;
+    /** Moves in after this many spots with all five found, or after `movesInAfterAny` in any case. */
+    readonly movesInAfterAllFound: number;
+    readonly movesInAfterAny: number;
+    /** After moving in: on the wall from `wallFrom` to `wallTo`, hiding visits at this hourly chance. */
+    readonly wallFrom: number;
+    readonly wallTo: number;
+    readonly movedInHourlyChance: number;
+  };
+  readonly poe: {
+    readonly firstDay: number;
+    readonly firstFrom: number;
+    readonly firstTo: number;
+    readonly dailyChance: number;
+    /** Forced when Ellie holds this many trinkets and Poe has stayed away `forceAfterDays` days. */
+    readonly forceTrinkets: number;
+    readonly forceAfterDays: number;
+    readonly arriveFrom: number;
+    readonly arriveTo: number;
+    readonly stayMinutes: number;
+    readonly afterTradeMinutes: number;
+  };
+  readonly pickle: { readonly stayMinutes: number; readonly answerFun: number };
+}
+
+export interface WeatherTuning {
+  /** Rolled at 00:00; never on day 1, Saturdays or two days running. */
+  readonly rainChance: number;
+  readonly startFrom: number;
+  readonly startTo: number;
+  readonly minMinutes: number;
+  readonly maxMinutes: number;
+  /** Outdoor interactions in free will (x0.3), Peaches' window-sit boost (x1.5). The indoor Calm x0.6 is a DecayModifier. */
+  readonly outdoorFactor: number;
+  readonly windowSitFactor: number;
+}
+
+export interface BubbleTuning {
+  /** Thought bubble when a need is below this (30) or a request is active. */
+  readonly thoughtBelow: number;
+  /** Per-cat gap between thoughts in ticks, drawn from this range (900 to 1800), and how long one shows (60). */
+  readonly thoughtGapTicks: readonly [number, number];
+  readonly thoughtShowTicks: number;
+  /** Speech chances (sim.md 8.10). Bond level-ups and refusals always speak. */
+  readonly speech: {
+    readonly afterEllie: number;
+    readonly afterCat: number;
+    readonly quirk: number;
+    readonly verdict: number;
+    readonly seesVisitor: number;
+  };
+  /** Ticks between any two speech bubbles, and per cat. */
+  readonly globalCooldownTicks: number;
+  readonly catCooldownTicks: number;
+}
+
+/** One wall's beam (sim.md 11.1 and 11.2). `p` runs 0..1 from `from` to `to`. */
+export interface SunBeamSpec {
+  readonly from: number;
+  readonly to: number;
+  readonly peak: number;
+  /**
+   * Depth into the room in tiles: `linear` runs `start` to `end`; `arch` is
+   * `noon + (edge - noon) x (1 - sin(pi p))` (back wall: 4 at the edges, 2 at noon).
+   */
+  readonly depth: { readonly kind: 'linear'; readonly start: number; readonly end: number } | { readonly kind: 'arch'; readonly edge: number; readonly noon: number };
+  /** Sideways shear across the full depth in tiles, linear from `start` to `end` (back wall: 3 to -3; side walls: 1). */
+  readonly shear: { readonly start: number; readonly end: number };
+}
+
+export interface SunTuning {
+  /** Beams by the window's outward facing: `left` (morning), `up` (back wall, midday), `right` (evening). `down` casts nothing. */
+  readonly beams: Readonly<Record<'left' | 'up' | 'right', SunBeamSpec>>;
+  /** A tile counts as sunbeam at this share of coverage (0.5). */
+  readonly minCoverage: number;
+  /** Tile set recomputed every this many game minutes (5). */
+  readonly recomputeMinutes: number;
+  /** Additive light alpha: `base + amplitude x sin(pi p)`. */
+  readonly intensity: { readonly base: number; readonly amplitude: number };
+  /** The garden grass is in sun between these minutes (07:00 to 19:00), except the tree's shade patch. */
+  readonly grassFrom: number;
+  readonly grassTo: number;
+}
+
 export interface SimTuning {
   readonly time: {
     /** Game minutes per tick (0.05 at every speed; speed changes ticks per second). */
@@ -1499,10 +1937,7 @@ export interface SimTuning {
     readonly startMinute: number;
     /** FROZEN 5: Thursday. */
     readonly startWeekday: Weekday;
-    /**
-     * Phase start minutes. Light (sim.md 1.5): `morning` is dawn (darkness ramps
-     * down to 0), `day` is full light, `evening` is dusk (ramps up), `night` is full dark.
-     */
+    /** Phase start minutes (sim.md 1.5: dawn 300, day 420, dusk 1110, night 1260). */
     readonly phases: Readonly<Record<DayPhase, number>>;
     /** Night darkness alpha (0.65); see darknessAt() in math.ts. */
     readonly nightDarkness: number;
@@ -1561,15 +1996,54 @@ export interface SimTuning {
     readonly urgency: { readonly below: number; readonly factor: number };
     /** Ellie's favourites multiplier per tag (sim.md 4.2 "Ellie x"). Missing means 1. */
     readonly ellieTagWeights: Readonly<Partial<Record<InteractionTag, number>>>;
+    /** Ellie's repeat cap (sim.md 4.4): need effects drop to `factor` from the `fromUse`th use in a game day (3, 0.5). */
+    readonly repeatCap: { readonly fromUse: number; readonly factor: number };
+    /** Recency R (sim.md 5.1): the first row whose window contains the last use applies (60 min x0.5, 180 min x0.8). */
+    readonly recency: readonly { readonly withinMinutes: number; readonly factor: number }[];
+    /** Ellie's bedtime pull Q on `bed.sleep` by time of day (sim.md 5.4: x2.5 22-02, x1.5 21-22 and 02-05, x0.3 09-19). */
+    readonly bedtime: readonly TimeFactor[];
+    /** Every other free-will candidate is scaled in this window (x0.6 from 23:30 to 05:00), except the exempt tags. */
+    readonly lateNight: TimeFactor & { readonly exempt: readonly InteractionTag[] };
+    /** Energy below `below`: `sleep` and `nap` candidates get `factor` on top of urgency (10, x2). */
+    readonly lowEnergySleep: { readonly below: number; readonly factor: number };
+    /** Candidates that would finish an open daily wish (x1.3). */
+    readonly wishFactor: number;
+    /** Cat time-of-day pulls (sim.md 5.5): `tags` is a list, or `allButNap` for "everything but nap* and scheduled quirks". */
+    readonly catCircadian: readonly (TimeFactor & { readonly tags: readonly InteractionTag[] | 'allButNap' })[];
+    /** Fixed scores for the fallbacks (sim.md 8.8: idle 0.3, wander 0.28). */
+    readonly idleScore: number;
+    readonly wanderScore: number;
   };
+  /** Cat behaviour numbers (sim.md 8 and 10). */
+  readonly cats: CatTuning;
+  /** Visitor schedules (sim.md 12). The per-visitor `chancePerHour` and `visitMinutes` in VisitorDef stay as the simple knobs. */
+  readonly visitors: VisitorTuning;
+  /** Rain (sim.md 13). */
+  readonly weather: WeatherTuning;
+  /** Thought and speech bubble cadence (sim.md 8.10). */
+  readonly bubbles: BubbleTuning;
+  /** The in-game sun and its beams (sim.md 11). */
+  readonly sun: SunTuning;
+  /** Gentle clutter (sim.md 7.4 and 7.5). */
+  readonly clutter: { readonly messClearHours: number; readonly boxClearHours: number };
   readonly movement: {
     readonly ellieTilesPerSecond: number;
     readonly jumpTicks: number;
   };
   readonly wishes: {
     readonly perDay: number;
-    /** Minute the morning roll happens. */
+    /** The roll happens when Ellie first wakes after `earliestMinute` (300), or at `rollMinute` (420) if she is already up (play.md 7.1). */
     readonly rollMinute: number;
+    readonly earliestMinute: number;
+    /** Roll rules (play.md 7.1): at most `perCategory` per category and `maxCatWishes` cat wishes a day; one easy wish at least. */
+    readonly perCategory: number;
+    readonly maxCatWishes: number;
+    /** A wish completed within this many game days has weight 0 (2). */
+    readonly cooldownDays: number;
+    /** x2 when its category was not offered in the last `unseenDays` days (2); x3 when never completed. */
+    readonly unseenWeight: number;
+    readonly unseenDays: number;
+    readonly neverDoneWeight: number;
   };
   readonly delivery: {
     /** Game minutes from order to Pickle's knock in Live mode (FROZEN 15: 30). */
@@ -1729,12 +2203,13 @@ export interface QueuedAction {
   interaction: InteractionId;
   target: EntityId | null;
   tile: TilePos | null;
-  source: ActionSource;
   /**
-   * Picked by free will or cat AI (sim.md 6.3). At most one autonomous entry,
-   * only at index 0 and never while player entries exist; a player queue stops it.
+   * Who queued it. An entry is autonomous (sim.md 6.3) exactly when the source is
+   * `freeWill` or `ai`: derive it with isAutonomousSource() in rules.ts, there is
+   * no separate flag to disagree. At most one autonomous entry, only at index 0
+   * and never while player entries exist; a player queue stops it.
    */
-  autonomous: boolean;
+  source: ActionSource;
   queuedTick: number;
 }
 
@@ -1777,6 +2252,8 @@ export interface MoodC {
   value: number;
   band: MoodBand;
   feelings: Feeling[];
+  /** Timed buffs on Ellie: id to the tick it ends (`caffeinated`). */
+  buffs: Record<string, number>;
 }
 
 export interface BondC {
@@ -1824,6 +2301,11 @@ export interface VisitorC {
 
 export interface PlaceableC {
   item: ItemId;
+  /**
+   * The canonical tile (footprint origin). `PositionC.pos` of an item mirrors it
+   * and the world is the only writer of both (it also keeps `room` fresh); nobody
+   * else writes either, so they cannot disagree.
+   */
   tile: TilePos;
   rotation: Rotation;
   mount: MountRef;
@@ -1903,7 +2385,16 @@ export interface EntityQuery {
 // 16. SimState (fully serialisable)
 // ===========================================================================
 
+/**
+ * - `live`: runs at `time.speed` (0 is a pause).
+ * - `build`, `photo`: the sim does not step (effectiveSteps 0).
+ * - `activity`: a minigame overlay is open; the sim keeps running at x1 (FROZEN 17).
+ * - `cutscene`: a scripted beat (the tour, the Knighting, the housewarming); steps at x1, and only need
+ *   decay is suspended. The clock itself never freezes (FROZEN 23).
+ * Only `live` is ever saved: Sim.load normalises the others (see contracts.md 19).
+ */
 export type GameMode = 'live' | 'build' | 'activity' | 'photo' | 'cutscene';
+export const GAME_MODES: readonly GameMode[] = ['live', 'build', 'activity', 'photo', 'cutscene'];
 export type Weather = 'clear' | 'cloudy' | 'rain';
 
 export interface HeartsState {
@@ -1924,6 +2415,8 @@ export interface ActiveWish {
   done: boolean;
   /** Tick it was completed, or null. */
   doneTick: number | null;
+  /** The value a delta goal counts from, taken at the roll (`wish.cosy_up`: Home Cosy then), or null. */
+  baseline: number | null;
 }
 
 export interface WishesState {
@@ -1931,8 +2424,14 @@ export interface WishesState {
   /** Day the current set was rolled. */
   rolledDay: number;
   completedTotal: number;
+  /** All three done in one day (`wishesFullSets`). */
+  fullSets: number;
   /** Wish id -> times completed. */
   history: IdMap<WishId, number>;
+  /** Wish id -> game day it was last completed (the 2-day cooldown). */
+  lastDone: IdMap<WishId, number>;
+  /** Wish id -> game day it was last offered (a category unseen for 2 days gets x2 weight). */
+  offered: IdMap<WishId, number>;
 }
 
 export interface AspirationsState {
@@ -1942,21 +2441,23 @@ export interface AspirationsState {
   title: TitleId | null;
 }
 
-export type MailRef = { kind: 'def'; id: MailId } | { kind: 'personal'; index: number };
+export type MailRef = { kind: 'def'; id: MailId } | { kind: 'personal'; id: string };
 
 export interface MailEntry {
   ref: MailRef;
   arrivedDay: number;
   read: boolean;
   attachmentsClaimed: boolean;
+  /** Personal mail only: the text as delivered, so a later edit to personal.ts never changes a letter she already has. */
+  snapshot: { subject: string; body: string } | null;
 }
 
 export interface MailState {
   inbox: MailEntry[];
   /** Mail ids already sent (non-repeatable). */
   sent: IdMap<MailId, number>;
-  /** Personal mail indices already delivered. */
-  personalSent: number[];
+  /** Ids of personal mail already delivered (each arrives once). */
+  personalSent: string[];
   /** Waiting at the mailbox, not yet collected. */
   waiting: number;
   /** Scheduled sends from effects: [mail id, day]. */
@@ -2033,6 +2534,53 @@ export interface WardrobeState {
 
 export type PhotoFilter = 'none' | 'polaroid' | 'night' | 'warm';
 
+/** Tags recorded from the frame (play.md 9): subjects, states, context and the special `zoomies_3am`. */
+export type PhotoTag =
+  | 'ellie'
+  | 'george'
+  | 'salem'
+  | 'shadow'
+  | 'peaches'
+  | 'bruce'
+  | 'poe'
+  | 'pickle'
+  | 'all_four'
+  | 'sleeping'
+  | 'in_box'
+  | 'zoomies'
+  | 'eating'
+  | 'on_lap'
+  | 'sunbeam'
+  | 'night'
+  | 'garden'
+  | 'outfit'
+  | 'lanterns'
+  | 'stars'
+  | 'zoomies_3am';
+export const PHOTO_TAGS: readonly PhotoTag[] = [
+  'ellie',
+  'george',
+  'salem',
+  'shadow',
+  'peaches',
+  'bruce',
+  'poe',
+  'pickle',
+  'all_four',
+  'sleeping',
+  'in_box',
+  'zoomies',
+  'eating',
+  'on_lap',
+  'sunbeam',
+  'night',
+  'garden',
+  'outfit',
+  'lanterns',
+  'stars',
+  'zoomies_3am',
+];
+
 export interface PhotoMeta {
   id: PhotoId;
   day: number;
@@ -2041,8 +2589,10 @@ export interface PhotoMeta {
   caption: StringKey;
   captionBy: CatName;
   cats: CatName[];
+  /** What was in the frame (pure `photoTags` in src/activities/life): wishes, stickers and secrets count photos by tag. */
+  tags: PhotoTag[];
   room: RoomId | null;
-  /** The PNG lives in its own storage key (save module). */
+  /** The PNG lives in its own storage key (save module) and travels inside export and import (F33). */
   storageKey: string;
 }
 
@@ -2105,6 +2655,12 @@ export interface OnboardingState {
 
 export interface HousewarmingState {
   status: 'locked' | 'ready' | 'happening' | 'done';
+  /**
+   * The game day the party is set for, or null. `housewarming.rsvp { tonight: true }`
+   * sets it to today (from the RSVP letter, or the journal's "throw it" button on a later
+   * day) and the party starts at 18:30 that evening; `tonight: false` leaves it null and
+   * the status `ready`. After the party it holds the day it happened.
+   */
   day: number | null;
 }
 
@@ -2169,6 +2725,20 @@ export interface SimOptions {
   freeWill: boolean;
 }
 
+/**
+ * What changed in the last Build session, written by the world plugin when Build
+ * mode closes (F28). The cats read it in a system to react (sim.md 10.6), so they
+ * need neither the app bus nor placedTick guesses. Null until the first session closes.
+ */
+export interface LastBuild {
+  closedTick: number;
+  added: EntityId[];
+  moved: EntityId[];
+  /** Items sold or stored away (the entities are gone). */
+  removed: ItemId[];
+  painted: RoomId[];
+}
+
 /** Activity in progress (the activity's own runtime state lives in the activity object). */
 export interface ActivitySession {
   activity: ActivityId;
@@ -2178,6 +2748,12 @@ export interface ActivitySession {
   /** Action id waiting on activity.finish. */
   actionId: number | null;
   startedTick: number;
+  /**
+   * Drawn from `state.rng` by the sim when it creates the session. The app builds the
+   * activity's private stream with `createRng(session.rngSeed)` and never touches
+   * `state.rng`, so replays do not depend on when the app forks (F1).
+   */
+  rngSeed: number;
 }
 
 export interface SimState {
@@ -2208,6 +2784,7 @@ export interface SimState {
   onboarding: OnboardingState;
   housewarming: HousewarmingState;
   activity: ActivitySession | null;
+  lastBuild: LastBuild | null;
   /** Lifetime counters (progress events, interactions...). */
   stats: Record<StatKey, number>;
   /** Counters since the morning wish roll. */
@@ -2249,6 +2826,11 @@ export interface SystemContext {
   readonly state: SimState;
   readonly content: ContentIndex;
   readonly world: WorldQueries;
+  /**
+   * Buffers: events pushed here are held and delivered to `sim.onEvent` listeners
+   * after the last system of the step, in order (createEventQueue in events.ts), so a
+   * throwing UI handler can never abort a tick half-way (F6).
+   */
   readonly emit: SimEventSink;
   /**
    * Game-clock minutes this tick covers: need decay, schedules, cooldowns.
@@ -2276,6 +2858,7 @@ export type PlayerAction =
   | { readonly type: 'walkTo'; readonly tile: TilePos }
   | { readonly type: 'interact'; readonly interaction: InteractionId; readonly target: EntityId | null; readonly tile?: TilePos }
   | { readonly type: 'queue.cancel'; readonly actionId: number }
+  /** Non-zero also writes `time.lastSpeed`. Panels that soft-pause the game send 0. */
   | { readonly type: 'time.setSpeed'; readonly speed: Speed }
   | { readonly type: 'time.togglePause' }
   | { readonly type: 'mode.set'; readonly mode: 'live' | 'build' | 'photo' }
@@ -2300,6 +2883,10 @@ export type PlayerAction =
   | { readonly type: 'trade.accept'; readonly item: ItemId }
   | { readonly type: 'onboarding.next' }
   | { readonly type: 'onboarding.skip' }
+  /** The housewarming RSVP (play.md 12.1): throw it this evening, or not tonight. Only valid while the status is `ready`. */
+  | { readonly type: 'housewarming.rsvp'; readonly tonight: boolean }
+  /** A mid-play reaction event from a running activity (`ev.ball_loose`...), forwarded as the `reaction` SimEvent for the cats. */
+  | { readonly type: 'activity.event'; readonly event: ReactionEventId }
   // Test and debug only (rejected unless the sim was created with debug: true)
   | { readonly type: 'debug.setNeed'; readonly entity: EntityId; readonly need: NeedKey; readonly value: number }
   | { readonly type: 'debug.addHearts'; readonly amount: number }
@@ -2328,6 +2915,8 @@ export type Meower = CatName | 'bruce';
 export type BlipVoice = 'ellie' | Meower | 'poe' | 'pickle';
 export type FloorSound = 'wood' | 'tile' | 'carpet' | 'rug' | 'grass' | 'stone' | 'gymMat' | 'gravel';
 export type HitGrade = 'perfect' | 'good' | 'miss';
+/** What `gym.stroke` can sound like: the eight Hyrox stations plus the two home-gym extras (N8). */
+export type GymSound = HyroxStation | 'treadmill' | 'kettlebell';
 export type MusicTrack = 'title' | 'home' | 'night' | 'gym' | 'heavy' | 'lofi' | 'cosy' | 'raceDay' | 'housewarming' | 'none';
 
 /** Cue names without a payload. src/audio's local Cue union is a superset of AudioCue. */
@@ -2428,13 +3017,17 @@ export type AudioCue =
   | { readonly cue: 'huff'; readonly cat: Meower }
   | { readonly cue: 'blip'; readonly voice: BlipVoice }
   | { readonly cue: 'step'; readonly floor: FloorSound }
-  | { readonly cue: 'gym.stroke'; readonly station: HyroxStation }
+  | { readonly cue: 'gym.stroke'; readonly station: GymSound }
   | { readonly cue: 'gym.hit'; readonly grade: HitGrade }
   | { readonly cue: 'race.crowd'; readonly intensity: number };
 
 export type AudioCueName = AudioCue['cue'];
 
-/** What the music state machine listens to. */
+/**
+ * What the music state machine listens to. Build it with the pure `musicContextOf(state)`
+ * in src/core/music.ts (F27): `raceDay` is true only while the race activity is running,
+ * never just because it is Saturday.
+ */
 export interface MusicContext {
   readonly mode: GameMode | 'title';
   readonly activity: ActivityId | null;
@@ -2468,6 +3061,7 @@ export type SimEvent =
   | { readonly type: 'say'; readonly entity: EntityId; readonly line: StringKey; readonly vars: StringVars | null }
   | { readonly type: 'thought'; readonly entity: EntityId; readonly icon: SpriteKey }
   | { readonly type: 'emote'; readonly entity: EntityId; readonly emote: Emote }
+  /** `at` is in tile units (the engine draws it; ActivityContext.particles takes canvas pixels). */
   | { readonly type: 'particles'; readonly particle: ParticleKind; readonly at: Vec2; readonly count: number }
   | { readonly type: 'toast'; readonly key: StringKey; readonly vars: StringVars | null; readonly icon: SpriteKey | null }
   | { readonly type: 'hearts'; readonly delta: number; readonly balance: number; readonly reason: HeartsReason }
@@ -2481,6 +3075,8 @@ export type SimEvent =
   | { readonly type: 'sticker'; readonly sticker: StickerId }
   | { readonly type: 'unlock'; readonly what: UnlockRef }
   | { readonly type: 'mail.arrived'; readonly ref: MailRef }
+  /** A reaction event for the cat AI (play.md 13.3). `interaction.start` already covers the start events. */
+  | { readonly type: 'reaction'; readonly event: ReactionEventId; readonly entity: EntityId | null }
   | { readonly type: 'delivery'; readonly order: number; readonly items: readonly ItemId[] }
   /** sim.md `moodBandChanged`: the mood step changed (band may stay the same between steps 4 and 5). */
   | { readonly type: 'mood.band'; readonly band: MoodBand; readonly step: MoodStep }
@@ -2658,7 +3254,9 @@ export type ActivityInput =
   | { readonly type: 'pointer'; readonly x: number; readonly y: number; readonly down: boolean }
   | { readonly type: 'pointerMove'; readonly x: number; readonly y: number };
 
+/** The names are contract suffixes (`grade.good`); play.md's keys follow them (FROZEN 32). */
 export type ActivityGrade = 'perfect' | 'great' | 'good' | 'okay';
+export const ACTIVITY_GRADES: readonly ActivityGrade[] = ['perfect', 'great', 'good', 'okay'];
 
 /**
  * Minigame result scores (FROZEN 4). One score s in 0..1. Skip, cancel or Leave:
@@ -2709,9 +3307,41 @@ export interface ActivityResult {
   readonly save?: JsonValue;
 }
 
+/**
+ * play.md 13.3 reaction events the cats listen for. The sim derives the start events
+ * from `interaction.start` (`ev.training`, `ev.sushi_start`, `ev.ritual_start`,
+ * `ev.music_heavy`, `ev.console_on`, `ev.stargaze`, `ev.photographed`) and the
+ * rest from its own state changes (`ev.wish_done`, `ev.aspiration_tier`, `ev.mail_read`,
+ * `ev.race_done`, `ev.home_from_race`, `ev.george_verdict`). Only the mid-play
+ * ones come from an activity through `ActivityContext.event`: `ev.ball_loose`,
+ * `ev.peaches_headbang`, `ev.train_pb`, `ev.sushi_done`.
+ */
+export type KnownReactionEvent =
+  | 'ev.training'
+  | 'ev.train_pb'
+  | 'ev.ball_loose'
+  | 'ev.race_done'
+  | 'ev.home_from_race'
+  | 'ev.sushi_start'
+  | 'ev.sushi_done'
+  | 'ev.ritual_start'
+  | 'ev.music_heavy'
+  | 'ev.peaches_headbang'
+  | 'ev.console_on'
+  | 'ev.photographed'
+  | 'ev.stargaze'
+  | 'ev.george_verdict'
+  | 'ev.wish_done'
+  | 'ev.aspiration_tier'
+  | 'ev.mail_read';
+export type ReactionEventId = KnownReactionEvent | (string & {});
+
 /** Read-only snapshot handed to an activity. Activities never mutate SimState. */
 export interface ActivityContext {
-  /** A private stream forked from the sim RNG (forkRng), so results are deterministic. */
+  /**
+   * A private stream: `createRng(session.rngSeed)`, built by the app (F1). The activity
+   * draws only from it, so results are deterministic and `state.rng` is never touched.
+   */
   readonly rng: RngState;
   readonly params: ActivityParams;
   readonly state: DeepReadonly<SimState>;
@@ -2724,8 +3354,10 @@ export interface ActivityContext {
   readonly cue: (cue: AudioCue) => void;
   /** Ask a cat to say a line in the world (cooldowns still apply). */
   readonly say: (cat: CatName, line: StringKey) => void;
-  /** Ask for particles at canvas pixels. */
+  /** Ask for particles at canvas pixels (logical 480 x 270 units, not tiles; the engine converts). */
   readonly particles: (kind: ParticleKind, at: Vec2, count: number) => void;
+  /** Fire a reaction event mid-play (F29). The app dispatches `activity.event`; results still arrive only at the end. */
+  readonly event: (event: ReactionEventId) => void;
 }
 
 export interface Activity {
@@ -2761,7 +3393,10 @@ export interface ActivityDef {
 
 /** One domain file: dotted keys (`cat.george.idle.01`) to text. */
 export type StringTable = Readonly<Record<string, string>>;
-/** Placeholder values: {name}, {cat}, {n}. */
+/**
+ * Placeholder values: {name} (the player), {cat} (a cat's display name) and {n}. `{n}` is
+ * "any short value": a count, or a word such as an item, title or aspiration name (N9).
+ */
 export interface StringVars {
   readonly name?: string;
   readonly cat?: string;
@@ -2872,6 +3507,8 @@ export const DEFAULT_SETTINGS: Settings = {
 export const SAVE_KEY = 'ellies-place:save:v1';
 export const SAVE_BACKUP_KEY = 'ellies-place:save:v1:backup';
 export const PHOTO_KEY_PREFIX = 'ellies-place:photo:';
+/** Settings have their own key, so the title screen can change them before any game exists (F37). */
+export const SETTINGS_KEY = 'ellies-place:settings:v1';
 export const SAVE_VERSION = 1;
 
 export interface SaveFile {
@@ -2884,7 +3521,12 @@ export interface SaveFile {
   readonly settings: Settings;
 }
 
-/** Upgrades raw JSON one version. Registered in src/save; tested per step. */
+/**
+ * Upgrades one version. `migrate` receives the SaveFile ROOT (`{ format, version, state, settings... }`)
+ * at version `from` and returns it at `to`, bumping both `version` and `state.version`. Steps
+ * must form an unbroken chain from 1 to SAVE_VERSION (migrationChainProblems() in src/core/validate.ts,
+ * tested). Fields added later are filled from createEmptySimState by reconcileState().
+ */
 export interface Migration {
   readonly from: number;
   readonly to: number;
@@ -2895,12 +3537,21 @@ export type LoadResult =
   | { readonly kind: 'none' }
   | { readonly kind: 'ok'; readonly file: SaveFile }
   | { readonly kind: 'recovered'; readonly file: SaveFile; readonly from: 'backup' }
+  /** Written by a newer build (`version` above SAVE_VERSION). Never loaded, and never overwritten by an autosave. */
+  | { readonly kind: 'tooNew'; readonly version: number }
   | { readonly kind: 'corrupt' }
   | { readonly kind: 'unavailable' };
 
-export type SaveResult = { readonly ok: true } | { readonly ok: false; readonly reason: 'unavailable' | 'quota' | 'error' };
+export type SaveResult =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly reason: 'unavailable' | 'quota' | 'error' | 'tooNew' | 'nonJson' };
 
-export type ImportResult = { readonly ok: true; readonly file: SaveFile } | { readonly ok: false; readonly reason: 'parse' | 'format' | 'version' | 'invalid' };
+/** Photo PNGs by id (data URLs). They travel inside export and import (F33). */
+export type PhotoBundle = Readonly<Record<PhotoId, string>>;
+
+export type ImportResult =
+  | { readonly ok: true; readonly file: SaveFile; readonly photos: PhotoBundle }
+  | { readonly ok: false; readonly reason: 'parse' | 'format' | 'version' | 'tooNew' | 'invalid' };
 
 /** The subset of Storage the save module needs (injectable for tests). */
 export interface StorageLike {
@@ -2930,8 +3581,13 @@ export interface TestHooks {
   /** Advances the sim exactly n ticks, synchronously, regardless of speed. */
   step(ticks: number): void;
   setSpeed(speed: Speed): void;
-  /** A deep copy (JSON round-trip) of the current state. */
+  /**
+   * A deep copy (JSON round-trip) of the current state. NaN and Infinity become `null`
+   * in the copy, so `findNonJson(getState())` is always empty: use `nonJson()` for that check.
+   */
   getState(): SimState;
+  /** Paths of every NaN, Infinity, undefined or non-plain value in the LIVE state (`findNonJson`). Empty is clean. */
+  nonJson(): string[];
   dispatch: Dispatch;
   findEntity(query: EntityQuery): EntityId | null;
   /** Starts a fresh game with this seed. */
@@ -2984,7 +3640,47 @@ export type ActionHandler<T extends PlayerActionType> = (
 
 export type ActionHandlers = { readonly [T in PlayerActionType]?: ActionHandler<T> };
 
-/** A bundle of behaviour registered with sim.use(). */
+/** Whose point of view a condition or effect is read from (`Who`: actor, target). */
+export interface EvalScope {
+  readonly actor?: EntityId;
+  readonly target?: EntityId | null;
+}
+
+export interface StartActionRequest {
+  readonly interaction: InteractionId;
+  readonly target: EntityId | null;
+  readonly tile?: TilePos;
+  readonly source: ActionSource;
+  /** Put it at the front of the actor's queue (scripted beats suspend the queue, sim.md 6.4) instead of the back. */
+  readonly front?: boolean;
+}
+
+export type StartActionResult = { readonly ok: true; readonly actionId: number } | { readonly ok: false; readonly reason: StringKey };
+
+/**
+ * What src/sim exports for plugins (FROZEN 37, F30), so cat-ai-dev and the world plugin never fork
+ * the sim. Every function is named in `src/sim/index.ts` and takes the `SystemContext` the plugin
+ * was called with. The same code paths run for the player, free will and plugins.
+ */
+export interface SimToolkit {
+  /** The one Condition evaluator. */
+  evalCondition(ctx: SystemContext, cond: Condition, scope?: EvalScope): boolean;
+  /** The one Effect interpreter (needs, bond, Hearts, stats, flags, spawn...). */
+  applyEffects(ctx: SystemContext, effects: readonly Effect[], scope?: EvalScope): void;
+  /** Queues an interaction for any actor through the normal rules (queue cap, reachability, slot reservation). */
+  startAction(ctx: SystemContext, actor: EntityId, req: StartActionRequest): StartActionResult;
+  /** Ends the actor's current action (or the one with `actionId`), keeping gains; `graceful` plays its end animation. */
+  cancelAction(ctx: SystemContext, actor: EntityId, opts?: { readonly actionId?: number; readonly graceful?: boolean }): boolean;
+  /** Reserves slot `slot` of `target` for `who`; false if it is taken. */
+  reserveSlot(ctx: SystemContext, target: EntityId, slot: number, who: EntityId): boolean;
+  releaseSlot(ctx: SystemContext, target: EntityId, slot: number, who: EntityId): void;
+}
+
+/**
+ * A bundle of behaviour registered with sim.use() or, normally, passed in
+ * `CreateSimOptions.plugins`. Plugins hold DERIVED CACHES ONLY: anything that
+ * affects the next tick must live in SimState, or a save and reload would diverge (F8).
+ */
 export interface SimPlugin {
   readonly id: string;
   /** Run after the core system of each phase, in registration order. */
@@ -2992,7 +3688,7 @@ export interface SimPlugin {
   readonly ai?: AiHooks;
   /** Handlers for actions the core does not own (build.*, trade.accept...). */
   readonly actions?: ActionHandlers;
-  /** Called after a new game is created (spawn cats, visitors) and after load. */
+  /** Called once after a new game is created (spawn cats, visitors) and after load, in registration order. */
   init?(ctx: SystemContext, reason: 'newGame' | 'load'): void;
 }
 
@@ -3004,6 +3700,11 @@ export interface CreateSimOptions {
   readonly clock: Clock;
   /** Load this state instead of a new game. */
   readonly state?: SimState;
+  /**
+   * Registered in this order BEFORE the game starts: createSim registers every plugin,
+   * then runs `newGame(seed)` (or `load(state)`) and each plugin's `init` once. Normal
+   * wiring is `[world.plugin(), createCatsPlugin()]`; plugin order changes the state hash.
+   */
   readonly plugins?: readonly SimPlugin[];
   /** Accept debug.* actions (test mode and unit tests only). */
   readonly debug?: boolean;
@@ -3022,6 +3723,7 @@ export interface Sim {
   /** Advances n fixed ticks (default 1). */
   step(ticks?: number): void;
   dispatch: Dispatch;
+  /** For tests: adds a plugin. Throws once a game exists, because a late plugin would miss `init`. */
   use(plugin: SimPlugin): void;
   /** Subscribes to SimEvents; returns unsubscribe. */
   onEvent(sink: SimEventSink): () => void;
@@ -3046,8 +3748,11 @@ export type CreateSim = (opts: CreateSimOptions) => Sim;
 
 // ---- src/sim/cats ----------------------------------------------------------
 
-/** Registers the cat and visitor plugins on a sim. */
-export type RegisterCats = (sim: Sim) => void;
+/**
+ * The cat and visitor plugin. It goes into `CreateSimOptions.plugins` (after the world's), so the
+ * sim starts or loads a game only after it is registered (F30).
+ */
+export type CreateCatsPlugin = () => SimPlugin;
 
 // ---- src/world -------------------------------------------------------------
 
@@ -3102,8 +3807,13 @@ export interface BuildDeps {
 
 export interface BuildMode {
   readonly isOpen: boolean;
+  /**
+   * Build mode follows the sim's mode: it subscribes to `mode.changed` and opens or closes by
+   * itself when the UI dispatches `mode.set` (N11). `open()` and `close()` are for the
+   * integrator and tests only; called while the mode already matches they do nothing.
+   */
   open(): void;
-  /** Closes and emits build.closed. */
+  /** Closes and emits build.closed; the world plugin has by then written `SimState.lastBuild`. */
   close(): void;
   /** Pick an item to place (from the catalog or storage). */
   select(item: ItemId | null): void;
@@ -3144,6 +3854,7 @@ export interface Camera {
 }
 
 export interface ParticleApi {
+  /** `at` is in logical canvas pixels (480 x 270), the same unit as ActivityContext.particles. */
   emit(kind: ParticleKind, at: Vec2, count: number): void;
   clear(): void;
   readonly live: number;
@@ -3332,14 +4043,26 @@ export interface SaveApi {
   readonly available: boolean;
   hasSave(): boolean;
   load(): LoadResult;
-  /** Writes the current save, rotating the previous good one into the backup slot. */
+  /**
+   * Writes the current save, rotating the previous good one into the backup slot. Refuses
+   * (`tooNew`) when the slot holds a save from a newer build: that one is never overwritten.
+   */
   save(file: SaveFile): SaveResult;
-  makeFile(state: SimState, settings: Settings): SaveFile;
-  /** Filename `ellies-place-<date>.json` and its JSON text. */
-  exportFile(file: SaveFile): { readonly filename: string; readonly json: string };
-  /** Validates and migrates; does not replace anything. */
+  /**
+   * Null (plus a `save.result` error with reason `nonJson`) when `findNonJson(state)` finds a NaN,
+   * Infinity or undefined: a bug is never saved as `null` (F7).
+   */
+  makeFile(state: SimState, settings: Settings): SaveFile | null;
+  /** The album PNGs the file's `state.album` lists (missing ones skipped), for exportFile. */
+  collectPhotos(file: SaveFile): PhotoBundle;
+  /** Filename `ellies-place-<date>.json` and its JSON text; the photos ride inside it. */
+  exportFile(file: SaveFile, photos: PhotoBundle): { readonly filename: string; readonly json: string };
+  /** Validates (validateSimState), migrates and reconciles; does not replace anything. Photos come back for the app to store. */
   importText(text: string): ImportResult;
-  /** Raw JSON -> current SaveFile, applying migrations. Throws on invalid input. */
+  /** Settings live under SETTINGS_KEY, independent of any game. Defaults when missing or broken. */
+  saveSettings(settings: Settings): SaveResult;
+  loadSettings(): Settings;
+  /** Raw JSON -> current SaveFile, applying migrations from the file's version. Throws on invalid input. */
   migrate(raw: unknown): SaveFile;
   savePhoto(id: PhotoId, dataUrl: string): SaveResult;
   loadPhoto(id: PhotoId): string | null;

@@ -27,8 +27,8 @@ const act = (s: string): ActivityId => s as ActivityId;
 describe('music state machine: track choice', () => {
   it('home by day, night at night', () => {
     expect(chooseTrack(base).track).toBe('home');
-    expect(chooseTrack(ctx({ phase: 'morning' })).track).toBe('home');
-    expect(chooseTrack(ctx({ phase: 'evening' })).track).toBe('home');
+    expect(chooseTrack(ctx({ phase: 'dawn' })).track).toBe('home');
+    expect(chooseTrack(ctx({ phase: 'dusk' })).track).toBe('home');
     expect(chooseTrack(ctx({ phase: 'night' })).track).toBe('night');
   });
 

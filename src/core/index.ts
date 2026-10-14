@@ -13,3 +13,7 @@ export * from './math';
 export * from './rules';
 export * from './content';
 export * from './state';
+export * from './keys';
+export * from './stats';
+export * from './music';
+export * from './validate';
