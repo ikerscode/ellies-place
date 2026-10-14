@@ -256,153 +256,7 @@ Overlays show on upright poses (idle, walk, sit, carry, use, dance, photo, twirl
 
 ## 7. Furniture and decor
 
-About 125 items. Sizes are the grid size before the outline; footprints are in tiles (`w × h`). "Rot" lists drawn rotations (`0` only, or `0 1 2` with 3 = 1 flipped). "States" lists extra keys. All are single frame unless frames are given.
-
-### Batch B: bedroom, living room, lighting, wall decor (46)
-
-| Item id | Footprint | Grid | Rot | States / frames | Styles |
-| --- | --- | --- | --- | --- | --- |
-| `bed_single` | 2 × 3 | 30 × 54 | 0 1 2 | `.overhead` (blanket layer) | cottage |
-| `bed_double` | 3 × 3 | 46 × 54 | 0 1 2 | `.overhead` | |
-| `bed_canopy` | 3 × 3 | 46 × 70 | 0 | `.overhead` | goth |
-| `bed_daybed` | 3 × 2 | 46 × 38 | 0 1 2 | | cottage |
-| `bed_bunk_cat` | 2 × 3 | 30 × 62 | 0 | | cat |
-| `sofa_small` | 2 × 1 | 30 × 24 | 0 1 2 | | |
-| `sofa_velvet` | 3 × 1 | 46 × 24 | 0 1 2 | | goth |
-| `sofa_corner` | 3 × 2 | 46 × 40 | 0 1 2 | | |
-| `armchair` | 1 × 1 | 14 × 24 | 0 1 2 | | cottage |
-| `armchair_wingback` | 1 × 1 | 14 × 28 | 0 1 2 | | goth |
-| `beanbag` | 1 × 1 | 14 × 14 | 0 | | retro |
-| `chair_desk` | 1 × 1 | 14 × 22 | 0 1 2 | | |
-| `pouf` | 1 × 1 | 12 × 10 | 0 | | |
-| `gaming_chair` | 1 × 1 | 14 × 26 | 0 1 2 | | neon |
-| `table_coffee` | 2 × 1 | 30 × 16 | 0 1 | | |
-| `table_side` | 1 × 1 | 12 × 16 | 0 | | |
-| `table_desk` | 2 × 1 | 30 × 22 | 0 1 2 | | |
-| `table_vanity` | 2 × 1 | 30 × 30 | 0 | | goth |
-| `nightstand` | 1 × 1 | 14 × 18 | 0 | | |
-| `wardrobe` | 2 × 1 | 30 × 40 | 0 1 | `.open` | |
-| `wardrobe_goth` | 2 × 1 | 30 × 44 | 0 1 | `.open` | goth |
-| `dresser` | 2 × 1 | 30 × 24 | 0 1 | | cottage |
-| `bookcase` | 1 × 1 | 14 × 40 | 0 1 | | |
-| `bookcase_wide` | 2 × 1 | 30 × 40 | 0 1 | | |
-| `shelf_records` | 2 × 1 | 30 × 22 | 0 1 | | retro |
-| `chest_trunk` | 2 × 1 | 30 × 18 | 0 1 | `.open` | goth |
-| `record_player` | 1 × 1 | 14 × 20 | 0 1 | `.on` 4 frames (spinning) | retro |
-| `tv_small` | 1 × 1 | 14 × 20 | 0 1 | `.on` 2 frames | |
-| `tv_big` | 2 × 1 | 30 × 26 | 0 1 | `.on` 2 frames | |
-| `console` | 1 × 1 | 10 × 6 (surface) | 0 | `.on` 2 frames (light) | |
-| `laptop` | 1 × 1 | 10 × 7 (surface) | 0 1 | `.on` 2 frames | |
-| `speaker_tall` | 1 × 1 | 12 × 26 | 0 | `.on` 2 frames (cone pulse) | neon |
-| `mirror_floor` | 1 × 1 | 14 × 34 | 0 1 | | goth |
-| `lamp_small` | surface | 8 × 10 | 0 | `.on` | |
-| `lamp_floor` | 1 × 1 | 10 × 30 | 0 | `.on` | |
-| `lamp_mushroom` | surface | 9 × 9 | 0 | `.on` | cottage |
-| `lamp_lava` | surface | 6 × 12 | 0 | `.on` 4 frames | retro neon |
-| `candles` | surface | 10 × 8 | 0 | `.on` 2 frames (flicker) | goth |
-| `candelabra` | 1 × 1 | 12 × 28 | 0 | `.on` 2 frames | goth |
-| `fairy_lights` | wall 3 | 46 × 8 | 0 | `.on` 2 frames | cottage |
-| `neon_sign_bat` | wall 2 | 28 × 12 | 0 | `.on` 2 frames | neon |
-| `wall_sconce` | wall 1 | 8 × 12 | 0 | `.on` | goth |
-| `poster_gig` | wall 1 | 12 × 14 | 0 | | retro (abstract original artwork, no band name, no text) |
-| `frame_print` | wall 1 | 12 × 12 | 0 | | (the optional framed print; the UI draws only `FRAMED_PRINT_TEXT` from `src/content/personal.ts`) |
-| `frame_polaroids` | wall 2 | 26 × 12 | 0 | | callback to the polaroid keepsake |
-| `mirror_wall` | wall 1 | 12 × 14 | 0 | | |
-| `shelf_wall` | wall 2 | 28 × 8 | 0 | 2 surface slots | |
-| `clock_wall` | wall 1 | 10 × 10 | 0 | 2 frames (pendulum) | |
-| `rug_round` | rug 2 × 2 | 32 × 32 | 0 | no outline | |
-| `rug_runner` | rug 3 × 1 | 48 × 16 | 0 1 | no outline | cottage |
-| `rug_bat` | rug 3 × 2 | 48 × 32 | 0 | no outline | goth |
-| `rug_checker` | rug 2 × 2 | 32 × 32 | 0 | no outline | retro |
-
-Rugs are drawn on the rug layer with `outline: 'none'` and a 1 px border in their own `deep` shade.
-
-### Batch C: kitchen, bath, gym (all 8 Hyrox stations), props and surface decor (44)
-
-| Item id | Footprint | Grid | Rot | States / frames | Styles |
-| --- | --- | --- | --- | --- | --- |
-| `counter` | 1 × 1 | 14 × 24 | 0 1 2 | | |
-| `counter_corner` | 1 × 1 | 14 × 24 | 0 1 2 | | |
-| `sink_kitchen` | 1 × 1 | 14 × 24 | 0 1 2 | `.on` 2 frames | |
-| `stove` | 1 × 1 | 14 × 24 | 0 1 2 | `.on` 2 frames | |
-| `fridge` | 1 × 1 | 14 × 38 | 0 1 2 | `.open` | |
-| `fridge_retro` | 1 × 1 | 14 × 38 | 0 1 2 | `.open` | retro |
-| `coffee_machine` | surface | 10 × 12 | 0 | `.on` 3 frames (steam) | |
-| `kettle` | surface | 9 × 9 | 0 | `.on` 2 frames | |
-| `toaster` | surface | 10 × 8 | 0 | `.on` | |
-| `sushi_board` | surface | 12 × 6 | 0 | | |
-| `table_dining_small` | 2 × 1 | 30 × 20 | 0 1 | | cottage |
-| `table_dining_round` | 2 × 2 | 30 × 30 | 0 | | |
-| `chair_dining` | 1 × 1 | 12 × 22 | 0 1 2 | | cottage |
-| `stool_bar` | 1 × 1 | 10 × 18 | 0 | | |
-| `cat_bowls` | 1 × 1 | 14 × 7 | 0 | `.full` | cat |
-| `bath` | 3 × 2 | 46 × 30 | 0 1 | `.full`, `.overhead` (front rim) | |
-| `bath_clawfoot` | 3 × 2 | 46 × 32 | 0 1 | `.full`, `.overhead` | goth |
-| `sink_bath` | 1 × 1 | 14 × 24 | 0 1 2 | | |
-| `toilet` | 1 × 1 | 12 × 20 | 0 1 2 | | |
-| `shower` | 1 × 1 | 14 × 40 | 0 | `.on` 2 frames | |
-| `towel_rail` | wall 1 | 12 × 12 | 0 | | |
-| `bath_mat` | rug 2 × 1 | 32 × 16 | 0 1 | no outline | |
-| `skierg` | 1 × 1 | 14 × 36 | 0 1 | | gym (station 1) |
-| `sled` | 1 × 1 | 14 × 16 | 0 1 | | gym (stations 2 and 3) |
-| `sled_track` | rug 1 × 4 | 16 × 64 | 0 1 | no outline | gym (garden turf lane) |
-| `burpee_mat` | rug 2 × 1 | 32 × 16 | 0 1 | no outline | gym (station 4, jump line) |
-| `rower` | 1 × 3 | 14 × 50 | 0 1 | | gym (station 5) |
-| `farmers_handles` | 1 × 1 | 14 × 10 | 0 | | gym (station 6) |
-| `sandbag` | 1 × 1 | 14 × 10 | 0 | | gym (station 7) |
-| `wallball_target` | wall 1 | 12 × 14 | 0 | | gym (station 8; ball is `prop.wallball`) |
-| `treadmill` | 1 × 2 | 14 × 36 | 0 1 2 | `.on` 2 frames | gym (runs) |
-| `kettlebell` | 1 × 1 | 10 × 10 | 0 | | gym |
-| `race_board` | wall 2 | 28 × 14 | 0 | | gym (PB board) |
-| `medal_rack` | wall 1 | 12 × 14 | 0 | 4 states `.m0`..`.m3` (medals hung) | gym |
-| `yoga_mat` | rug 1 × 2 | 16 × 32 | 0 1 | no outline | gym |
-
-Props and surface decor (≤ 12 × 12, anchor bottom centre): `prop.mug`, `prop.coffee` (2 frames steam), `prop.rusk`, `prop.plate`, `prop.sushi`, `prop.trinket`, `prop.box` (delivery box, `.open`), `prop.book`, `prop.ham`, `prop.toy` (feather wand), `prop.controller`, `prop.handheld`, `prop.wallball`, `prop.vase` (`.broken` for Salem), `prop.record_sleeve`, `prop.plant_tiny`, `prop.skull_candle` (goth), `prop.snow_globe` (game 1 globe), `prop.fortune_cat_card`, `prop.camera`. These are not catalog items unless `src/content/data` lists them.
-
-### Batch D: garden, plants, cat furniture, patterns, icons (36 items plus patterns and icons)
-
-| Item id | Footprint | Grid | Rot | States / frames | Styles |
-| --- | --- | --- | --- | --- | --- |
-| `tree_garden` | 2 × 2 | 30 × 46 | 0 | `.overhead` (canopy) | plant |
-| `washing_line` | 4 × 1 | 62 × 24 | 0 1 | 2 frames (sway) | cottage |
-| `bird_bath` | 1 × 1 | 14 × 20 | 0 | 2 frames (water glint) | |
-| `fence_panel` | 1 × 1 | 16 × 22 | 0 1 | | fixed (Bruce peeks over) |
-| `garden_wall` | 1 × 1 | 16 × 14 | 0 1 | | fixed (Bruce's wall) |
-| `lantern_garden` | 1 × 1 | 10 × 24 | 0 | `.on` 2 frames | cottage (game 1 lantern) |
-| `bench_garden` | 2 × 1 | 30 × 20 | 0 1 2 | | cottage |
-| `picnic_blanket` | rug 2 × 2 | 32 × 32 | 0 | no outline | cottage |
-| `deckchair` | 1 × 2 | 14 × 30 | 0 1 2 | | |
-| `firepit` | 1 × 1 | 14 × 14 | 0 | `.on` 3 frames | |
-| `planter_veg` | 2 × 1 | 30 × 16 | 0 1 | | plant |
-| `flower_bed` | 2 × 1 | 30 × 14 | 0 | | plant |
-| `mailbox` | 1 × 1 | 10 × 20 | 0 | `.flag` (mail waiting) | fixed |
-| `doormat` | rug 1 × 1 | 16 × 12 | 0 | no outline | fixed |
-| `telescope` | 1 × 1 | 14 × 24 | 0 1 | | |
-| `stepping_stones` | rug 1 × 1 | 16 × 16 | 0 | no outline | |
-| `plant_monstera` | 1 × 1 | 14 × 26 | 0 | | plant |
-| `plant_snake` | 1 × 1 | 10 × 22 | 0 | | plant |
-| `plant_hanging` | wall 1 | 12 × 16 | 0 | | plant |
-| `plant_succulents` | surface | 10 × 8 | 0 | | plant |
-| `plant_rose_black` | surface | 8 × 12 | 0 | | goth plant (game 1 rose, rim outline) |
-| `plant_fern` | 1 × 1 | 14 × 18 | 0 | | plant cottage |
-| `plant_cat_grass` | surface | 10 × 8 | 0 | | plant cat |
-| `plant_bonsai` | surface | 12 × 12 | 0 | | plant |
-| `cat_tree_small` | 1 × 1 | 14 × 34 | 0 | | cat |
-| `cat_tree_tall` | 2 × 1 | 30 × 52 | 0 | | cat |
-| `cat_perch_window` | wall 1 | 14 × 8 | 0 | | cat |
-| `cat_shelf_steps` | wall 2 | 28 × 16 | 0 | | cat |
-| `cat_tunnel` | 2 × 1 | 30 × 12 | 0 1 | | cat |
-| `cat_bed_round` | 1 × 1 | 14 × 9 | 0 | | cat |
-| `cat_bed_cave` | 1 × 1 | 14 × 14 | 0 1 | | cat goth (rim outline) |
-| `cat_scratcher_post` | 1 × 1 | 10 × 24 | 0 | | cat |
-| `cat_scratcher_flat` | 1 × 1 | 14 × 8 | 0 1 | | cat |
-| `cat_throne` | 1 × 1 | 14 × 26 | 0 | | cat (George) |
-| `cat_box_castle` | 2 × 1 | 30 × 22 | 0 | | cat (Salem) |
-| `litter_tray` | 1 × 1 | 14 × 10 | 0 1 | | cat |
-
-**Patterns** (`pattern.<surface>.<pattern>`, 16 × 16, palette `1 2 3`, no outline), for `PaintPattern` × `PaintSurface`: `pattern.floor.plain`, `.stripes`, `.checks`, `.wood`, `.tiles`, `.wallpaper` and `pattern.wall.plain`, `.stripes`, `.checks`, `.wood` (panelling), `.tiles`, `.wallpaper` (12). Plus `pattern.ground.grass` (2 frames, wind), `pattern.ground.path`, `pattern.ground.soil` (3, garden). The engine recolours with `rasterize(grid, { 1: c0, 2: c1, 3: c2 }, 'none')`.
-
-**Motifs** (`motif.<id>`, ≤ 8 × 8, stamped on wallpaper every 8 px offset by 4 on odd rows): `motif.bat`, `motif.moon`, `motif.star`, `motif.rose`, `motif.mushroom`, `motif.cat_face`, `motif.leaf`, `motif.skull` (8).
+The item list (every sprite key, size, rotation, state, MVP flag and recolour note) lives in `design/spec/art-checklist.md`, generated from `home.md`; this file's old item ids are void (FROZEN row 21).
 
 ## 8. Icons (batch D)
 
@@ -429,9 +283,9 @@ All `outline` default, anchor top-left. Need and thought icons are 10 × 10; too
 | Batch | Folder | Owner | Content | Contact sheet |
 | --- | --- | --- | --- | --- |
 | `base` | `src/art/base/` | pixel-artist (lead) | Compiler, palette, every character, outfits | `reports/art/base.png` |
-| `b` | `src/art/b/` | pixel-artist B | §7 batch B | `reports/art/b.png` |
-| `c` | `src/art/c/` | pixel-artist C | §7 batch C and props | `reports/art/c.png` |
-| `d` | `src/art/d/` | pixel-artist D | §7 batch D, patterns, motifs, §8 icons, fx | `reports/art/d.png` |
+| `b` | `src/art/b/` | pixel-artist B | checklist batch B | `reports/art/b.png` |
+| `c` | `src/art/c/` | pixel-artist C | checklist batch C and props | `reports/art/c.png` |
+| `d` | `src/art/d/` | pixel-artist D | checklist batch D, patterns, motifs, §8 icons, fx | `reports/art/d.png` |
 
 `src/art/base/sheet.ts` finds every `src/art/*/index.ts` that exports `BATCH` and draws one sheet per batch, so new batches need no wiring. The engine gets the same list from the integrator (`sprites: [BASE.BATCH, B.BATCH, ...]`).
 
