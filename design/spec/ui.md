@@ -718,7 +718,7 @@ A book opened over a scrim: a dark plum cover frame (`--box`, `--edge`, `--float
 ```
 
 - Four rows (Hyrox Hero, Cat Royalty, Home Maker, Collector), each a vine with 4 buds (done buds bloom, using the aspiration icon). Focusing a bud shows that tier's title, goal and rewards.
-- Goal text comes from tier string keys (`asp.<id>.tier<n>.goal`), written by the writer from the designer's goals; the UI does not render `Condition`s.
+- Goal text comes from tier string keys (`asp.<id>.tier.<n>.goal`), written by the writer from the designer's goals; the UI does not render `Condition`s.
 - Title picker: the unlocked titles; choosing dispatches `title.set`.
 
 ### 11.3 Collection
@@ -1264,14 +1264,17 @@ All in a `ui` domain file (`src/content/strings/ui.ts`), owned by the writer. No
 | Prefix | Examples |
 | --- | --- |
 | `ui.hud.*` | `ui.hud.queue.label`, `ui.hud.queue.cancel`, `ui.hud.queue.freeWill`, `ui.hud.day`, `ui.hud.speed.pause`, `ui.hud.speed.n`, `ui.hud.realTime`, `ui.hud.raceDay`, `ui.hud.hearts.tip`, `ui.hud.orders`, `ui.hud.carrying`, `ui.hud.hidden` |
-| `ui.need.<key>.name`, `ui.need.<key>.help` | for the six needs and the five cat needs |
+| `ui.need.<key>.name`, `ui.need.<key>.help` | for the six Ellie needs and the eight cat needs (`food`, `play`, `affection`, `nap`, `royalty`, `chaos`, `solitude`, `vibes`) |
+| `ui.phase.<DayPhase>` | `dawn`, `day`, `dusk`, `night` |
+| `ui.reason.<ReasonCode>` | why a petal is greyed or an action was refused, one line each, gently worded |
+| `grade.<ActivityGrade>` | `perfect`, `great`, `good`, `okay` |
 | `ui.mood.<band>` | `mopey` to `great` words |
 | `ui.wish.*` | `ui.wish.none`, `ui.wish.done`, `ui.wish.allDone.<cat>`, `ui.wish.reward` |
 | `ui.mode.*` | token names and tooltips with keys |
 | `ui.bloom.*` | `ui.bloom.more`, `ui.bloom.back`, `ui.bloom.empty.<cat>` |
 | `ui.toast.*` | one per row of 8.2 |
 | `ui.build.*` | tool names and tips, `ui.build.paused`, `ui.build.cosy`, `ui.build.try` |
-| `build.err.<PlacementError>` | thirteen reasons, gently worded |
+| `build.err.<PlacementError>` | nineteen reasons, one per `PlacementError`, gently worded |
 | `ui.catalog.*` | title, Pickle lines, filters, sorts, badges, basket, order button, empty |
 | `ui.journal.*` | tab names, page titles, every empty state (in cat voices) |
 | `ui.cats.*` | panel title, doing-now phrases, bond tooltip |
@@ -1293,7 +1296,7 @@ All in a `ui` domain file (`src/content/strings/ui.ts`), owned by the writer. No
 - **Engine:** emits the `KeyAction` bindings in 20.1 with the guard in 20.2; calls `ui.setScale` on boot and resize; uses the scale rule in 2.3 (2.5 at 1280 × 720, 2.75 at 1440 × 800, 4 at 1920 × 1080); `pointer.entity` includes Ellie, cats, visitors and smart objects; draws emotes and item or spot highlights on the hints layer; previews photo filters.
 - **Sim:** `menuFor` returns petals in display order with a `reason` key for every disabled one; rejected `PlayerAction`s return a `StringKey` reason in the `ui.*` or `build.err.*` space; Ellie's `agent.current` progress fields are filled for the queue ring.
 - **Cat AI and sim:** cat discoveries are flags, so the journal can show them: `known.<cat>.like.<tag>`, `known.<cat>.dislike.<tag>`, `known.<cat>.quirk.<quirkId>`.
-- **Game designer:** items carry `room.<roomKind>` tags for the catalog room filter (untagged items show everywhere); every aspiration tier has goal and reward string keys `asp.<id>.tier<n>.goal` and `.reward`; every `InteractionDef` has an `icon` (petals and queue cards need one); wishes keep titles to 40 characters and petal labels to 22.
+- **Game designer:** items carry `room.<roomKind>` tags for the catalog room filter (untagged items show everywhere); every aspiration tier has goal and reward string keys `asp.<id>.tier.<n>.goal` and `.reward`; every `InteractionDef` has an `icon` (petals and queue cards need one); wishes keep titles to 40 characters and petal labels to 22.
 - **Writer:** the keys in section 24; cat-voiced empty states; no dashes.
 - **Build-mode-dev:** builds sections 9 and 10 with `ui.kit`, adds `data-hl` ids from 19, and handles the build key actions.
 - **Integrator:** wires `app.request`, `photo.request`, `activity.skip`/`leave`/`skippable`, `loadPhoto`, the stage DOM in 2.1, `audio.unlock()` on first gesture, and soft pause relies on `time.setSpeed` being accepted in live.

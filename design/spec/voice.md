@@ -35,10 +35,13 @@ The unit test in `tests/unit/strings/` enforces most of these, plus some voice r
 | Interaction labels | `int.` | 22 characters |
 | Wish titles | `wish.` | 40 characters |
 | Aspiration names and tier titles | `asp.*.name`, `asp.*.tier.n` | 40 characters |
+| Aspiration goals and rewards | `asp.*.tier.n.goal`, `.reward` | 70 characters |
 | Aspiration blurbs | `asp.*.desc` | 80 characters |
 | Speech bubbles | `cat.`, `visitor.`, `ellie.`, `onboard.` | 70 characters |
 | Toasts and hints | `ui.toast.`, `ui.hint.` | 80 characters |
 | Confirm prompts and taglines | `*Confirm`, `*.tagline` | 80 characters |
+| Need tooltips and reasons | `ui.need.*.help`, `ui.reason.*`, `build.err.*` | 80 characters |
+| Grade labels | `grade.*` | 16 characters |
 | Other UI labels | `ui.`, `onboard.ui.` | 32 characters |
 | Mail subject | `mail.*.subject` | 40 characters |
 | Mail body | `mail.*.body` | 4 lines, each 56 characters or fewer, split with `\n` |
@@ -55,8 +58,14 @@ Limits count characters after placeholders are filled with typical values (`{nam
 - **Speech:** `cat.<cat>.<situation>.nn`, `visitor.<bruce|poe|pickle>.<situation>.nn`, `ellie.<situation>.nn`. Lines that share everything but the number are interchangeable variants, numbered 01, 02... with no gaps, so code can pick one with the seeded RNG by counting keys under the prefix.
 - **Common situations:** `pet`, `idle`, `food`, `nap`, `bed`, `morning`, `newItem`, `approve`/`disapprove` (George on new furniture), `race`, `caption` (photo captions), `lowMood`, `grass`, plus each cat's own (`box`, `ham`, `knock`, `zoomies`, `laser` for Salem; `sunbeam`, `record`, `lid` for Peaches; `heavy`, `lap`, `trust` for Shadow; `fish`, `pillow`, `bow`, `knight` for George).
 - **Onboarding:** `onboard.<speaker>.<step>.nn`, in play order, and `onboard.ui.*` for its buttons.
-- **Content:** `int.<interactionId>`, `wish.<wishId>`, `asp.<id>.name|desc|tier.<1-4>` (ids `hyrox`, `royalty`, `home`, `collect`, FROZEN §3 #7), `mail.<mailId>.subject|body`, `item.<itemId>.name|desc`, `room.<roomId>`.
-- **UI keyed by contract enums,** so code can build the key: `ui.need.<EllieNeed>`, `ui.catNeed.<CatNeed>`, `ui.bond.<0-4>`, `ui.mood.<MoodBand>`, `ui.phase.<DayPhase>`, `ui.mode.<GameMode>`, `ui.speed.<0-3>`, `ui.day.<Weekday>`, `ui.category.<ItemCategory>`, `ui.style.<StyleTag>`, `ui.cosy.<CosyFactor>`, `ui.journal.<JournalTab>`, `ui.radio.<RadioStation>`, `ui.hyrox.<HyroxStation>`, `ui.toast.place.<PlacementError>`.
+- **Content (FROZEN 22; one builder per family in `src/core/keys.ts`, which is the truth for spelling):**
+  - Interactions: `int.<interactionId>` with the `sim.md` §4.3 and §8.6 id (`int.bed.sleep`, `int.cat.pet`, `int.gym.<station>.train`). A reason written for one interaction is `int.<id>.why.<n>`.
+  - Wishes: `wish.<wishId>`, where the id does not repeat the prefix (`wish.bow_george`); an optional cat reaction is `wish.<wishId>.done`.
+  - Mail: `mail.<mailId>.subject` and `.body` (`mail.pickle.welcome.subject`); `.from` for the sender where `play.md` names one.
+  - Items: `item.<ItemId>.name` and `.desc`. Rooms: `room.<roomId>`.
+  - Aspirations: `asp.<id>.name` and `.desc`, then per tier `asp.<id>.tier.<1-4>` (title), `.goal` and `.reward`. Ids: `hyrox`, `royalty`, `home`, `collect` (FROZEN 7).
+  - Placement errors: `build.err.<PlacementError>`, one per member (nineteen).
+- **UI keyed by contract enums,** so code can build the key (the coverage test in `tests/unit/core/keyCoverage.test.ts` walks every one, with no allowlist left): `ui.need.<need>.name` and `.help` (six Ellie needs, eight cat needs), `ui.bond.<0-4>`, `ui.mood.<MoodBand>`, `ui.phase.<dawn|day|dusk|night>`, `ui.mode.<GameMode>`, `ui.speed.<0-3>`, `ui.day.<Weekday>`, `ui.category.<ItemCategory>`, `ui.style.<StyleTag>`, `ui.cosy.<CosyFactor>`, `ui.journal.<JournalTab>`, `ui.radio.<RadioStation>`, `ui.hyrox.<HyroxStation>`, `ui.reason.<ReasonCode>` (why a petal is greyed or an action refused), `grade.<perfect|great|good|okay>`.
 - **Other UI:** `ui.<area>.<thing>`; toasts are `ui.toast.*`, hints `ui.hint.*`.
 
 ## The voices

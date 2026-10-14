@@ -31,7 +31,7 @@ Read with: `design/ELLIE.md` (tone, facts), `design/BRIEF.md`, `design/spec/sim.
 - **Ids** are stable `snake_case` strings. Prefixes: `act.` activities, `stn.` Hyrox stations, `wish.` wishes, `asp.` aspirations, `out.` outfits, `stk.` stickers, `mail.` mail, `crit.` critters. In data tables the prefix is part of the id.
 - **Item ids** (catalog) are written bare, like `pb_board`. They are proposals. If `home.md` names the same thing differently, `home.md` wins and the Wave 2 data uses its id. What must survive is the unlock source and the price band.
 - **Interaction ids** (like `cat.bow`) are proposals in the same way. `sim.md` wins on names.
-- **String keys** are in `code`. A short placeholder in quotes after a key, like `wish.bow_george.title` "Bow to George", is a hint for the writer only. The writer owns every final word.
+- **String keys** are in `code`. A short placeholder in quotes after a key, like `wish.bow_george` "Bow to George", is a hint for the writer only. The writer owns every final word.
 - **Any id shown to the player without its own key** (a station, medal, streak colour, place, filter, layout, menu label) uses `<id>.name` for its display name, for example `streak.violet.name`, `act.race.name`, `plate.fan.name`. No player-facing text lives in data or code.
 - **Game time:** `hh:mm` is the in-game clock. "Game minute" and "game hour" are in-game. "s" means real seconds while an activity screen is open. At speed x1 one game hour is one real minute (BRIEF section 4).
 - **Day 1 is a Monday.** Saturdays are days 6, 13, 20, 27 and so on.
@@ -48,7 +48,7 @@ Every minigame in this spec runs inside the same frame, which `activities-dev` b
 | Intro | One line on screen, key `<act>.instr`, shown 1.5 s, then a 3-beat count-in (0.4 s per beat) | She always knows the one control before it matters. |
 | Controls | One action key: Space or Enter, or click/tap anywhere on the activity. Arrow keys only where the row says so. Left/Right arrows can also be the left/right half of the screen for click and tap. | One-button play, mouse first. |
 | Score | A number from 0.0 to 1.0, shown as points `round(score x 100)` | One scale for every game, so Hearts and XP use one formula. |
-| Grade | `grade.perfect` >= 90 points, `grade.great` >= 70, `grade.nice` >= 40, `grade.done` below 40 | Every grade is a positive word. No "fail" text exists. |
+| Grade | `grade.perfect` >= 90 points, `grade.great` >= 70, `grade.good` >= 40, `grade.okay` below 40 (the suffixes are the `ActivityGrade` contract; FROZEN 32) | Every grade is a positive word. No "fail" text exists. |
 | Miss | Defined per minigame below. A miss only lowers the score. | |
 | Skip | After the 2nd miss, a **Skip** button appears (key `ui.skip`, "Skip"), hotkey Esc or S. Skip ends the minigame as a **pass**. | Pillar 1. |
 | Pass | A skipped minigame scores **0.5** (`PASS_SCORE`), counts as completed for wishes, aspirations and race time, and pays the normal result effects at 0.5. It never sets a PB. | "Skip counts as pass", fixed and predictable. |
@@ -825,7 +825,7 @@ The green streaks are the default. Other colours change only the streak pixels.
 | Swap | Once per game day she may swap one wish for another eligible one (`wish.swap`). Free. | Choice, not chore. |
 | Reward | On completion: Hearts x moodMult (rounded), and a mood boost: a moodlet `moodlet.wish` of the row's size for 4 game hours. Moodlets stack to +20 at most. "Moodlet" is internal only; player text says "mood boost". | |
 | Full set | All 3 done in one game day: +15 Hearts x moodMult and `wishesFullSets += 1`. | |
-| Toast | `wish.done` "Wish granted: {title}" with a sparkle and the cats' reaction (`ev.wish_done`). | |
+| Toast | `ui.wish.done` "Wish granted: {title}" with a sparkle and the cats' reaction (`ev.wish_done`). | |
 | Journal | `journal.wishes` lists today's wishes, the swap button, and a count of all wishes ever completed. | |
 | Free will | Free will gives a small utility bonus (x1.2) to interactions that would complete an open wish. | Helps the soak and a hands-off player. |
 
@@ -850,7 +850,7 @@ Wave 2 encodes conditions as data. "Today" means since the wish was offered.
 
 ### 7.3 The wishes pool (60 rows: 30 MVP)
 
-Title keys are `wish.<id>.title`. Every wish also has `wish.<id>.done` for a one-line cat reaction (optional, falls back to `wish.done.generic.<n>`).
+Title keys are `wish.<id>` (the `WishId` is the part after `wish.`: `bow_george`; FROZEN 22). Every wish also has `wish.<id>.done` for a one-line cat reaction (optional, falls back to `wish.done.generic.<n>`).
 
 | # | Id | Cat. | Title (placeholder) | Condition | Context | Hearts | Mood | MVP |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -935,10 +935,10 @@ Bond levels below are `sim.md`'s levels 0 to 4 (top level 4).
 
 | Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `asp.hyrox.1` | `asp.hyrox.1.name` "Warm-up" | 5 training sessions completed (any stations, passes count) | `pb_board` (wall PB board) | `kettlebell_rack` | `out.sweatband` |
-| 2 | `asp.hyrox.2` | `asp.hyrox.2.name` "Race Day" | Finish 1 race | `medal_hooks` (wall medal display) | `foam_roller` | `out.race_kit` |
-| 3 | `asp.hyrox.3` | `asp.hyrox.3.name` "Target Time" | Finish a race in under 1:30:00 | `trophy_shelf` | `recovery_beanbag` | `out.trainers` |
-| 4 | `asp.hyrox.4` | `asp.hyrox.4.name` "PB Streak" | After tier 3: set a new overall PB in 3 races, and have every station skill at 5 or more | `champion_banner` | `pro_treadmill` | `out.gym_hoodie`, `title.hyrox_hero` |
+| 1 | `asp.hyrox.1` | `asp.hyrox.tier.1` "Warm-up" | 5 training sessions completed (any stations, passes count) | `pb_board` (wall PB board) | `kettlebell_rack` | `out.sweatband` |
+| 2 | `asp.hyrox.2` | `asp.hyrox.tier.2` "Race Day" | Finish 1 race | `medal_hooks` (wall medal display) | `foam_roller` | `out.race_kit` |
+| 3 | `asp.hyrox.3` | `asp.hyrox.tier.3` "Target Time" | Finish a race in under 1:30:00 | `trophy_shelf` | `recovery_beanbag` | `out.trainers` |
+| 4 | `asp.hyrox.4` | `asp.hyrox.tier.4` "PB Streak" | After tier 3: set a new overall PB in 3 races, and have every station skill at 5 or more | `champion_banner` | `pro_treadmill` | `out.gym_hoodie`, `title.hyrox_hero` |
 
 Reference pace: tier 1 on day 2, tier 2 on day 6 (first Saturday), tier 3 around day 13, tier 4 around day 24.
 
@@ -946,10 +946,10 @@ Reference pace: tier 1 on day 2, tier 2 on day 6 (first Saturday), tier 3 around
 
 | Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `asp.royalty.1` | `asp.royalty.1.name` "Cat Friend" | Any one cat at bond level 2 | `cat_bed_round` | `cat_scratcher_post` | `out.paw_clip` |
-| 2 | `asp.royalty.2` | `asp.royalty.2.name` "Court of Four" | All four cats at bond level 2 or more at the same time | `cat_tree_tall` | `cat_tunnel` | none |
-| 3 | `asp.royalty.3` | `asp.royalty.3.name` "Royal Favour" | George has knighted her (`knighted`), and Shadow has sat on her lap at least once (`shadowOnLap` ever) | `royal_cushion` (George's throne cushion) | `window_perch` | `out.bell_choker` |
-| 4 | `asp.royalty.4` | `asp.royalty.4.name` "Four on the Bed" | All four cats at bond level 4, and on one night all four are on her bed at the 03:00 check while she sleeps | `four_cats_portrait` | `canopy_cat_bed` | `out.cat_slippers`, `title.cat_royalty` |
+| 1 | `asp.royalty.1` | `asp.royalty.tier.1` "Cat Friend" | Any one cat at bond level 2 | `cat_bed_round` | `cat_scratcher_post` | `out.paw_clip` |
+| 2 | `asp.royalty.2` | `asp.royalty.tier.2` "Court of Four" | All four cats at bond level 2 or more at the same time | `cat_tree_tall` | `cat_tunnel` | none |
+| 3 | `asp.royalty.3` | `asp.royalty.tier.3` "Royal Favour" | George has knighted her (`knighted`), and Shadow has sat on her lap at least once (`shadowOnLap` ever) | `royal_cushion` (George's throne cushion) | `window_perch` | `out.bell_choker` |
+| 4 | `asp.royalty.4` | `asp.royalty.tier.4` "Four on the Bed" | All four cats at bond level 4, and on one night all four are on her bed at the 03:00 check while she sleeps | `four_cats_portrait` | `canopy_cat_bed` | `out.cat_slippers`, `title.cat_royalty` |
 
 Reference pace: tier 1 day 3, tier 2 day 9, tier 3 day 17, tier 4 day 25. For tier 4, `cat-ai` must give every cat at bond level 4 a strong pull to Ellie's bed at night (see 13).
 
@@ -959,10 +959,10 @@ Rooms counted: bedroom, living room, kitchen-diner, bathroom, spare room, back g
 
 | Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `asp.home.1` | `asp.home.1.name` "One cosy room" | Any room rated Cosy 45 or more (FROZEN §3 #8) | `pothos_plant` | `bookshelf_tall` | none |
-| 2 | `asp.home.2` | `asp.home.2.name` "A matching set" | First set completed (any room has an active set bonus, `home.md` sets) | `string_lights` | `velvet_armchair` | `out.cosy_jumper` |
-| 3 | `asp.home.3` | `asp.home.3.name` "Three rooms, three sets" | 3 rooms rated Cosy 65 or more, and 3 different sets completed | `lantern_arch` | `garden_swing` | none. (When the housewarming becomes available is FROZEN §3 #9.) |
-| 4 | `asp.home.4` | `asp.home.4.name` "Cosy from the door to the garden" | Home Cosy (rated) 80 or more | `stained_glass_lamp` (or `attic_ladder` if the stretch attic exists) | `chandelier_goth` | `out.dungarees`, `title.home_maker` |
+| 1 | `asp.home.1` | `asp.home.tier.1` "One cosy room" | Any room rated Cosy 45 or more (FROZEN §3 #8) | `pothos_plant` | `bookshelf_tall` | none |
+| 2 | `asp.home.2` | `asp.home.tier.2` "A matching set" | First set completed (any room has an active set bonus, `home.md` sets) | `string_lights` | `velvet_armchair` | `out.cosy_jumper` |
+| 3 | `asp.home.3` | `asp.home.tier.3` "Three rooms, three sets" | 3 rooms rated Cosy 65 or more, and 3 different sets completed | `lantern_arch` | `garden_swing` | none. (When the housewarming becomes available is FROZEN §3 #9.) |
+| 4 | `asp.home.4` | `asp.home.tier.4` "Cosy from the door to the garden" | Home Cosy (rated) 80 or more | `stained_glass_lamp` (or `attic_ladder` if the stretch attic exists) | `chandelier_goth` | `out.dungarees`, `title.home_maker` |
 
 Reference pace: tier 1 day 2, tier 2 day 5, tier 3 day 11, tier 4 day 22.
 
@@ -972,10 +972,10 @@ Reference pace: tier 1 day 2, tier 2 day 5, tier 3 day 11, tier 4 day 22.
 
 | Tier | Id | Name (placeholder) | Exact condition | Gift item | Unlock item | Outfit or title |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `asp.collect.1` | `asp.collect.1.name` "First Finds" | 1 Poe trade and 5 photos taken | `curio_shelf` | `glass_cloche` | none |
-| 2 | `asp.collect.2` | `asp.collect.2.name` "Curator" | 50 % of catalog items owned, and 20 photos taken | `photo_wall_frames` | `display_cabinet` | none |
-| 3 | `asp.collect.3` | `asp.collect.3.name` "Magpie's Rival" | 8 Poe trades and 15 stickers | `gilded_poe_perch` | `map_of_stars_rug` | none |
-| 4 | `asp.collect.4` | `asp.collect.4.name` "The Whole Collection" | 95 % of catalog items owned, 50 photos taken, and all 6 critters befriended | `golden_polaroid_frame` (not counted in the catalog) | none | `title.collector` |
+| 1 | `asp.collect.1` | `asp.collect.tier.1` "First Finds" | 1 Poe trade and 5 photos taken | `curio_shelf` | `glass_cloche` | none |
+| 2 | `asp.collect.2` | `asp.collect.tier.2` "Curator" | 50 % of catalog items owned, and 20 photos taken | `photo_wall_frames` | `display_cabinet` | none |
+| 3 | `asp.collect.3` | `asp.collect.tier.3` "Magpie's Rival" | 8 Poe trades and 15 stickers | `gilded_poe_perch` | `map_of_stars_rug` | none |
+| 4 | `asp.collect.4` | `asp.collect.tier.4` "The Whole Collection" | 95 % of catalog items owned, 50 photos taken, and all 6 critters befriended | `golden_polaroid_frame` (not counted in the catalog) | none | `title.collector` |
 
 Reference pace: tier 1 day 4, tier 2 day 12, tier 3 day 19, tier 4 day 29.
 
@@ -1268,7 +1268,7 @@ MVP: 19. Gift items from stickers: full 8 (`bruce_wall_cushion`, `cardboard_cast
 
 ### 11.2 Mail list (31 rows: 11 MVP)
 
-Keys: `mail.<id>.from`, `mail.<id>.subject`, `mail.<id>.body`.
+Keys: `mail.<id>.from`, `mail.<id>.subject`, `mail.<id>.body`. The `MailId` is the part after `mail.` (`pickle.welcome`, FROZEN 22), so the first row's keys are `mail.pickle.welcome.subject` and `.body`.
 
 | # | Id | From | Trigger and schedule | Attachment | MVP |
 | --- | --- | --- | --- | --- | --- |
