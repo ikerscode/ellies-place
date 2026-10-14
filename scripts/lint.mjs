@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * Banned-pattern lint (design/TECH.md quality gates). Fails when it finds:
- *  1. Math.random or Date.now in src/sim/ (and src/core/, except the clock module).
+ *  1. Wall-clock or random APIs (Math.random, Date.now, new Date, Date(), performance.now,
+ *     crypto.getRandomValues, crypto.randomUUID, also via Math['random']) in src/sim, src/world,
+ *     src/activities, src/content/data and src/core (except the clock module).
  *  2. http://, https:// or //cdn in src/ (W3C XML namespace URIs are allowed).
  *  3. Em or en dashes in src/content/strings/.
  *  4. Explicit `any` in type positions anywhere in src/ (stricter than "exported types").
@@ -12,10 +14,15 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
 
-const SRC = 'src';
+/** EP_LINT_SRC lets the lint self-test point it at a scratch tree. */
+const SRC = process.env.EP_LINT_SRC ?? 'src';
 const CODE_EXT = /\.(?:ts|tsx|mts|js|mjs)$/;
 const TEXT_EXT = /\.(?:ts|tsx|mts|js|mjs|css|html|json)$/;
-const CLOCK_ALLOW = new Set([join('src', 'core', 'clock.ts')]);
+const CLOCK_ALLOW = new Set([join(SRC, 'core', 'clock.ts')]);
+/** Directories whose code must be deterministic (F2): randomness and time come from the seeded RNG and the injected Clock. */
+const DETERMINISTIC_DIRS = ['sim', 'world', 'activities', join('content', 'data'), 'core'].map((d) => join(SRC, d) + sep);
+const NONDETERMINISM =
+  /\bMath\s*(?:\.\s*random\b|\[\s*['"`]random['"`]\s*\])|\bDate\s*(?:\.\s*now\b|\[\s*['"`]now['"`]\s*\])|\bnew\s+Date\b|\bDate\s*\(|\bperformance\s*(?:\.\s*now\b|\[\s*['"`]now['"`]\s*\])|\bcrypto\s*\.\s*(?:getRandomValues|randomUUID)\b/;
 const NS_ALLOW = /^https?:\/\/www\.w3\.org\//;
 
 function walk(dir) {
@@ -71,8 +78,7 @@ for (const file of files) {
   const isCode = CODE_EXT.test(file);
   const noComments = isCode ? strip(raw, { strings: false }).split('\n') : rawLines;
   const noStrings = isCode ? strip(raw, { strings: true }).split('\n') : rawLines;
-  const inSim = file.startsWith(join(SRC, 'sim') + sep);
-  const inCore = file.startsWith(join(SRC, 'core') + sep);
+  const deterministic = DETERMINISTIC_DIRS.some((d) => file.startsWith(d)) && !CLOCK_ALLOW.has(file);
   const inStrings = file.startsWith(join(SRC, 'content', 'strings') + sep);
 
   rawLines.forEach((rawLine, idx) => {
@@ -81,7 +87,7 @@ for (const file of files) {
     const bare = noStrings[idx] ?? '';
 
     // 1. Non-determinism in simulation code.
-    if ((inSim || (inCore && !CLOCK_ALLOW.has(file))) && /\bMath\s*\.\s*random\b|\bDate\s*\.\s*now\b/.test(code)) {
+    if (deterministic && isCode && NONDETERMINISM.test(code)) {
       report(file, lineNo, 'no-nondeterminism', rawLine);
     }
 

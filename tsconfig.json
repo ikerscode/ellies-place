@@ -1,7 +1,15 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vite/client"]
+    "types": [
+      "vite/client"
+    ]
   },
-  "include": ["src/**/*.ts", "tests/unit/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "tests/unit/**/*.ts"
+  ],
+  "exclude": [
+    "tests/unit/tooling/**"
+  ]
 }
