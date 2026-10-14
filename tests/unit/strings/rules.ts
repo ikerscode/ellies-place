@@ -117,6 +117,8 @@ export function limitFor(key: string): LimitRule {
     if (second === 'ui') return { kind: 'chars', max: 32, what: 'UI label' };
     return { kind: 'chars', max: 70, what: 'speech bubble' };
   }
+  if (domain === 'grade') return { kind: 'chars', max: 16, what: 'grade label' };
+  if (domain === 'ui' && (last === 'help' || second === 'reason')) return { kind: 'chars', max: 80, what: 'tooltip or reason' };
   if (domain === 'ui') {
     if (second === 'toast' || second === 'hint') return { kind: 'chars', max: 80, what: 'toast or hint' };
     return { kind: 'chars', max: 32, what: 'UI label' };

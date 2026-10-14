@@ -94,6 +94,19 @@ describe('string tables', () => {
     expect([...ids].sort()).toEqual(['collect', 'home', 'hyrox', 'royalty']);
   });
 
+  it('use the frozen key families, not the Wave 1 spellings (FROZEN 22)', () => {
+    const keys = entries.map(([k]) => k);
+    const old = /^(ui\.toast\.place\.|ui\.catNeed\.|ui\.phase\.(morning|evening)$|ui\.need\.[a-z]+$|wish\.wish\.|mail\.mail\.|int\.int\.)/;
+    expect(keys.filter((k) => old.test(k))).toEqual([]);
+    // Interaction ids come from sim.md (`bed.sleep`), never camelCase verbs (`sitSofa`).
+    expect(keys.filter((k) => k.startsWith('int.') && /^int\.[a-z]+[A-Z]/.test(k) && !k.startsWith('int.gym.'))).toEqual([]);
+    // Every aspiration tier has a goal and a reward.
+    const missing = ['hyrox', 'royalty', 'home', 'collect'].flatMap((a) =>
+      [1, 2, 3, 4].flatMap((n) => ['', '.goal', '.reward'].map((suf) => `asp.${a}.tier.${n}${suf}`)),
+    ).filter((k) => !(k in STRINGS));
+    expect(missing).toEqual([]);
+  });
+
   it('fit the length limits in design/spec/voice.md', () => {
     expect(problems(lengthProblem)).toEqual([]);
   });
