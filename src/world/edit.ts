@@ -23,7 +23,7 @@ import {
   type StartPlacement,
   type TilePos,
 } from '../core';
-import { computeCosy } from './cosy';
+import { buildScene, computeCosy } from './cosy';
 import { placedItems, roomOfPlaced, slotTile, type Placed, type WorldEnv } from './shared';
 
 /** The Cosy readings to refresh. */
@@ -126,6 +126,7 @@ export function syncPlacements(env: WorldEnv, state: SimState): void {
 
 /** Recomputes `cosyRated` and/or `cosyLive` for every room and writes them into `lot.rooms`. */
 export function refreshCosy(env: WorldEnv, state: SimState, readings: readonly Reading[]): void {
+  const scene = buildScene(env, state);
   for (const id of Object.keys(state.lot.rooms)) {
     const rs = state.lot.rooms[id as RoomId];
     if (!rs) continue;
@@ -134,8 +135,8 @@ export function refreshCosy(env: WorldEnv, state: SimState, readings: readonly R
       rs.cosyLive = 0;
       continue;
     }
-    if (readings.includes('rated')) rs.cosyRated = computeCosy(env, state, id as RoomId, 'rated', false).score;
-    if (readings.includes('live')) rs.cosyLive = computeCosy(env, state, id as RoomId, 'live', false).score;
+    if (readings.includes('rated')) rs.cosyRated = computeCosy(env, state, id as RoomId, 'rated', false, 0, scene).score;
+    if (readings.includes('live')) rs.cosyLive = computeCosy(env, state, id as RoomId, 'live', false, 0, scene).score;
   }
 }
 

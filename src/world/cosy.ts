@@ -25,6 +25,7 @@ import {
   type SetBonusId,
   type SimState,
   type StringKey,
+  type TileKind,
   type TilePos,
 } from '../core';
 import { FLOORISH, isRug, placedItems, roomOfPlaced, tilesOf, windowInside, type Placed, type WorldEnv } from './shared';
@@ -94,7 +95,7 @@ export function itemValue(def: ItemDef): number {
   return clamp(Math.round(2 * Math.sqrt(def.price)), 2, 24);
 }
 
-interface RItem extends Placed {
+export interface RItem extends Placed {
   readonly traits: ReadonlySet<string>;
   /** Tile used for light, plant corner and sun: host tile for surface items, the floor tile south of a wall item. */
   readonly anchor: TilePos;
@@ -125,6 +126,15 @@ interface Ctx {
   readonly nonDefaultWall: boolean;
   readonly nonDefaultFloor: boolean;
   readonly roomIndex: number;
+  readonly sunny: ReadonlySet<RoomId>;
+}
+
+/** Everything per-lot that every room's score needs, computed once per refresh instead of once per room. */
+export interface Scene {
+  readonly itemsByRoom: ReadonlyMap<RoomId, readonly RItem[]>;
+  readonly floorByRoom: ReadonlyMap<RoomId, readonly number[]>;
+  /** Rooms with a left, back or right window (they get a sunbeam at some hour). */
+  readonly sunny: ReadonlySet<RoomId>;
 }
 
 function wallPaintStyle(env: WorldEnv, state: St, room: RoomId, surface: 'wall' | 'floor'): readonly string[] {
@@ -134,12 +144,13 @@ function wallPaintStyle(env: WorldEnv, state: St, room: RoomId, surface: 'wall' 
   return env.content.paints.get(id)?.styles ?? [];
 }
 
-function itemsInRoom(env: WorldEnv, state: St, room: RoomId): RItem[] {
+export function buildScene(env: WorldEnv, state: St): Scene {
   const placed = placedItems(state, env.content);
   const byId = new Map<EntityId, Placed>(placed.map((p) => [p.id, p]));
-  const out: RItem[] = [];
+  const itemsByRoom = new Map<RoomId, RItem[]>();
   for (const p of placed) {
-    if (roomOfPlaced(env, state, p, byId) !== room) continue;
+    const room = roomOfPlaced(env, state, p, byId);
+    if (room === null) continue;
     let anchor: TilePos = p.pl.tile;
     const m = p.pl.mount;
     if (m.kind === 'wall') anchor = { tx: p.pl.tile.tx, ty: p.pl.tile.ty + 1 };
@@ -148,9 +159,26 @@ function itemsInRoom(env: WorldEnv, state: St, room: RoomId): RItem[] {
       const host = byId.get(m.parent);
       if (host) anchor = host.pl.tile;
     }
-    out.push({ ...p, traits: env.traits.get(p.def.id) ?? new Set<string>(), anchor });
+    let list = itemsByRoom.get(room);
+    if (!list) {
+      list = [];
+      itemsByRoom.set(room, list);
+    }
+    list.push({ ...p, traits: env.traits.get(p.def.id) ?? new Set<string>(), anchor });
   }
-  return out;
+  const floorByRoom = new Map<RoomId, number[]>();
+  const { roomAt, tiles } = state.lot;
+  for (let i = 0; i < roomAt.length; i++) {
+    const r = roomAt[i];
+    if (!r || !FLOORISH.has(tiles[i] as TileKind)) continue;
+    let list = floorByRoom.get(r as RoomId);
+    if (!list) {
+      list = [];
+      floorByRoom.set(r as RoomId, list);
+    }
+    list.push(i);
+  }
+  return { itemsByRoom, floorByRoom, sunny: sunRooms(env, state) };
 }
 
 // ---- Value, variety, plants -----------------------------------------------------
@@ -321,7 +349,7 @@ function catComfort(c: Ctx): Comfort {
   const cm: Comfort = { george: 0, salem: 0, shadow: 0, peaches: 0 };
   const has = (it: RItem, tags: readonly string[]) => tags.some((t) => it.traits.has(t));
   let nap = 0;
-  let sunny = c.kind === 'garden' || sunRooms(c.env, c.state).has(c.room);
+  let sunny = c.kind === 'garden' || c.sunny.has(c.room);
   let warm = false;
   for (const it of c.items) {
     if (has(it, ['cat_perch_high', 'cat_throne'])) cm.george += 0.5;
@@ -382,20 +410,19 @@ function liveMess(c: Ctx): number {
 
 // ---- Report ----------------------------------------------------------------------------
 
-function makeCtx(env: WorldEnv, state: St, room: RoomId, reading: CosyReading): Ctx | null {
+function makeCtx(env: WorldEnv, state: St, room: RoomId, reading: CosyReading, scene: Scene): Ctx | null {
   const rs = state.lot.rooms[room];
   if (!rs) return null;
   const rd = env.content.rooms.get(room);
-  const floor: number[] = [];
-  for (let i = 0; i < state.lot.roomAt.length; i++) if (state.lot.roomAt[i] === room && FLOORISH.has(state.lot.tiles[i] as never)) floor.push(i);
   return {
     env,
     state,
     room,
     reading,
     kind: rs.kind,
-    floor,
-    items: itemsInRoom(env, state, room),
+    floor: scene.floorByRoom.get(room) ?? [],
+    items: scene.itemsByRoom.get(room) ?? [],
+    sunny: scene.sunny,
     nonDefaultWall: !!rd && rd.kind !== 'garden' && rd.kind !== 'frontStep' && rs.wallPaint !== rd.wallPaint,
     nonDefaultFloor: !!rd && rs.floorPaint !== rd.floorPaint,
     roomIndex: env.content.db.lot.rooms.findIndex((r) => r.id === room),
@@ -404,8 +431,8 @@ function makeCtx(env: WorldEnv, state: St, room: RoomId, reading: CosyReading): 
 
 const ZERO_PARTS: Readonly<Record<CosyFactor, number>> = { value: 0, variety: 0, lighting: 0, plants: 0, sets: 0, cats: 0, paint: 0, clutter: 0 };
 
-export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: CosyReading = 'rated', withHints = true, maxHints = 2): CosyReport {
-  const c = makeCtx(env, state, room, reading);
+export function computeCosy(env: WorldEnv, state: St, room: RoomId, reading: CosyReading = 'rated', withHints = true, maxHints = 2, scene: Scene = buildScene(env, state)): CosyReport {
+  const c = makeCtx(env, state, room, reading, scene);
   if (!c || !c.state.lot.rooms[room]?.scored) return { room, reading, score: 0, parts: ZERO_PARTS, sets: [], hints: [] };
 
   const val = valueOf(c);
