@@ -23,4 +23,5 @@ if (a !== b) {
   console.error(`soak: determinism check failed (${a} !== ${b})`);
   process.exit(1);
 }
-console.log(`soak: stub OK (determinism hash ${a.toString(16)}); full soak arrives in Wave 2`);
+console.log('soak: STUB. This run simulates nothing; it only hashes the RNG. qa-engineer replaces it in Wave 2.');
+console.log(`soak: stub OK (determinism hash ${a.toString(16)})`);

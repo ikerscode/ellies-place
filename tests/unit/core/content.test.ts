@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { buildContentIndex, validateContent } from '../../../src/core/content';
-import { asInteractionId, asItemId, type ContentDb } from '../../../src/core/types';
+import {
+  asAspirationId,
+  asInteractionId,
+  asItemId,
+  asMailId,
+  asSpriteKey as sk,
+  asStickerId,
+  asStringKey as key,
+  asWishId,
+  type ContentDb,
+} from '../../../src/core/types';
 import { makeFixtureContent } from './fixtures';
 
 describe('content index', () => {
@@ -54,5 +64,61 @@ describe('content validation v2', () => {
     expect(has('maxCopies below 1')).toBe(true);
     expect(has('auto-fetches unknown interaction nope.fetch')).toBe(true);
     expect(has('gift ghost unknown')).toBe(true);
+  });
+});
+
+describe('content validation v3 (F38)', () => {
+  it('catches what the v2 check let through: an empty cast, a bad seed, unknown ids in effects, a negative weight', () => {
+    const base = makeFixtureContent();
+    const db: ContentDb = {
+      ...base,
+      lot: { ...base.lot, rooms: [{ ...base.lot.rooms[0]!, seed: { tx: 0, ty: 0 } }], windows: [{ tile: { tx: 2, ty: 1 }, facing: 'up' }] },
+      wishes: [
+        {
+          id: asWishId('bow'),
+          title: key('wish.bow'),
+          icon: sk('icon.wish'),
+          category: 'george',
+          size: 'small',
+          offerIf: { kind: 'sticker', id: asStickerId('nope') },
+          goal: { kind: 'aspirationTier', id: asAspirationId('asp.ghost'), atLeast: 1 },
+          rewards: [{ kind: 'grantItem', item: asItemId('ghost_item') }, { kind: 'mail', id: asMailId('ghost_mail') }],
+          weight: -1,
+          mvp: true,
+        },
+      ],
+    };
+    const problems = validateContent(db, { complete: true });
+    const has = (s: string): boolean => problems.some((p) => p.includes(s));
+    expect(has('rooms: living seed (0,0) is not on a floor')).toBe(true);
+    expect(has('lot.windows[0]')).toBe(true);
+    expect(has('wishes: bow: unknown sticker nope')).toBe(true);
+    expect(has('unknown aspiration asp.ghost')).toBe(true);
+    expect(has('unknown item ghost_item')).toBe(true);
+    expect(has('unknown mail ghost_mail')).toBe(true);
+    expect(has('negative weight')).toBe(true);
+    expect(has('visitors: missing bruce')).toBe(true);
+    expect(has('hyrox: missing station skiErg')).toBe(true);
+    expect(has('aspirations: missing asp.hyrox')).toBe(true);
+    expect(has('lot.spots: missing mailbox')).toBe(true);
+    expect(validateContent(base)).toEqual([]);
+  });
+
+  it('checks sprite and string keys against the registries', () => {
+    const db = makeFixtureContent();
+    const sprites = new Set<string>(['item.sofa_small', 'icon.int.sit']);
+    const strings = { 'item.sofa_small.name': 'Sofa' };
+    const problems = validateContent(db, { sprites, strings });
+    expect(problems).toContain('items: lamp_small: sprite item.lamp_small is not in the art registry');
+    expect(problems).toContain('items: sofa_small: string item.sofa_small.desc is missing');
+    expect(problems.some((p) => p.includes('sprite item.sofa_small.r1 is not in the art registry'))).toBe(true);
+    expect(problems.some((p) => p.includes('string int.sofa.sit is missing'))).toBe(true);
+  });
+
+  it('enforces the key spellings', () => {
+    const db = makeFixtureContent();
+    const sofa = db.items[0]!;
+    const problems = validateContent({ ...db, items: [{ ...sofa, name: key('item.sofa.title') }, db.items[1]!] });
+    expect(problems).toContain('items: sofa_small name: key item.sofa.title should be item.sofa_small.name');
   });
 });

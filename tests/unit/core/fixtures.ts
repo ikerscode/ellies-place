@@ -390,7 +390,7 @@ export function makeFixtureContent(): ContentDb {
     interactions: [
       {
         id: asInteractionId('sofa.sit'),
-        label: key('int.sit'),
+        label: key('int.sofa.sit'),
         icon: sk('icon.int.sit'),
         target: 'object',
         actors: [{ kind: 'ellie' }, { kind: 'anyCat' }],
@@ -442,7 +442,7 @@ export function makeFixtureContent(): ContentDb {
       },
       {
         id: asInteractionId('grass.rusk_ritual'),
-        label: key('int.dunkRusk'),
+        label: key('int.grass.rusk_ritual'),
         icon: sk('icon.int.rusk'),
         target: 'tile',
         actors: [{ kind: 'ellie' }],

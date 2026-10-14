@@ -1,6 +1,7 @@
 /**
  * Builds lookup maps over the authored content tables and checks them.
  */
+import { contentProblems, type ValidateOptions } from './contentChecks';
 import { parseUnlockCode } from './rules';
 import { ROOM_KINDS, asAspirationId, type ContentDb, type ContentIndex, type RoomKind } from './types';
 
@@ -14,10 +15,17 @@ function indexBy<K, V>(rows: readonly V[], key: (v: V) => K, table: string, prob
   return m;
 }
 
-/** Problems found while indexing and cross-checking references. Empty means valid. */
-export function validateContent(db: ContentDb): string[] {
+export type { ValidateOptions } from './contentChecks';
+
+/**
+ * Problems found while indexing and cross-checking references. Empty means valid. With `sprites` and
+ * `strings` it also checks every sprite and string key the data mentions (Gate 2); with `complete` the
+ * full cast, stations, aspirations and lot spots. See contentChecks.ts.
+ */
+export function validateContent(db: ContentDb, opts: ValidateOptions = {}): string[] {
   const problems: string[] = [];
-  buildIndexInto(db, problems);
+  const index = buildIndexInto(db, problems);
+  problems.push(...contentProblems(db, index, opts));
   return problems;
 }
 
@@ -25,6 +33,7 @@ export function validateContent(db: ContentDb): string[] {
 export function buildContentIndex(db: ContentDb): ContentIndex {
   const problems: string[] = [];
   const index = buildIndexInto(db, problems);
+  problems.push(...contentProblems(db, index));
   if (problems.length > 0) throw new Error(`content invalid:\n  ${problems.join('\n  ')}`);
   return index;
 }
