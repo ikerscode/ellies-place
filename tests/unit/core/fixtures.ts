@@ -3,6 +3,8 @@
  * tables land in src/content/data. Import it, do not copy it.
  * Numbers are close to sim.md and play.md but the data module is the source of truth.
  */
+import { entitiesWith, getC } from '../../../src/core/state';
+import { footprintTiles, rotateFacing, rotateOffset, tileCenter } from '../../../src/core/geometry';
 import {
   AUTO_PLAY_SCORE,
   PASS_SCORE,
@@ -18,9 +20,15 @@ import {
   type CatDef,
   type CatName,
   type ContentDb,
+  type ContentIndex,
   type EconomyTable,
+  type Layer,
+  type NavGrid,
   type NeedSpec,
+  type RaceModel,
   type SimTuning,
+  type TileKind,
+  type WorldQueries,
 } from '../../../src/core/types';
 
 const need = (decayPerHour: number, gain = 1): NeedSpec => ({
@@ -126,6 +134,20 @@ export const FIXTURE_ECONOMY: EconomyTable = {
   housewarming: 200,
   skillXp: { base: 10, perScore: 20, curveBase: 15, curvePerLevel: 5, maxLevel: 10 },
   maxHeartsPerDay: 2000,
+};
+
+export const FIXTURE_RACE: RaceModel = {
+  station: { skill: 0.45, fitness: 0.35, score: 0.2, fresh: 0.03 },
+  run: { fitness: 0.8, experience: 0.2, experienceRaces: 5, fresh: 0.03, coffee: 0.02, worstSeconds: 450, bestSeconds: 230 },
+  freshEnergy: 60,
+  coffeeHours: 3,
+  medals: [
+    { id: 'royal', underSeconds: 3600 },
+    { id: 'gold', underSeconds: 4080 },
+    { id: 'silver', underSeconds: 4800 },
+    { id: 'bronze', underSeconds: 5700 },
+    { id: 'finisher', underSeconds: null },
+  ],
 };
 
 const cat = (name: CatName, personalityNeed: CatDef['personalityNeed']): CatDef => ({
@@ -350,6 +372,57 @@ export function makeFixtureContent(): ContentDb {
     mail: [],
     stickers: [],
     hyrox: [],
+    race: FIXTURE_RACE,
     onboarding: [],
   };
+}
+
+const WALKABLE: ReadonlySet<TileKind> = new Set<TileKind>(['floor', 'door', 'grass', 'path', 'gate']);
+
+/**
+ * A small real implementation of WorldQueries over any SimState, for sim, cats
+ * and engine unit tests until src/world lands: tiles from `state.lot`, floor
+ * items block, slots from the item's SlotDef, no sunbeams. Navigation is cached
+ * by `lot.revision` like the real one.
+ */
+export function makeFixtureWorld(content: ContentIndex): WorldQueries {
+  let cached: NavGrid | null = null;
+  const world: WorldQueries = {
+    roomAt: (state, tile) => state.lot.roomAt[tile.ty * state.lot.w + tile.tx] ?? null,
+    navGrid: (state) => {
+      if (cached && cached.revision === state.lot.revision && cached.w === state.lot.w && cached.h === state.lot.h) return cached;
+      const { w, h } = state.lot;
+      const floor = state.lot.tiles.map((t) => (WALKABLE.has(t) ? 1 : 0));
+      for (const id of entitiesWith(state as never, 'placeable')) {
+        const pl = getC(state as never, 'placeable', id);
+        const def = pl ? content.items.get(pl.item) : undefined;
+        if (!pl || !def || def.placement === 'rug' || def.blocksPath === false || pl.mount.kind !== 'floor') continue;
+        for (const t of footprintTiles(pl.tile, def.footprint, pl.rotation)) {
+          const i = t.ty * w + t.tx;
+          if (i >= 0 && i < floor.length) floor[i] = 0;
+        }
+      }
+      const zero = new Array<number>(w * h).fill(0);
+      cached = { w, h, revision: state.lot.revision, cost: [floor, zero, zero], jumps: [] };
+      return cached;
+    },
+    slotPose: (state, entity, slot) => {
+      const pl = getC(state as never, 'placeable', entity);
+      const def = pl ? content.items.get(pl.item) : undefined;
+      const sd = def?.slots[slot];
+      if (!pl || !def || !sd) return null;
+      const o = rotateOffset(sd.dx, sd.dy, def.footprint, pl.rotation);
+      return {
+        pos: tileCenter({ tx: pl.tile.tx + o.dx, ty: pl.tile.ty + o.dy }),
+        facing: rotateFacing(sd.facing, pl.rotation),
+        layer: sd.layer as Layer,
+      };
+    },
+    footprintTiles: (item, tile, rotation) => {
+      const def = content.items.get(item);
+      return def ? footprintTiles(tile, def.footprint, rotation) : [];
+    },
+    sunbeams: () => [],
+  };
+  return world;
 }

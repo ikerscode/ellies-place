@@ -8,6 +8,7 @@ import {
   CAT_NAMES,
   HYROX_ORDER,
   SAVE_VERSION,
+  SKILL_IDS,
   VISITOR_NAMES,
   asEntityId,
   type CatName,
@@ -18,6 +19,7 @@ import {
   type DayPhase,
   type EntityId,
   type HyroxStation,
+  type SkillId,
   type LotState,
   type SimState,
   type VisitorName,
@@ -124,6 +126,12 @@ function perStation<T>(v: T): Record<HyroxStation, T> {
   return out;
 }
 
+function perSkill<T>(v: T): Record<SkillId, T> {
+  const out = {} as Record<SkillId, T>;
+  for (const s of SKILL_IDS) out[s] = v;
+  return out;
+}
+
 function perCat<T>(v: T): Record<CatName, T> {
   const out = {} as Record<CatName, T>;
   for (const c of CAT_NAMES) out[c] = v;
@@ -175,6 +183,7 @@ export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}):
       weekday: opts.startWeekday ?? 'thu',
       phase: opts.phase ?? 'day',
       speed: 1,
+      lastSpeed: 1,
       fastForward: 1,
       realTime: false,
     },
@@ -195,7 +204,7 @@ export function createEmptySimState(seed: number, opts: EmptyStateOptions = {}):
     quirks: { active: {}, zoomiesAt: null },
     stickers: { earned: {} },
     records: {
-      hyrox: { skill: perStation(0), stationPbMs: perStation<number | null>(null), racePbMs: null, races: [], medals: [] },
+      hyrox: { skill: perSkill(0), stationPb: perStation<number | null>(null), racePbMs: null, races: [], medals: [] },
       best: {},
     },
     wardrobe: { worn: { ellie: {}, george: {}, salem: {}, shadow: {}, peaches: {} }, streakColor: '#3fae6a' },

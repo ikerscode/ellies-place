@@ -15,7 +15,7 @@ import {
   removeEntity,
   setC,
 } from '../../../src/core/state';
-import { HYROX_ORDER, asSpriteKey } from '../../../src/core/types';
+import { SKILL_IDS, asSpriteKey } from '../../../src/core/types';
 
 describe('state skeleton', () => {
   it('is JSON-clean and survives a round-trip with the same hash', () => {
@@ -25,7 +25,7 @@ describe('state skeleton', () => {
     expect(copy).toEqual(s);
     expect(hashState(copy)).toBe(hashState(s));
     expect(s.lot.tiles).toHaveLength(30 * 17);
-    expect(Object.keys(s.records.hyrox.skill)).toEqual([...HYROX_ORDER]);
+    expect(Object.keys(s.records.hyrox.skill)).toEqual([...SKILL_IDS]);
   });
 
   it('same seed gives the same state; rng advances change the hash', () => {

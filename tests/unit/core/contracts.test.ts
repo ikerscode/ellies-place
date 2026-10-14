@@ -11,6 +11,7 @@ import { STRINGS } from '../../../src/content/strings';
 import {
   asActivityId,
   asEntityId,
+  asStringKey,
   createEventBus,
   forkRng,
   createRng,
@@ -78,7 +79,7 @@ function makeTapActivity(): Activity {
       misses,
       grade: 'okay',
       timeMs: null,
-      effects: [{ kind: 'need', who: 'ellie', need: 'fun', delta: 10 }],
+      effects: [{ kind: 'stat', stat: 'tap.done', delta: 1 }],
       progress: [{ kind: 'activity', subject: 'tap', n: 1 }],
     };
   };
@@ -142,7 +143,7 @@ describe('bus and actions', () => {
     const plugin: SimPlugin = {
       id: 'test',
       actions: {
-        'build.sell': (_ctx, action) => (action.entity > 0 ? { ok: true } : { ok: false, reason: 'bad' }),
+        'build.sell': (_ctx, action) => (action.entity > 0 ? { ok: true } : { ok: false, reason: asStringKey('ui.reason.notNow') }),
       },
     };
     const sell: PlayerAction = { type: 'build.sell', entity: asEntityId(1) };

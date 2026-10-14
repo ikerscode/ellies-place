@@ -66,8 +66,28 @@ export const asTitleId = (s: string): TitleId => s as TitleId;
 export const asOnboardingStepId = (s: string): OnboardingStepId => s as OnboardingStepId;
 export const asCatalogCategoryId = (s: string): CatalogCategoryId => s as CatalogCategoryId;
 
-/** A map keyed by a branded id, stored as a plain JSON object. Missing keys read as undefined. */
-export type IdMap<K extends string, V> = Partial<Record<K, V>>;
+/**
+ * A map keyed by a branded id, stored as a plain JSON object. A `Record`, not a
+ * `Partial`: with `noUncheckedIndexedAccess` a missing key reads as `V | undefined`,
+ * and with `exactOptionalPropertyTypes` plus a non-optional value type nobody can
+ * write `undefined` into state (JSON would drop the key and `hashState` throws).
+ */
+export type IdMap<K extends string, V> = Record<K, V>;
+
+type Primitive = string | number | boolean | bigint | symbol | null | undefined;
+/**
+ * Deeply read-only view of state (a shallow `Readonly<SimState>` let
+ * `state.hearts.balance = 1` compile). Primitives come first so branded
+ * strings and numbers (`ItemId`...) pass through untouched. State holds no
+ * Maps or Sets, so objects and arrays are all there is.
+ */
+export type DeepReadonly<T> = T extends Primitive
+  ? T
+  : T extends (...args: never[]) => unknown
+    ? T
+    : T extends readonly (infer U)[]
+      ? readonly DeepReadonly<U>[]
+      : { readonly [K in keyof T]: DeepReadonly<T[K]> };
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -183,14 +203,23 @@ export interface GameTime {
   minuteOfDay: number;
   weekday: Weekday;
   phase: DayPhase;
-  /** Player-chosen speed. Build mode and open panels force an effective 0 without changing this. */
+  /**
+   * The speed in force. 0 is a pause. Build, photo and activity modes do not
+   * change it (build and photo run at 0 through effectiveSteps(); activities
+   * run at x1). Panels that soft-pause the game (ui.md) dispatch
+   * `time.setSpeed 0`, so this is what autosave stores: Sim.load restores
+   * `lastSpeed` (FROZEN 23).
+   */
   speed: Speed;
+  /** The last non-zero speed. `time.setSpeed` with a non-zero value writes it; a soft pause leaves it alone. */
+  lastSpeed: Exclude<Speed, 0>;
   /**
    * Sleep fast-forward (sim.md 1.3). 1 normally. While Ellie sleeps through the
    * night the sim sets it to SimTuning.time.sleepFastForward (10): the engine then
-   * runs that many ticks per fixed step instead of `speed` (200 ticks/s), and
-   * `speed` is left untouched so it comes back after. See effectiveSteps().
-   * Never above 1 in real-time mode.
+   * runs that many ticks per fixed step instead of `speed` (200 ticks/s). It
+   * REPLACES `speed`, it never multiplies it (speed 3 with fast-forward 10 is 10,
+   * not 30), and `speed` is left untouched so it comes back after. See
+   * effectiveSteps(). Never above 1 in real-time mode.
    */
   fastForward: number;
   /** Ambient "real time" mode: the time system follows the injected Clock's wall time. */
@@ -521,6 +550,10 @@ export const HYROX_ORDER: readonly HyroxStation[] = [
   'wallBalls',
 ];
 
+/** A trainable skill: the eight Hyrox stations plus Kitchen (play.md, FROZEN 25). */
+export type SkillId = HyroxStation | 'kitchen';
+export const SKILL_IDS: readonly SkillId[] = [...HYROX_ORDER, 'kitchen'];
+
 export type RadioStation = 'heavy' | 'lofi' | 'cosy';
 
 // ===========================================================================
@@ -557,7 +590,7 @@ export type Condition =
   | { readonly kind: 'catNear'; readonly cat?: CatName; readonly radius: number }
   | { readonly kind: 'inRoom'; readonly who: Who; readonly room: RoomId | 'outdoor' | 'indoor' }
   | { readonly kind: 'wearing'; readonly who: 'ellie' | CatName; readonly outfit: OutfitId }
-  | { readonly kind: 'skill'; readonly station: HyroxStation | 'any'; readonly atLeast: number }
+  | { readonly kind: 'skill'; readonly skill: SkillId | 'any'; readonly atLeast: number }
   // objects and world
   | { readonly kind: 'objectFlag'; readonly flag: string; readonly equals: JsonPrimitive }
   | { readonly kind: 'targetHasTag'; readonly tag: Tag }
@@ -609,7 +642,8 @@ export type Effect =
   | { readonly kind: 'flag'; readonly flag: FlagKey; readonly value: boolean }
   | { readonly kind: 'stat'; readonly stat: StatKey; readonly delta: number }
   | { readonly kind: 'record'; readonly stat: StatKey; readonly value: number; readonly better: 'higher' | 'lower' }
-  | { readonly kind: 'skillXp'; readonly station: HyroxStation; readonly xp: number }
+  /** Adds XP to a skill. Interactions and results normally get their XP from ECONOMY.skillXp (FROZEN 25); this literal form is for rewards. */
+  | { readonly kind: 'skillXp'; readonly skill: SkillId; readonly xp: number }
   | { readonly kind: 'unlock'; readonly what: UnlockRef }
   /** Gives free-origin copies (FROZEN 12: gifts, trades, secrets); they never refund. Also unlocks the item. */
   | { readonly kind: 'grantItem'; readonly item: ItemId; readonly count?: number }
@@ -625,6 +659,9 @@ export type Effect =
   | { readonly kind: 'particles'; readonly particle: ParticleKind; readonly at: 'actor' | 'target'; readonly count?: number }
   | { readonly kind: 'chance'; readonly p: number; readonly then: readonly Effect[]; readonly else?: readonly Effect[] }
   | { readonly kind: 'when'; readonly if: Condition; readonly then: readonly Effect[]; readonly else?: readonly Effect[] };
+
+/** The effect kinds an ActivityResult may carry (FROZEN 25). */
+export type ResultEffect = Extract<Effect, { readonly kind: 'skillXp' | 'record' | 'stat' | 'feeling' | 'flag' }>;
 
 /** `mood` is the good-mood trickle. `sell` is a refund (never counted in earnedTotal). */
 export type HeartsReason =
@@ -1160,6 +1197,11 @@ export interface InteractionDef {
   readonly repeatExempt?: boolean;
   /** Exempt from the recency factor R in the scorer (sleep, eat, bowls.fill, sim.md 5.1). */
   readonly recencyExempt?: boolean;
+  /**
+   * The skill an activity interaction trains. Auto-play (free will) and played
+   * runs award the same XP: ECONOMY.skillXp scaled by resultScore() (FROZEN 25).
+   */
+  readonly skill?: SkillId;
   readonly adverts: readonly Advertisement[];
   /** Slot kinds (or slot ids) on the target the actor may use, in preference order. */
   readonly slots?: readonly (SlotKind | string)[];
@@ -1368,9 +1410,37 @@ export interface HyroxStationDef {
   readonly activity: ActivityId;
   /** Gym item that hosts it. */
   readonly item: ItemId;
-  /** Race time model (play.md): seconds at skill 0 and skill 10, before performance and Fitness. */
-  readonly baseSeconds: number;
-  readonly skilledSeconds: number;
+  /** Race segment time in seconds at performance P = 0 (play.md 2.6 "Worst"). */
+  readonly worstSeconds: number;
+  /** Race segment time in seconds at P = 1 ("Best"). */
+  readonly bestSeconds: number;
+}
+
+/**
+ * The race-time model's coefficients (play.md 2.6), so the formula has one
+ * implementation in src/activities/hyrox and no number in code:
+ *   P_station = skill 0.45 x skill/10 + fitness 0.35 x F/100 + score 0.20 x s + fresh 0.03
+ *   P_run     = fitness 0.80 x F/100 + experience 0.20 x min(1, races/5) + fresh 0.03 + coffee 0.02
+ *   t         = worst - (worst - best) x clamp(P, 0, 1), rounded half up per segment, then summed.
+ */
+export interface RaceModel {
+  readonly station: { readonly skill: number; readonly fitness: number; readonly score: number; readonly fresh: number };
+  readonly run: {
+    readonly fitness: number;
+    readonly experience: number;
+    /** Races at which the experience term is full (5). */
+    readonly experienceRaces: number;
+    readonly fresh: number;
+    readonly coffee: number;
+    readonly worstSeconds: number;
+    readonly bestSeconds: number;
+  };
+  /** Energy at or above this at the start counts as `fresh` (60). */
+  readonly freshEnergy: number;
+  /** A coffee finished within this many game hours of the start counts as `coffee` (3). */
+  readonly coffeeHours: number;
+  /** Medals by finish time, best first; the finisher medal (any finish) is the last row. Hearts are in ECONOMY.medals. */
+  readonly medals: readonly { readonly id: string; readonly underSeconds: number | null }[];
 }
 
 export type OnboardingSpeaker = CatName | 'pickle' | 'ellie';
@@ -1583,6 +1653,7 @@ export interface ContentDb {
   readonly mail: readonly MailDef[];
   readonly stickers: readonly StickerDef[];
   readonly hyrox: readonly HyroxStationDef[];
+  readonly race: RaceModel;
   readonly onboarding: readonly OnboardingStepDef[];
 }
 
@@ -1939,10 +2010,10 @@ export interface RaceRecord {
 }
 
 export interface HyroxState {
-  /** Skill 0..10 per station (fractional XP). */
-  skill: Record<HyroxStation, number>;
-  /** Best training time per station in ms, or null. */
-  stationPbMs: Record<HyroxStation, number | null>;
+  /** Skill level 0..10 per skill (Hyrox stations and kitchen), with fractional XP. */
+  skill: Record<SkillId, number>;
+  /** Best training score per station in points 0..100 (play.md 2.2), or null. Race PBs are in ms (racePbMs). */
+  stationPb: Record<HyroxStation, number | null>;
   racePbMs: number | null;
   races: RaceRecord[];
   medals: string[];
@@ -2177,6 +2248,7 @@ export const SYSTEM_ORDER: readonly SystemName[] = [
 export interface SystemContext {
   readonly state: SimState;
   readonly content: ContentIndex;
+  readonly world: WorldQueries;
   readonly emit: SimEventSink;
   /**
    * Game-clock minutes this tick covers: need decay, schedules, cooldowns.
@@ -2239,7 +2311,7 @@ export type PlayerActionType = PlayerAction['type'];
 export type ActionOf<T extends PlayerActionType> = Extract<PlayerAction, { readonly type: T }>;
 
 /** Result of dispatching: rejected actions explain why (UI may toast the reason). */
-export type DispatchResult = { readonly ok: true } | { readonly ok: false; readonly reason: StringKey | string };
+export type DispatchResult = { readonly ok: true } | { readonly ok: false; readonly reason: StringKey };
 
 export type Dispatch = (action: PlayerAction) => DispatchResult;
 
@@ -2613,15 +2685,24 @@ export interface ActivityResult {
   /** Misses during play (Skip shows after two). */
   readonly misses: number;
   readonly grade: ActivityGrade;
-  /** Time taken or scored in ms, where meaningful (Hyrox stations, race). */
+  /** Time taken in ms, where meaningful (the race total). Training PBs are points, not time. */
   readonly timeMs: number | null;
+  /** The skill this run trains (matches InteractionDef.skill), so the sim awards ECONOMY.skillXp. */
+  readonly skill?: SkillId;
   /**
-   * Non-Hearts state changes, applied by the sim (needs at factor 1, skillXp,
-   * records, stats, moodlets). The sim scales positive need effects by
-   * needFactor() and pays minigame Hearts itself from the score and ECONOMY,
-   * so activities never put `hearts` effects here.
+   * Activity-specific data the sim stores or the UI shows. Race: `stationScores`
+   * (8 numbers in race order) and `splitsMs` (16: run, station, run, ...).
+   * Sushi: fillings. Dunk: perfect count. Photo: tags.
    */
-  readonly effects: readonly Effect[];
+  readonly details?: JsonObject;
+  /**
+   * Only what the numbers in data cannot say: skillXp (literal bonus), record,
+   * stat, feeling and flag (FROZEN 25). Need effects, Hearts and XP come from
+   * InteractionDef.effects, ECONOMY.minigame and ECONOMY.skillXp, scaled by
+   * needFactor() and resultScore(), so a played run and a free-will auto-play
+   * award the same thing. The type refuses the rest.
+   */
+  readonly effects: readonly ResultEffect[];
   /** Counted toward wishes, aspirations and stickers. */
   readonly progress: readonly ProgressEvent[];
   /** Replaces SimState.activitySaves[activity] when present (Critterbound). */
@@ -2633,7 +2714,7 @@ export interface ActivityContext {
   /** A private stream forked from the sim RNG (forkRng), so results are deterministic. */
   readonly rng: RngState;
   readonly params: ActivityParams;
-  readonly state: Readonly<SimState>;
+  readonly state: DeepReadonly<SimState>;
   readonly content: ContentIndex;
   readonly actor: EntityId;
   readonly strings: StringLookup;
@@ -2880,8 +2961,9 @@ declare global {
 // ---- src/sim -------------------------------------------------------------
 
 export interface AiContext {
-  readonly state: Readonly<SimState>;
+  readonly state: DeepReadonly<SimState>;
   readonly content: ContentIndex;
+  readonly world: WorldQueries;
   readonly actor: EntityId;
 }
 
@@ -2916,6 +2998,8 @@ export interface SimPlugin {
 
 export interface CreateSimOptions {
   readonly content: ContentIndex;
+  /** Walkability, slot poses, footprints, sunbeams (FROZEN 20). Boot step 5 builds it with `createWorld`. */
+  readonly world: WorldQueries;
   readonly seed: number;
   readonly clock: Clock;
   /** Load this state instead of a new game. */
@@ -2926,9 +3010,15 @@ export interface CreateSimOptions {
 }
 
 export interface Sim {
-  /** The live state. Treat as read-only outside src/sim; change it with dispatch. */
+  /**
+   * The live state. Treat as read-only outside src/sim; change it with dispatch.
+   * `load()` and `newGame()` REPLACE it, so never cache `sim.state` (or anything
+   * inside it) across a call that can load: read the property each time.
+   */
   readonly state: SimState;
   readonly content: ContentIndex;
+  /** The world the sim was created with, exposed so the cats plugin and the engine need no second wiring. */
+  readonly world: WorldQueries;
   /** Advances n fixed ticks (default 1). */
   step(ticks?: number): void;
   dispatch: Dispatch;
@@ -2943,7 +3033,11 @@ export interface Sim {
   findEntities(query: EntityQuery): readonly EntityId[];
   /** Petals for the interaction menu (Ellie as actor). */
   menuFor(target: EntityId | null, tile?: TilePos): readonly MenuOption[];
-  /** Ticks to run per engine fixed step: speed * fastForward, or 0 when paused or in build. */
+  /**
+   * Ticks to run per engine fixed step: `effectiveSteps(state.time, state.mode)`.
+   * Fast-forward REPLACES speed (it never multiplies); 1 in activity and cutscene
+   * modes; 0 when paused and in build and photo modes.
+   */
   stepsPerTick(): number;
   hash(): string;
 }
@@ -2957,18 +3051,38 @@ export type RegisterCats = (sim: Sim) => void;
 
 // ---- src/world -------------------------------------------------------------
 
-export interface World {
-  /** Fresh lot state from content.lot (tiles, rooms, paint). Start placements are spawned by the sim plugin. */
-  createLot(): LotState;
-  check(state: Readonly<SimState>, req: PlacementRequest): PlacementCheck;
-  roomAt(state: Readonly<SimState>, tile: TilePos): RoomId | null;
-  cosy(state: Readonly<SimState>, room: RoomId): CosyReport;
-  navGrid(state: Readonly<SimState>): NavGrid;
-  sunbeams(state: Readonly<SimState>): readonly SunbeamPatch[];
+/**
+ * The read-only part of the world that the sim, the cats and the engine need
+ * (FROZEN 20, review B1). One implementation, owned by src/world, injected into
+ * `createSim`, `SystemContext`, `AiContext` and `createEngine`, so nobody
+ * re-derives walkability (a second opinion on `breaksPath` is a soft-lock risk).
+ * The world COMPUTES sunbeams (sim.md 11); the engine only draws them and
+ * Peaches seeks them. Every query is pure over the state it is given and caches
+ * on `lot.revision` (and, for sunbeams, on the 5-minute step of the clock).
+ */
+export interface WorldQueries {
+  roomAt(state: DeepReadonly<SimState>, tile: TilePos): RoomId | null;
+  /** Per-layer movement cost, cached by `lot.revision` (see NavGrid.cost). */
+  navGrid(state: DeepReadonly<SimState>): NavGrid;
+  /** World-space slot position and facing for a placed item, or null when it has no such slot. */
+  slotPose(state: DeepReadonly<SimState>, entity: EntityId, slot: number): { pos: Vec2; facing: Facing; layer: Layer } | null;
   /** Tiles an item occupies at a placement. */
   footprintTiles(item: ItemId, tile: TilePos, rotation: Rotation): readonly TilePos[];
-  /** World-space slot position and facing for a placed item. */
-  slotPose(state: Readonly<SimState>, entity: EntityId, slot: number): { pos: Vec2; facing: Facing; layer: Layer } | null;
+  /** Today's sunbeam patches at the current time (empty at night, in rain and on days with no beams). */
+  sunbeams(state: DeepReadonly<SimState>): readonly SunbeamPatch[];
+}
+
+export interface World extends WorldQueries {
+  /** Fresh lot state from content.lot (tiles, rooms, paint). Start placements are spawned by the sim plugin. */
+  createLot(): LotState;
+  check(state: DeepReadonly<SimState>, req: PlacementRequest): PlacementCheck;
+  /**
+   * Cosy of one room. `reading` defaults to `rated` (Build meter, milestones,
+   * housewarming). The plugin refreshes `cosyRated` on `world.changed` and
+   * `cosyLive` every 20 ticks in the `triggers` phase, writing both into
+   * `lot.rooms[id]`; this call recomputes from scratch for hints and tests.
+   */
+  cosy(state: DeepReadonly<SimState>, room: RoomId, reading?: CosyReading): CosyReport;
   /** Sim plugin: build.* action handlers, start placements, cosy refresh, world.changed events. */
   plugin(): SimPlugin;
 }
@@ -3008,7 +3122,7 @@ export type RenderLayer = 'floor' | 'rugs' | 'walls' | 'objects' | 'overhead' | 
 export const RENDER_LAYERS: readonly RenderLayer[] = ['floor', 'rugs', 'walls', 'objects', 'overhead', 'lighting', 'particles', 'weather', 'hints'];
 
 export interface RenderFrame {
-  readonly state: Readonly<SimState>;
+  readonly state: DeepReadonly<SimState>;
   readonly content: ContentIndex;
   readonly atlas: SpriteAtlas;
   /** Interpolation between previous and current tick, 0..1. */
@@ -3040,6 +3154,8 @@ export interface EngineOptions {
   readonly clock: Clock;
   readonly bus: EpBus;
   readonly content: ContentIndex;
+  /** Draws `world.sunbeams(state)`; the engine computes no light geometry of its own (FROZEN 20). */
+  readonly world: WorldQueries;
   readonly sprites: readonly ArtBatch[];
   readonly sim: Sim;
 }
@@ -3091,7 +3207,7 @@ export interface InteractionMenuSpec {
 
 export interface Ui {
   /** Called once per rendered frame. */
-  update(state: Readonly<SimState>, dtMs: number): void;
+  update(state: DeepReadonly<SimState>, dtMs: number): void;
   /** The canvas scale changed; UI units follow it. */
   setScale(scale: number): void;
   open(panel: PanelId, opts?: { readonly tab?: JournalTab }): void;

@@ -88,12 +88,17 @@ export function clockText(minuteOfDay: number): string {
 }
 
 /**
- * Sim ticks the engine runs per fixed step. Live: `speed`, or `fastForward`
- * instead while sleep fast-forward is on (and not paused). Cutscenes: 1.
- * Build, photo and activity modes: 0.
+ * Sim ticks the engine runs per fixed step (FROZEN 17 and 23).
+ * - `activity`: always 1. The house keeps living behind a minigame at x1, whatever
+ *   `speed` or `fastForward` say; the previous speed comes back afterwards.
+ * - `cutscene`: 1 (the onboarding tour does not freeze the clock; the sim only
+ *   suspends need decay in this mode).
+ * - `build` and `photo`: 0.
+ * - `live`: 0 when paused; else `fastForward` if above 1 (it REPLACES `speed`,
+ *   200 ticks/s at 10, never in real-time mode); else `speed`.
  */
 export function effectiveSteps(time: GameTime, mode: GameMode): number {
-  if (mode === 'cutscene') return 1;
+  if (mode === 'activity' || mode === 'cutscene') return 1;
   if (mode !== 'live' || time.speed === 0) return 0;
   const ff = Math.floor(time.fastForward);
   return ff > 1 && !time.realTime ? ff : time.speed;

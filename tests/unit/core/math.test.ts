@@ -74,7 +74,13 @@ describe('math helpers', () => {
     expect(effectiveSteps(s.time, 'live')).toBe(10);
     expect(effectiveSteps(s.time, 'cutscene')).toBe(1);
     expect(effectiveSteps(s.time, 'build')).toBe(0);
-    expect(effectiveSteps(s.time, 'activity')).toBe(0);
+    // FROZEN 17: the house keeps running at x1 behind an activity, whatever speed says.
+    expect(effectiveSteps(s.time, 'activity')).toBe(1);
+    s.time.speed = 3;
+    expect(effectiveSteps(s.time, 'activity')).toBe(1);
+    s.time.speed = 0;
+    expect(effectiveSteps(s.time, 'activity')).toBe(1);
+    s.time.speed = 3;
     s.time.realTime = true;
     expect(effectiveSteps(s.time, 'live')).toBe(3);
     s.time.realTime = false;
