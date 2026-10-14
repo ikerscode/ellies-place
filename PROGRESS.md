@@ -1,10 +1,10 @@
 # PROGRESS
 
 - **Start:** Mon 12 Oct 2026 22:34 SAST
-- **Last update:** Wed 14 Oct ~10:55 SAST
-- **Current wave:** 1 (design freeze), final step: code-reviewer#2 re-checking blockers B1-B6 (reports/wave1-recheck.md). Done since pause: contracts v3 (b558fba), string keys (5 commits), art checklist, docs paths. Next: commit "wave 1: spec frozen", then Wave 2.
-- **Merged branches:** all Wave 1 (game-designer-systems, -home, -play, writer, pixel-artist-lead, audio-dev, ui-dev) on main.
-- **Gate status:** Gate 1 mechanical checks GREEN (Chromium). Contracts review verdict NOT READY (6 blockers, 41 fixes): rulings in FROZEN rows 20-37 (2cc97eb). architect#3 applying contracts v3; pixel-artist#lead2 writing art-checklist. Then writer renames keys, then a short re-review, then Gate 1 commit "wave 1: spec frozen". WebKit still NOT run.
+- **Last update:** Wed 14 Oct ~15:45 SAST
+- **Current wave:** 2 (foundations), batch A dispatched ~15:40 on Sonnet 5.5: sim-dev, world-dev, data (core), data-progress, save-dev, engine-dev (worktrees ~/Projects/ellies-place-wt/<id>, branches w2/<id>). Batch B next: ui-dev, pixel-artist A+D, pixel-artist B+C, qa-engineer (audio-dev skipped: engine already ported in Wave 1, integrator wires it).
+- **Merged branches:** all Wave 1 (tag wave1-frozen, 2091686). Wave 2 none yet.
+- **Gate status:** Gate 1 GREEN (recheck READY, reports/wave1-recheck.md). Wave 1 gate done. WebKit still NOT run.
 
 ## Decisions
 
