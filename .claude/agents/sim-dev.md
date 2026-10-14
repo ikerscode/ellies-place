@@ -1,6 +1,6 @@
 ---
 name: sim-dev
-description: Builds the deterministic simulation core (entity store, time, needs, smart objects, utility AI, action queue, A*, carrying, free will, headless soak runner) and later the progression systems (wishes, aspirations, Hearts, mail, housewarming, onboarding runner, stickers).
+description: Builds the deterministic simulation core (entity store, time, needs, smart objects, utility AI, action queue, A*, carrying, free will) and later the progression systems (wishes, aspirations, Hearts, mail, housewarming, onboarding runner, stickers).
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: inherit
 effort: high
@@ -24,7 +24,7 @@ Read `design/TECH.md`, `design/spec/contracts.md`, `design/spec/sim.md` and `des
 - **Action queue:** up to 4 actions, cancellable, with interrupt rules (sleeping blocks most actions; cats can interrupt idle).
 - **Pathfinding:** A* with 8 directions and no corner cutting, dynamic costs, reservations, cat jump edges between z-layers, and path caching invalidated when the world changes.
 - **Carrying:** pick up, put down and hand-over. Some interactions require an item in hand.
-- **Headless runner** (`tests/soak/`, shared with qa-engineer): steps N days at maximum speed with no rendering, and checks every invariant.
+- **No soak runner:** qa-engineer owns `tests/soak/` and `src/testing/headless.ts` (FROZEN row 24). You write unit tests in `tests/unit/sim/` and expose what the runner needs (`createSim`, `step`, state hash, invariant helpers).
 
 ## Wave 3: progression
 
